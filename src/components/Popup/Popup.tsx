@@ -9,11 +9,14 @@ import { useGifStore } from '@/stores/gifGeneratorStore';
 
 import ConfigurationPanel from '../ConfigurationPanel/ConfigurationPanel';
 import Progress from '../Progress/Progress';
+import { Button } from '../Button/Button';
 
 interface PopupProps {}
 
 export function Popup({}: PopupProps) {
   const videoElement = useAppStore((state) => state.videoElement);
+  const status = useAppStore((state) => state.status);
+  const setStatus = useAppStore((state) => state.setStatus);
   const createGif = useGifStore((state) => state.createGif);
 
   const handleSubmit = useCallback(
@@ -34,14 +37,29 @@ export function Popup({}: PopupProps) {
         },
         videoElement
       );
+
+      setStatus('generating');
     },
     [videoElement]
   );
 
+  function handleCloseClick() {
+    setStatus('configuring');
+  }
+
   return (
     <div className={css.popup}>
-      <Progress />
-      <ConfigurationPanel onSubmit={handleSubmit} />
+      <section className={css.config}>
+        <ConfigurationPanel onSubmit={handleSubmit} />
+      </section>
+      {status === 'generating' && (
+        <section className={css.generation}>
+          <Button className={css.close} size="small" onClick={handleCloseClick}>
+            Close
+          </Button>
+          <Progress />
+        </section>
+      )}
     </div>
   );
 }

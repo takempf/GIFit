@@ -10,6 +10,12 @@
   overflow: hidden;
   backdrop-filter: blur(3px);
   box-shadow: #0003 0 2px 2px;
+
+  /* Grid overlapping elements trick */
+  display: grid;
+  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
+  grid-template-areas: 'main';
 }
 
 .popup::after {
@@ -20,4 +26,25 @@
   inset: 1px;
   border-radius: inherit;
   pointer-events: none;
+}
+
+.config {
+  grid-area: main;
+}
+
+.generation {
+  grid-area: main;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(5px);
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
