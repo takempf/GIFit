@@ -12,6 +12,9 @@ import {
 
 import { log } from '@/utils/logger';
 
+// TODO centralize this
+const MAX_QUALITY = 10;
+
 // --- Configuration and Event Data Interfaces ---
 
 export interface GifConfig {
@@ -55,8 +58,7 @@ class GifService extends EventEmitter {
 
     this.canvasEl = document.createElement('canvas');
     const context = this.canvasEl.getContext('2d', {
-      // Important for reading pixel data consistently
-      willReadFrequently: true
+      willReadFrequently: true // Important
     });
 
     if (!context) {
@@ -78,6 +80,9 @@ class GifService extends EventEmitter {
     this.abort(); // Ensure any previous process is stopped
     this.aborted = false;
     this.framesComplete = 0;
+
+    // set maxColors based on quality (for now)
+    config.maxColors = (Number(config.quality) / MAX_QUALITY) * 256;
 
     // Validate config slightly
     const maxColors = config.maxColors || 256; // Default to 256 colors
@@ -167,7 +172,6 @@ class GifService extends EventEmitter {
 
       video.addEventListener('seeked', doneSeeking);
       video.addEventListener('error', onError); // Handle potential video errors during seek
-      console.log('time we are seeking to...', time);
       video.currentTime = time;
     });
   }
@@ -205,7 +209,7 @@ class GifService extends EventEmitter {
   ): Promise<void> {
     // Ensure we haven't aborted and the encoder still exists
     if (this.aborted || !this.encoder) {
-      console.log('Frame processing aborted or encoder missing.');
+      log('Frame processing aborted or encoder missing');
       return;
     }
 

@@ -2,7 +2,6 @@ import { create } from 'zustand';
 
 import GifService from '@/services/GifService';
 import type { GifConfig, GifCompleteData } from '@/services/GifService'; // Import types
-import { wait } from '@/utils/wait';
 
 // Define the possible statuses for the GIF creation process
 type GifStatus =
@@ -45,24 +44,21 @@ export const useGifStore = create<GifStore>((set, get) => ({
   ...initialState,
 
   async createGif(config, videoElement) {
-    console.log('create gif...', config);
     // Create a service instance or use existing one
     const existingServiceInstance = get()._serviceInstance;
-
-    // Reset state for a new creation process
-    set({
-      ...initialState,
-      _serviceInstance: existingServiceInstance ?? new GifService() // Create a new service instance
-    });
-    console.log('what is the status RIGHT NOW', get().status);
-
-    const service = get()._serviceInstance;
+    const service = existingServiceInstance ?? new GifService();
 
     if (!service) {
       // Should not happen based on above line, but good practice
       set({ status: 'error', error: 'Failed to initialize GifService.' });
       return;
     }
+
+    // Reset state for a new creation process
+    set({
+      ...initialState,
+      _serviceInstance: service
+    });
 
     // --- Setup Event Listeners ---
     const onFramesProgress = (ratio: number, frameCount: number) => {

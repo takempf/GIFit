@@ -19,14 +19,13 @@ export function Progress({}: ProgressProps) {
   const progress = useGifStore((state) => state.progress);
   const status = useGifStore((state) => state.status);
 
-  const percent = progress * 100;
+  const progressPercent = progress * 100;
 
   let imageUrl: string | undefined;
   let progressElementsStyle: CSSProperties | undefined;
 
   // Calculate image dimensions and create object URL if image exists
   if (result?.blob && result?.width > 0) {
-    console.log('result blob', result.blob);
     // Ensure width is positive to avoid division by zero
     const imageDisplayHeight =
       DEFAULT_IMAGE_DISPLAY_WIDTH * (result.height / result.width);
@@ -39,15 +38,17 @@ export function Progress({}: ProgressProps) {
 
   const downloadFilename = `gifit_${Date.now()}.gif`;
 
-  console.log('image url', imageUrl);
-
   return (
     <div className={css.gifitProgress}>
       <div className={css.details}>
         {status && <div className={css.status}>{status}</div>}
 
         <div className={css.elements} style={progressElementsStyle}>
-          <progress className={css.progress} value={percent} max="100" />
+          <progress
+            className={css.progress}
+            value={progressPercent}
+            max="100"
+          />
           {imageUrl && (
             <img
               className={css.result}

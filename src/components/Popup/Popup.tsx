@@ -14,12 +14,7 @@ interface PopupProps {}
 
 export function Popup({}: PopupProps) {
   const videoElement = useAppStore((state) => state.videoElement);
-  const status = useGifStore((state) => state.status);
-  const processedFrameCount = useGifStore((state) => state.processedFrameCount);
-  const result = useGifStore((state) => state.result);
   const createGif = useGifStore((state) => state.createGif);
-
-  console.log(result);
 
   const handleSubmit = useCallback(
     function handleSubmit(formValues) {
@@ -28,7 +23,6 @@ export function Popup({}: PopupProps) {
         return;
       }
 
-      log('Creating GIF with user specified GIF options', formValues);
       createGif(
         {
           quality: formValues.quality,
@@ -46,12 +40,6 @@ export function Popup({}: PopupProps) {
 
   return (
     <div className={css.popup}>
-      <div>
-        <strong>Status</strong>: {status}
-      </div>
-      <div>
-        <strong>Processed frames</strong>: {processedFrameCount}
-      </div>
       <Progress />
       <ConfigurationPanel onSubmit={handleSubmit} />
     </div>
