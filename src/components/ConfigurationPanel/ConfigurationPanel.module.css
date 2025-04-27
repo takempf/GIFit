@@ -1,0 +1,52 @@
+.gifitConfiguration {
+  opacity: 1;
+  transition:
+    -webkit-filter 300ms,
+    opacity 300ms,
+    transform 300ms;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+}
+
+.linkDimensions {
+  -webkit-appearance: none;
+  cursor: pointer;
+  opacity: 0.5;
+  position: absolute;
+  left: 50%;
+  margin: 16px 0 0 -9px;
+  padding: 4px;
+
+  &:after {
+    font-family: 'GIFit Icons';
+    content: '\e802';
+  }
+
+  &:hover {
+    opacity: 0.6;
+  }
+
+  &:checked {
+    opacity: 1;
+  }
+}
+
+.actions {
+  display: flex;
+  grid-column: span 2;
+
+  > * {
+    flex-grow: 1;
+  }
+}
+
+.submit {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 5px;
+}

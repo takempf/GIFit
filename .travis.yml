@@ -1,7 +1,0 @@
-language: node_js
-node_js:
-- '0.12'
-env:
-  global:
-  - secure: OW9n0j10XdgkgGNJhk0pQkY1MqlhIA5XDkqfL4G8nOVfqYbyNLnUygZKKwoxHumZ/cZFVGMrgVasSIgYt8uAz9sLaNxdRXkFyJ4v6r7YgXCdF0Xfb+qISyKZhpd8Z7/6sYuGvZPzufcnyt7jRCJL4bf4yMOvkCkfxaG1mnB3XOw=
-  - secure: Y5533Y3Z5cq/VHBoPb8kocuu7MkUuguDy+hWpTgAHLMwoFgSeBE/M+x5YWNQBUNT2fSpWIftnkF/CfiWzvUvi5WpvrwBnrsfvfduwxvqAq/DkLHNR/xGa/kIO7sPKyYBFmgDJOJnhvbFH8Q3INvf+U86mQtQDdYjoNdv4i9JZM4=

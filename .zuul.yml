@@ -1,9 +1,0 @@
-ui: tape
-browsers:
-  - name: chrome
-    version: latest
-browserify:
-  - transform: babelify
-  - transform: brfs
-  - options:
-    debug: true

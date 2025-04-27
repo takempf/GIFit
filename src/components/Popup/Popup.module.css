@@ -1,0 +1,23 @@
+.popup {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.5em;
+  border-radius: 0.5em;
+  z-index: 10;
+  width: 20em;
+  color: var(--color_panel_text);
+  background: rgba(225, 225, 225, 0.69);
+  overflow: hidden;
+  backdrop-filter: blur(3px);
+  box-shadow: #0003 0 2px 2px;
+}
+
+.popup::after {
+  content: '';
+  border-top: rgba(255, 255, 255, 0.75) 1px solid;
+  border-left: rgba(255, 255, 255, 0.5) 1px solid;
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+}

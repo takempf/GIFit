@@ -1,0 +1,72 @@
+:root {
+  --MAXIMUM_Z_INDEX: 2147483647;
+
+  --color_primary: rgb(219, 7, 7);
+
+  --color_gif: rgb(255, 255, 255);
+  --color_it: rgb(255, 255, 255);
+
+  --color_youtube_toolbar: rgb(117, 117, 117);
+  --color_youtube_toolbar_hover: rgb(164, 164, 164);
+  --color_youtube_toolbar_active: rgb(255, 255, 255);
+
+  --color_panel_text: rgb(125, 125, 125);
+  --color_panel_background: rgba(255, 255, 255, 0.95);
+  --color_input_text: rgb(25, 25, 25);
+
+  --color_slider_thumb: rgb(235, 235, 235);
+  --color_slider_thumb_focus: rgb(255, 255, 255);
+  --color_slider_background: rgba(0, 0, 0, 0.06);
+
+  --color_button: rgb(235, 235, 235);
+  --color_button_background: rgb(25, 25, 25);
+  --color_button_primary_background: rgb(235, 15, 15);
+  --color_subtle_shadow: rgba(0, 0, 0, 0.25);
+
+  --youtube_controls_height: 36px;
+  --youtube_controls_height_fullscreen: 54px;
+  --youtube_progress_bar_height: 5px;
+  --youtube_progress_bar_height_fullscreen: 8px;
+  --label_font_size: 10px;
+  --input_horizontal_padding: 1.5em;
+  --input_vertical_padding: 0.75em;
+  --input_border_radius: 3px;
+  --button_border_radius: 3px;
+
+  --ease_in_expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
+  --ease_out_expo: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+fieldset {
+  position: relative;
+  border: none;
+  margin: 0;
+  padding: 0;
+  line-height: 35px;
+}
+
+label {
+  text-transform: uppercase;
+  font-size: var(--label_font_size);
+  font-family: 'Roboto', sans-serif;
+  font-style: italic;
+  line-height: var(--label_font_size);
+  letter-spacing: 0.75px;
+}
+
+fieldset {
+  clear: both;
+}
+
+progress {
+  &::-webkit-progress-bar {
+    overflow: hidden;
+    border-radius: 3px;
+    background: var(--color_slider_background);
+    box-shadow: inset 0 1px 1px var(--color_subtle_shadow);
+  }
+
+  &::-webkit-progress-value {
+    background: rgb(25, 25, 25);
+  }
+}

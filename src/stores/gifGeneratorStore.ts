@@ -1,0 +1,139 @@
+import { create } from 'zustand';
+
+import GifService from '@/services/GifService';
+import type { GifConfig, GifCompleteData } from '@/services/GifService'; // Import types
+import { wait } from '@/utils/wait';
+
+// Define the possible statuses for the GIF creation process
+type GifStatus =
+  | 'idle' // Not doing anything
+  | 'processing' // Actively creating the GIF
+  | 'complete' // GIF creation finished successfully
+  | 'error' // An error occurred
+  | 'aborted'; // User cancelled the process
+
+interface GifState {
+  status: GifStatus;
+  progress: number; // 0 to 1
+  processedFrameCount: number;
+  error: string | null;
+  result: GifCompleteData | null;
+  _serviceInstance: GifService | null;
+}
+
+interface GifActions {
+  createGif: (
+    config: GifConfig,
+    videoElement: HTMLVideoElement
+  ) => Promise<void>; // Make async if needed for setup before returning
+  abortGif: () => void;
+  reset: () => void;
+}
+
+type GifStore = GifState & GifActions;
+
+const initialState: GifState = {
+  status: 'idle',
+  progress: 0,
+  processedFrameCount: 0,
+  error: null,
+  result: null,
+  _serviceInstance: null
+};
+
+export const useGifStore = create<GifStore>((set, get) => ({
+  ...initialState,
+
+  async createGif(config, videoElement) {
+    console.log('create gif...', config);
+    // Create a service instance or use existing one
+    const existingServiceInstance = get()._serviceInstance;
+
+    // Reset state for a new creation process
+    set({
+      ...initialState,
+      _serviceInstance: existingServiceInstance ?? new GifService() // Create a new service instance
+    });
+    console.log('what is the status RIGHT NOW', get().status);
+
+    const service = get()._serviceInstance;
+
+    if (!service) {
+      // Should not happen based on above line, but good practice
+      set({ status: 'error', error: 'Failed to initialize GifService.' });
+      return;
+    }
+
+    // --- Setup Event Listeners ---
+    const onFramesProgress = (ratio: number, frameCount: number) => {
+      set({
+        status: 'processing',
+        progress: ratio,
+        processedFrameCount: frameCount
+      });
+    };
+
+    const onComplete = (data: GifCompleteData) => {
+      set({ status: 'complete', result: data, _serviceInstance: null });
+    };
+
+    const onError = (err: Error) => {
+      console.error('GifService Error:', err);
+      set({
+        status: 'error',
+        error: err.message || 'An unknown error occurred.',
+        _serviceInstance: null
+      });
+      service.destroy();
+    };
+
+    const onAbort = () => {
+      // State might already be 'aborted' if triggered by get().abortGif()
+      // This handles cases where the service aborts internally or finishes aborting
+      if (get().status !== 'aborted') {
+        set({ status: 'aborted', _serviceInstance: null });
+      }
+      // Ensure cleanup even if abort was triggered externally
+      if (get()._serviceInstance) {
+        get()._serviceInstance?.destroy();
+        set({ _serviceInstance: null });
+      }
+    };
+
+    service.on('frames progress', onFramesProgress);
+    service.on('complete', onComplete);
+    service.on('error', onError);
+    service.on('abort', onAbort);
+
+    // --- Start GIF Creation ---
+    try {
+      // Note: createGif itself is synchronous in the service,
+      // but the process it starts is async via events.
+      service.createGif(config, videoElement);
+      // No need to await here, events will update the state
+    } catch (err: any) {
+      // Catch synchronous errors during setup (e.g., context creation)
+      onError(err);
+    }
+  },
+
+  abortGif() {
+    const service = get()._serviceInstance;
+    const currentStatus = get().status;
+
+    if (service && currentStatus === 'processing') {
+      set({ status: 'aborted' }); // Set status immediately for responsiveness
+      service.abort(); // Trigger the service's abort logic
+      // The 'abort' event handler will do the final cleanup (_serviceInstance = null)
+    } else if (service) {
+      // If service exists but not processing, ensure cleanup
+      service.destroy();
+      set({ _serviceInstance: null });
+    }
+  },
+
+  reset() {
+    get().abortGif(); // Ensure any active process is stopped and cleaned up
+    set(initialState); // Reset state to initial values
+  }
+}));

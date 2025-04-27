@@ -1,0 +1,63 @@
+.gifitProgress {
+  align-items: center;
+  justify-content: center;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  line-height: 1;
+  font-size: 24px;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:after {
+    content: '×';
+  }
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.details {
+  width: 80%;
+  text-align: center;
+}
+
+.status {
+  padding-bottom: 10px;
+  font-family: 'Roboto', sans-serif;
+  font-style: italic;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.save {
+}
+
+.elements {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  transition:
+    width 350ms,
+    height 350ms 250ms;
+}
+
+.progress {
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.result {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transition: -webkit-filter 1000ms 250ms;
+}

@@ -1,0 +1,8 @@
+.app {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: hotpink;
+  translate: 0 100%;
+  z-index: 10;
+}
