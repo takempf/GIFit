@@ -11,6 +11,7 @@ import {
 } from 'gifenc';
 
 import { log } from '@/utils/logger';
+import floydSteinberg from '@/utils/dither';
 
 // TODO centralize this
 const MAX_QUALITY = 10;
@@ -254,10 +255,17 @@ class GifService extends EventEmitter {
         // oneBitAlpha: false, // Optional: Handle transparency differently
       });
 
+      const ditheredImageData = floydSteinberg(
+        imageData.data,
+        config.width,
+        config.height,
+        palette
+      );
+
       // 4. Apply palette to get indexed data
       //    `applyPalette` returns Uint8Array of color indices
       const index = applyPalette(
-        imageData.data,
+        ditheredImageData,
         palette,
         config.noDither ? 'nearest' : 'FloydSteinberg'
       );
