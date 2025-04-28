@@ -3,22 +3,24 @@
   bottom: -0.5em;
   left: 0;
   translate: 0 100%;
-  border-radius: 0.5em;
   z-index: 1000;
   width: 100%;
+}
+
+.container {
+  position: relative;
+  border-radius: 0.5em;
   color: var(--color_panel_text);
   background: rgba(225, 225, 225, 0.69);
   backdrop-filter: blur(5px);
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.5) 0 8px 6px;
-
-  /* Grid overlapping elements trick */
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
 
-.popup::after {
+.container::after {
   content: '';
   border-top: rgba(255, 255, 255, 0.75) 1px solid;
   border-left: rgba(255, 255, 255, 0.5) 1px solid;
@@ -33,6 +35,20 @@
   justify-content: space-between;
   padding: 0 0 0 0.75em;
   background: rgba(255, 255, 255, 0.45);
+}
+
+.title {
+  font-size: 0.75em;
+  color: rgba(0, 0, 0, 0.75);
+}
+
+.close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  translate: 50% -50%;
+  z-index: 100;
+  border: white 1px solid !important;
 }
 
 .config {

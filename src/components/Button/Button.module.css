@@ -43,16 +43,16 @@
 
 /* Secondary Variant */
 .secondary {
-  background-color: #6c757d; /* Example secondary color */
+  background-color: rgb(50, 50, 50); /* Example secondary color */
   color: #ffffff;
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: #5a6268;
+  background-color: rgb(75, 75, 75);
 }
 
 .secondary:active:not(:disabled) {
-  background-color: #4e555b;
+  background-color: rgb(85, 85, 85);
 }
 
 .ghost {
@@ -86,6 +86,10 @@
 .large {
   padding: 0.75em 1.5em;
   font-size: 1.125em; /* 18px */
+}
+
+.rounded {
+  border-radius: 2em;
 }
 
 /* --- Disabled State --- */

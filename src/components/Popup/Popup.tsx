@@ -57,23 +57,34 @@ export function Popup({}: PopupProps) {
 
   return (
     <div className={css.popup}>
-      <section className={css.header}>
-        <strong className={css.title}>GIFit</strong>
-        <Button size="small" onClick={handleCloseAppClick}>
-          X
-        </Button>
-      </section>
-      <section className={css.config}>
-        <ConfigurationPanel onSubmit={handleSubmit} />
-      </section>
-      {status === 'generating' && (
-        <section className={css.generation}>
-          <Button className={css.close} size="small" onClick={handleCloseClick}>
-            Close
-          </Button>
-          <Progress />
+      <div className={css.container}>
+        <section className={css.header}>
+          <strong className={css.title}>GIFit</strong>
         </section>
-      )}
+        <section className={css.config}>
+          <ConfigurationPanel onSubmit={handleSubmit} />
+        </section>
+        {status === 'generating' && (
+          <section className={css.generation}>
+            <Button
+              className={css.close}
+              size="small"
+              onClick={handleCloseClick}>
+              Close
+            </Button>
+            <Progress />
+          </section>
+        )}
+      </div>
+
+      <Button
+        className={css.close}
+        size="small"
+        variant="secondary"
+        rounded={true}
+        onClick={handleCloseAppClick}>
+        ✕
+      </Button>
     </div>
   );
 }
