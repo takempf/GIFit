@@ -4,9 +4,12 @@ import { useEffect, useReducer } from 'react';
 
 import { clamp } from '@/utils/clamp.js';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
+import { secondsToTimecode } from '@/utils/secondsToTimecode';
+import { listenForPausedTimeUpdate } from '@/utils/listenForPausedTimeUpdate';
 import { useAppStore } from '@/stores/appStore';
 
 import { Input } from '../Input/Input';
+import { InputNumber } from '../InputNumber/InputNumber';
 import { Button } from '../Button/Button';
 
 const DEFAULT_WIDTH = 320;
@@ -72,7 +75,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const [state, dispatch] = useReducer(reducer, {
     start: '0:00',
-    end: '0:01',
+    duration: 1,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
     linkDimensions: true,
@@ -98,16 +101,25 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
+    function handlePausedTimeUpdate(currentTime: number) {
+      dispatch({
+        type: 'INPUT_CHANGE',
+        payload: {
+          name: 'start',
+          value: secondsToTimecode(currentTime)
+        }
+      });
+    }
+
+    video.addEventListener('loadeddata', handleVideoLoadedData);
+    const cleanupListenForPausedTimeUpdate = listenForPausedTimeUpdate(
+      video,
+      handlePausedTimeUpdate
+    );
+
     return () => {
-      if (!video) {
-        return;
-      }
-
-      video.addEventListener('loadeddata', handleVideoLoadedData);
-
-      return () => {
-        video.removeEventListener('loadeddata', handleVideoLoadedData);
-      };
+      video.removeEventListener('loadeddata', handleVideoLoadedData);
+      cleanupListenForPausedTimeUpdate();
     };
   }, [video]);
 
@@ -148,36 +160,46 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={state.start}
           onChange={handleInputChange}
         />
-        <Input
-          name="end"
-          label="End"
-          value={state.end}
-          onChange={handleInputChange}
-        />
-        <Input
-          name="width"
-          label="Width"
+        {/* <Input
+          name="duration"
+          label="Duration"
           type="number"
-          value={state.width}
+          value={state.duration}
           onChange={handleInputChange}
-        />
-        <input
-          className={css.linkDimensions}
-          name="linkDimensions"
-          type="checkbox"
-          checked={state.linkDimensions}
-          onChange={handleInputChange}
-        />
-        <Input
-          name="height"
-          label="Height"
+        /> */}
+        <InputNumber
+          name="duration"
+          label="Time"
           type="number"
-          value={state.height}
+          value={state.duration}
           onChange={handleInputChange}
         />
-        <Input
+        <div className={css.linkedInputs}>
+          <InputNumber
+            name="width"
+            label="Width"
+            type="number"
+            value={state.width}
+            onChange={handleInputChange}
+          />
+          <input
+            className={css.link}
+            name="linkDimensions"
+            type="checkbox"
+            checked={state.linkDimensions}
+            onChange={handleInputChange}
+          />
+          <InputNumber
+            name="height"
+            label="Height"
+            type="number"
+            value={state.height}
+            onChange={handleInputChange}
+          />
+        </div>
+        <InputNumber
           name="framerate"
-          label="Framerate"
+          label="FPS"
           type="number"
           min={1}
           max={60}
@@ -195,7 +217,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         />
         <div className={css.actions}>
           <Button id="gifit-submit" type="submit">
-            Create GIF
+            GIFit!
           </Button>
         </div>
       </form>

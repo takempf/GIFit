@@ -6,7 +6,7 @@ import cx from 'classnames';
 // Define the props interface
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode; // Content inside the button
-  variant?: 'primary' | 'secondary'; // Style variant
+  variant?: 'primary' | 'secondary' | 'ghost'; // Style variant
   size?: 'small' | 'medium' | 'large'; // Size variant
   onClick?: React.MouseEventHandler<HTMLButtonElement>; // Click handler
   // Allow any other standard button attributes like 'type', 'disabled', 'aria-label', etc.

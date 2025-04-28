@@ -16,6 +16,7 @@ interface PopupProps {}
 export function Popup({}: PopupProps) {
   const videoElement = useAppStore((state) => state.videoElement);
   const status = useAppStore((state) => state.status);
+  const close = useAppStore((state) => state.close);
   const setStatus = useAppStore((state) => state.setStatus);
   const createGif = useGifStore((state) => state.createGif);
 
@@ -26,13 +27,16 @@ export function Popup({}: PopupProps) {
         return;
       }
 
+      const start = timecodeToSeconds(formValues.start) * 1000;
+      const end = start + formValues.duration * 1000;
+
       createGif(
         {
           quality: formValues.quality,
           width: formValues.width,
           height: formValues.height,
-          start: timecodeToSeconds(formValues.start) * 1000,
-          end: timecodeToSeconds(formValues.end) * 1000,
+          start,
+          end,
           fps: formValues.framerate
         },
         videoElement
@@ -47,8 +51,18 @@ export function Popup({}: PopupProps) {
     setStatus('configuring');
   }
 
+  function handleCloseAppClick() {
+    close();
+  }
+
   return (
     <div className={css.popup}>
+      <section className={css.header}>
+        <strong className={css.title}>GIFit</strong>
+        <Button size="small" onClick={handleCloseAppClick}>
+          X
+        </Button>
+      </section>
       <section className={css.config}>
         <ConfigurationPanel onSubmit={handleSubmit} />
       </section>

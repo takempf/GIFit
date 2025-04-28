@@ -55,6 +55,19 @@
   background-color: #4e555b;
 }
 
+.ghost {
+  background-color: transparent;
+  color: rgba(0, 0, 0, 0.35);
+}
+
+.ghost:hover:not(:disabled) {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.ghost:active:not(:disabled) {
+  color: rgba(0, 0, 0, 0.5);
+}
+
 /* --- Sizes --- */
 
 /* Small Size */

@@ -1,21 +1,21 @@
 .popup {
   position: absolute;
-  bottom: 0.5em;
-  right: 0.5em;
+  bottom: -0.5em;
+  left: 0;
+  translate: 0 100%;
   border-radius: 0.5em;
-  z-index: 10;
-  width: 20em;
+  z-index: 1000;
+  width: 100%;
   color: var(--color_panel_text);
   background: rgba(225, 225, 225, 0.69);
+  backdrop-filter: blur(5px);
   overflow: hidden;
-  backdrop-filter: blur(3px);
-  box-shadow: #0003 0 2px 2px;
+  box-shadow: rgba(0, 0, 0, 0.5) 0 8px 6px;
 
   /* Grid overlapping elements trick */
-  display: grid;
-  grid-template-rows: 1fr;
-  grid-template-columns: 1fr;
-  grid-template-areas: 'main';
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .popup::after {
@@ -28,12 +28,17 @@
   pointer-events: none;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 0 0 0.75em;
+  background: rgba(255, 255, 255, 0.45);
+}
+
 .config {
-  grid-area: main;
 }
 
 .generation {
-  grid-area: main;
   position: relative;
   z-index: 2;
   display: flex;

@@ -1,15 +1,14 @@
 .input {
   --input-transition-duration: 225ms;
-
   position: relative;
   transition:
     background-color 550ms,
     border-color 550ms,
     box-shadow 550ms;
-  padding: var(--input_vertical_padding) var(--input_horizontal_padding);
+  padding: 0.5em 0.75em;
   display: flex;
-  flex-direction: column;
-  gap: 0.5em;
+  flex-direction: row;
+  gap: 0.25em;
   background-color: rgba(255, 255, 255, 0.45);
 
   &:hover {
@@ -25,28 +24,38 @@
       background-color var(--input-transition-duration),
       box-shadow var(--input-transition-duration);
 
-    .label {
-      letter-spacing: 2px;
-    }
-
     .actualInput {
       color: var(--color_primary);
     }
   }
 }
 
+.inputAndLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25em;
+  flex-grow: 1;
+}
+
 .label {
   transition: letter-spacing var(--input-transition-duration);
+  text-transform: uppercase;
+  font-size: var(--label_font_size);
+  font-family: 'Roboto', sans-serif;
+  font-style: italic;
+  line-height: var(--label_font_size);
+  letter-spacing: 0.75px;
 }
 
 input {
   outline: none;
+  font-size: inherit;
 }
 
 input[type='text'],
 input[type='number'] {
-  font-family: 'Roboto Mono', sans-serif;
-  font-size: 22px;
+  font-family: 'Space Mono', sans-serif;
+  font-size: 1em;
   color: var(--color_input_text);
   background: none;
   border: none;

@@ -1,0 +1,17 @@
+/* Style for browser's default spinners (optional) */
+.input::-webkit-outer-spin-button,
+.input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Hide default spinners in WebKit */
+  margin: 0;
+}
+
+.input[type='number'] {
+  -moz-appearance: textfield; /* Hide default spinners in Firefox */
+}
+
+.buttonGrid {
+  margin: -0.5em -0.75em -0.5em 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
