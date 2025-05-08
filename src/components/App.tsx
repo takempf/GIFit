@@ -3,6 +3,9 @@ import css from './App.module.css';
 import { useAppStore } from '@/stores/appStore';
 
 import { Popup } from './Popup/Popup';
+import { AppLogo } from './AppLogo/AppLogo';
+import { AppFrame } from './AppFrame/AppFrame';
+
 import { log } from '@/utils/logger';
 import { AnimatePresence } from 'motion/react';
 
@@ -20,10 +23,13 @@ export function App({}: AppProps) {
   return (
     <>
       <div className={css.app}>
-        <button className={css.gifitButton} onClick={handleClick}>
-          <strong className={css.gif}>GIF</strong>
-          <span className={css.it}>it!</span>
-        </button>
+        {!isOpen && (
+          <button className={css.gifitButton} onClick={handleClick}>
+            <AppFrame>
+              <AppLogo />
+            </AppFrame>
+          </button>
+        )}
       </div>
       <AnimatePresence>{isOpen && <Popup />}</AnimatePresence>
     </>

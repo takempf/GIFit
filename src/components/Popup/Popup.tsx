@@ -11,6 +11,12 @@ import { useGifStore } from '@/stores/gifGeneratorStore';
 import ConfigurationPanel from '../ConfigurationPanel/ConfigurationPanel';
 import Progress from '../Progress/Progress';
 import { Button } from '../Button/Button';
+import { AppLogo } from '../AppLogo/AppLogo';
+import { AppFrame } from '../AppFrame/AppFrame';
+
+import TKLogo from '@/assets/tk.svg';
+
+import css from './Popup.module.css';
 
 interface PopupProps {}
 
@@ -63,25 +69,34 @@ export function Popup({}: PopupProps) {
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}>
-      <div className={css.container}>
-        <section className={css.header}>
-          <strong className={css.title}>GIFit</strong>
-        </section>
-        <section className={css.config}>
-          <ConfigurationPanel onSubmit={handleSubmit} />
-        </section>
-        {status === 'generating' && (
-          <section className={css.generation}>
-            <Button
-              className={css.close}
-              size="small"
-              onClick={handleCloseClick}>
-              Close
-            </Button>
-            <Progress />
+      <AppFrame>
+        <AppLogo />
+        <div className={css.container}>
+          <section className={css.config}>
+            <ConfigurationPanel onSubmit={handleSubmit} />
           </section>
-        )}
-      </div>
+          {status === 'generating' && (
+            <section className={css.generation}>
+              <Button
+                className={css.close}
+                size="small"
+                onClick={handleCloseClick}>
+                Close
+              </Button>
+              <Progress />
+            </section>
+          )}
+        </div>
+        <footer>
+          <a
+            className={css.credit}
+            href="https://kempf.dev/#gifit"
+            target="_blank">
+            Crafted by <img className={css.tkLogo} src={TKLogo} />
+          </a>
+          <span className={css.version}>v3.0.0</span>
+        </footer>
+      </AppFrame>
 
       <Button
         className={css.close}

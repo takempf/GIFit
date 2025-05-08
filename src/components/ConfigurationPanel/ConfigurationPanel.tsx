@@ -167,6 +167,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           label="Time"
           type="number"
           value={state.duration}
+          step={1 / state.framerate}
           onChange={handleInputChange}
         />
         <InputNumber

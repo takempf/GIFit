@@ -1,0 +1,11 @@
+.appFrame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  border-radius: 1em;
+  padding: 0.5em;
+  border: rgba(255, 255, 255, 0.25) 1px solid;
+}

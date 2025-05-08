@@ -1,11 +1,40 @@
 .popup {
   position: absolute;
-  bottom: -0.5em;
+  bottom: 0;
   right: 0;
   translate: 0 100%;
   z-index: 1000;
   width: 100%;
   max-width: 420px;
+
+  footer {
+    align-self: stretch;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+
+    a {
+      color: currentColor;
+
+      &:hover {
+        opacity: 1;
+        color: rgba(255, 255, 255, 0.75);
+      }
+    }
+  }
+}
+
+.credit {
+}
+
+.version {
+}
+
+.tkLogo {
+  height: 1em;
+  translate: 0 0.075em;
+  opacity: 0.5;
 }
 
 .container {
@@ -13,7 +42,6 @@
   border-radius: 0.5em;
   color: var(--color_panel_text);
   background: rgba(225, 225, 225, 0.69);
-  backdrop-filter: blur(5px);
   overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.5) 0 8px 6px;
   display: flex;

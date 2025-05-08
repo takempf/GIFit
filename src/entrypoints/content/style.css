@@ -1,4 +1,4 @@
-@import 'https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap';
 
 :root {
   --MAXIMUM_Z_INDEX: 2147483647;
@@ -42,7 +42,7 @@
 html,
 body {
   font-size: 16px;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Geist', sans-serif;
 }
 
 progress {

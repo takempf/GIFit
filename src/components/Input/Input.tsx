@@ -10,6 +10,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: HTMLInputElement['type'];
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  ref: React.RefObject<HTMLInputElement>;
 }
 
 export function Input({
@@ -21,6 +22,7 @@ export function Input({
   type = 'text',
   value,
   onChange,
+  ref,
   ...restProps
 }: InputProps) {
   return (
@@ -35,6 +37,7 @@ export function Input({
           value={value}
           onChange={onChange}
           {...restProps}
+          ref={ref}
         />
       </label>
       {append}

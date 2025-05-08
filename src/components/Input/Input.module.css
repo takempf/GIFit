@@ -41,7 +41,7 @@
   transition: letter-spacing var(--input-transition-duration);
   text-transform: uppercase;
   font-size: var(--label_font_size);
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Geist', sans-serif;
   font-style: italic;
   line-height: var(--label_font_size);
   letter-spacing: 0.75px;
@@ -54,7 +54,8 @@ input {
 
 input[type='text'],
 input[type='number'] {
-  font-family: 'Space Mono', sans-serif;
+  font-family: 'Geist', sans-serif;
+  font-variant-numeric: tabular-nums;
   font-size: 1em;
   color: var(--color_input_text);
   background: none;
