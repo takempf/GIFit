@@ -1,8 +1,46 @@
 .app {
   position: absolute;
-  bottom: 0;
+  bottom: -0.5em;
   right: 0;
-  background: hotpink;
   translate: 0 100%;
   z-index: 10;
+}
+
+.gifitButton {
+  font-family: Archivo;
+  font-size: 1em;
+  background: black;
+  border: none;
+  border-radius: 0.5em;
+  border: rgba(255, 255, 255, 0.25) 1px solid;
+  padding: 0.25em 0.5em;
+  color: white;
+  cursor: pointer;
+  translate: 0 -0.25em;
+  opacity: 0.5;
+  transition:
+    translate 125ms,
+    opacity 125ms,
+    scale 125ms,
+    background-color 125ms;
+
+  strong {
+    font-weight: 900;
+  }
+
+  &:hover {
+    translate: 0 0;
+    opacity: 1;
+    scale: 1.05;
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &:active {
+    translate: 0 0.125em;
+  }
+}
+
+.it {
+  font-style: italic;
+  color: #ff2b5c;
 }

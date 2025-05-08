@@ -1,6 +1,7 @@
 import css from './Popup.module.css';
 
 import { useCallback } from 'react';
+import { motion } from 'motion/react';
 
 import { log } from '@/utils/logger';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
@@ -56,7 +57,12 @@ export function Popup({}: PopupProps) {
   }
 
   return (
-    <div className={css.popup}>
+    <motion.div
+      className={css.popup}
+      style={{ transformOrigin: 'top right' }}
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.9, opacity: 0 }}>
       <div className={css.container}>
         <section className={css.header}>
           <strong className={css.title}>GIFit</strong>
@@ -85,6 +91,6 @@ export function Popup({}: PopupProps) {
         onClick={handleCloseAppClick}>
         ✕
       </Button>
-    </div>
+    </motion.div>
   );
 }

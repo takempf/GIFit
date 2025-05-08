@@ -1,5 +1,7 @@
 import css from './Input.module.css';
 
+import cx from 'classnames';
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   prepend?: React.ReactNode;
   append?: React.ReactNode;
@@ -11,6 +13,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Input({
+  className,
   prepend,
   append,
   name,
@@ -21,7 +24,7 @@ export function Input({
   ...restProps
 }: InputProps) {
   return (
-    <div className={css.input}>
+    <div className={cx(css.input, className)}>
       {prepend}
       <label className={css.inputAndLabel}>
         <strong className={css.label}>{label}</strong>

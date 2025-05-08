@@ -8,12 +8,51 @@
 
 .form {
   display: grid;
-  grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'start duration'
+    'width height'
+    'fps quality'
+    'submit submit';
   gap: 1px;
 }
 
-.linkedInputs {
-  display: flex;
+.start {
+  grid-area: start;
+}
+
+.duration {
+  grid-area: duration;
+}
+
+.width {
+  grid-area: width;
+}
+
+.height {
+  grid-area: height;
+}
+
+.widthHeightLink {
+  grid-column-end: height;
+  grid-column-start: width;
+  grid-row-end: height;
+  grid-row-start: width;
+  align-self: center;
+  justify-self: center;
+  z-index: 5;
+}
+
+.fps {
+  grid-area: fps;
+}
+
+.quality {
+  grid-area: quality;
+}
+
+.submit {
+  grid-area: submit;
 }
 
 .actions {

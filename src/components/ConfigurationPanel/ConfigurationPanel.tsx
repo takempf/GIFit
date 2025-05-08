@@ -155,49 +155,45 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     <div className={css.gifitConfiguration}>
       <form className={css.form} onSubmit={handleSubmit}>
         <Input
+          className={css.start}
           name="start"
           label="Start"
           value={state.start}
           onChange={handleInputChange}
         />
-        {/* <Input
-          name="duration"
-          label="Duration"
-          type="number"
-          value={state.duration}
-          onChange={handleInputChange}
-        /> */}
         <InputNumber
+          className={css.duration}
           name="duration"
           label="Time"
           type="number"
           value={state.duration}
           onChange={handleInputChange}
         />
-        <div className={css.linkedInputs}>
-          <InputNumber
-            name="width"
-            label="Width"
-            type="number"
-            value={state.width}
-            onChange={handleInputChange}
-          />
-          <input
-            className={css.link}
-            name="linkDimensions"
-            type="checkbox"
-            checked={state.linkDimensions}
-            onChange={handleInputChange}
-          />
-          <InputNumber
-            name="height"
-            label="Height"
-            type="number"
-            value={state.height}
-            onChange={handleInputChange}
-          />
-        </div>
         <InputNumber
+          className={css.width}
+          name="width"
+          label="Width"
+          type="number"
+          value={state.width}
+          onChange={handleInputChange}
+        />
+        <input
+          className={css.widthHeightLink}
+          name="linkDimensions"
+          type="checkbox"
+          checked={state.linkDimensions}
+          onChange={handleInputChange}
+        />
+        <InputNumber
+          className={css.height}
+          name="height"
+          label="Height"
+          type="number"
+          value={state.height}
+          onChange={handleInputChange}
+        />
+        <InputNumber
+          className={css.fps}
           name="framerate"
           label="FPS"
           type="number"
@@ -207,6 +203,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           onChange={handleInputChange}
         />
         <Input
+          className={css.quality}
           name="quality"
           label="Quality"
           type="range"
@@ -215,11 +212,9 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={state.quality}
           onChange={handleInputChange}
         />
-        <div className={css.actions}>
-          <Button id="gifit-submit" type="submit">
-            GIFit!
-          </Button>
-        </div>
+        <Button id="gifit-submit" className={css.submit} type="submit">
+          GIFit!
+        </Button>
       </form>
     </div>
   );

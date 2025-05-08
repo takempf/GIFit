@@ -4,6 +4,7 @@ import { useAppStore } from '@/stores/appStore';
 
 import { Popup } from './Popup/Popup';
 import { log } from '@/utils/logger';
+import { AnimatePresence } from 'motion/react';
 
 interface AppProps {}
 
@@ -19,9 +20,12 @@ export function App({}: AppProps) {
   return (
     <>
       <div className={css.app}>
-        <button onClick={handleClick}>GIFit</button>
+        <button className={css.gifitButton} onClick={handleClick}>
+          <strong className={css.gif}>GIF</strong>
+          <span className={css.it}>it!</span>
+        </button>
       </div>
-      {isOpen && <Popup />}
+      <AnimatePresence>{isOpen && <Popup />}</AnimatePresence>
     </>
   );
 }

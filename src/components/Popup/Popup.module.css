@@ -1,10 +1,11 @@
 .popup {
   position: absolute;
   bottom: -0.5em;
-  left: 0;
+  right: 0;
   translate: 0 100%;
   z-index: 1000;
   width: 100%;
+  max-width: 420px;
 }
 
 .container {
@@ -55,8 +56,9 @@
 }
 
 .generation {
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
