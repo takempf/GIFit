@@ -73,9 +73,9 @@ export function Popup({}: PopupProps) {
             {status === 'generating' && (
               <motion.section
                 className={css.generation}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, pointerEvents: 'none' }}
+                animate={{ opacity: 1, pointerEvents: 'unset' }}
+                exit={{ opacity: 0, pointerEvents: 'none' }}
                 transition={{
                   type: 'spring',
                   stiffness: 300,
