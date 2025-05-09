@@ -1,7 +1,7 @@
 export function timecodeToSeconds(timeString: string): number {
   // Multipliers for seconds, minutes, hours
   const multipliers = [1, 60, 3600];
-
+  console.log('time string', timeString);
   const totalSeconds = timeString
     .split(':') // Split into segments (e.g., ['HH', 'MM', 'SS'])
     .reverse() // Reverse to process seconds first (e.g., ['SS', 'MM', 'HH'])
@@ -17,6 +17,6 @@ export function timecodeToSeconds(timeString: string): number {
       // Add the segment's value in seconds to the accumulator
       return accumulator + value * multipliers[index];
     }, 0); // Start accumulation from 0 seconds
-
+  console.log('time string 2', timeString);
   return totalSeconds;
 }

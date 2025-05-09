@@ -12,25 +12,45 @@ import { useAppStore } from '@/stores/appStore';
 import { Input } from '../Input/Input';
 import { InputNumber } from '../InputNumber/InputNumber';
 import { Button } from '../Button/Button';
+import { log } from '@/utils/logger';
 
 const DEFAULT_WIDTH = 320;
 const DEFAULT_HEIGHT = 180;
 
-function seekTo(videoElement: HTMLVideoElement, timecode: string) {
-  const time = timecodeToSeconds(timecode);
+interface ConfigState {
+  start: string;
+  duration: number;
+  width: number;
+  height: number;
+  linkDimensions: boolean;
+  framerate: number;
+  quality: number;
+  aspectRatio: number;
+}
+
+interface ConfigAction {
+  type: string;
+  payload: any;
+}
+
+function seekTo(videoElement: HTMLVideoElement, time: number) {
+  if (typeof time !== 'number' || time < 0) {
+    log(`Could not seek to ${time}`);
+    return;
+  }
 
   if (!videoElement.paused) {
     videoElement.pause();
   }
 
-  videoElement.currentTime = clamp(time, 0, videoElement.duration);
+  videoElement.currentTime = clamp(0, videoElement.duration, time);
 }
 
 function getVideoAspectRatio(videoElement: HTMLVideoElement) {
   return videoElement.videoWidth / videoElement.videoHeight;
 }
 
-function reducer(state, action) {
+function reducer(state: ConfigState, action: ConfigAction) {
   switch (action.type) {
     case 'INPUT_CHANGE': {
       const newState = {
@@ -99,26 +119,22 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
-    function handleTimeUpdate() {
-      console.log('time update', arguments);
-      // dispatch({
-      //   type: 'INPUT_CHANGE',
-      //   payload: {
-      //     name: 'start',
-      //     value: secondsToTimecode(currentTime)
-      //   }
-      // });
+    function handleVideoSeeked() {
+      dispatch({
+        type: 'INPUT_CHANGE',
+        payload: {
+          name: 'start',
+          value: secondsToTimecode(video.currentTime)
+        }
+      });
     }
 
     video.addEventListener('loadeddata', handleVideoLoadedData);
-    const cleanupSeekOnMouseEvents = listenForSeekOnMouseEvents(
-      video,
-      handleTimeUpdate
-    );
+    // video.addEventListener('seeked', handleVideoSeeked);
 
     return () => {
       video.removeEventListener('loadeddata', handleVideoLoadedData);
-      cleanupSeekOnMouseEvents();
+      // video.removeEventListener('seeked', handleVideoSeeked);
     };
   }, [video]);
 
@@ -142,9 +158,17 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       }
     });
 
-    // If we're changing the start or end time, show that in the video
-    if (fieldName === 'start' || fieldName === 'end') {
-      seekTo(video, newValue);
+    // If we're changing the start, show that in the video
+    if (fieldName === 'start' && newValue && video) {
+      seekTo(video, timecodeToSeconds(newValue as string));
+    }
+
+    // if we're changing the duration, seek to it
+    if (fieldName === 'duration' && newValue && video) {
+      const start = timecodeToSeconds(state.start as string);
+      const duration = Number(newValue);
+      const end = start + duration;
+      seekTo(video, end);
     }
 
     // TODO If start time is greater than end time, adjust
@@ -155,9 +179,16 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     onSubmit(state);
   }
 
+  function handleKeyDown(event: KeyboardEvent) {
+    event.stopPropagation();
+  }
+
   return (
     <div className={css.gifitConfiguration}>
-      <form className={css.form} onSubmit={handleSubmit}>
+      <form
+        className={css.form}
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}>
         <Input
           className={css.start}
           name="start"
