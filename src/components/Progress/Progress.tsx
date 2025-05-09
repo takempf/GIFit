@@ -119,9 +119,18 @@ export function Progress({}: ProgressProps) {
                 className={css.result}
                 src={imageUrl}
                 alt="Generated GIF preview"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{
+                  opacity: 0,
+                  boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+                }}
+                animate={{
+                  opacity: 1,
+                  boxShadow: 'rgba(0, 0, 0, 0.25) 0px 8px 6px -3px'
+                }}
+                exit={{
+                  opacity: 0,
+                  boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+                }}
                 transition={{ delay: 0.5 }}
               />
             )}
