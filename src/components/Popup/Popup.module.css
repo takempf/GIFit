@@ -8,6 +8,7 @@
   max-width: 420px;
 
   footer {
+    padding: 0 0.25em;
     align-self: stretch;
     color: rgba(255, 255, 255, 0.5);
     font-size: 12px;
@@ -32,8 +33,8 @@
 }
 
 .tkLogo {
-  height: 1em;
-  translate: 0 0.075em;
+  height: 0.8em;
+  translate: 0 0.05em;
   opacity: 0.5;
 }
 

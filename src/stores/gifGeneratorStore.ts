@@ -13,7 +13,10 @@ type GifStatus =
 
 interface GifState {
   status: GifStatus;
+  width: number;
+  height: number;
   progress: number; // 0 to 1
+  frameCount: number;
   processedFrameCount: number;
   error: string | null;
   result: GifCompleteData | null;
@@ -33,7 +36,10 @@ type GifStore = GifState & GifActions;
 
 const initialState: GifState = {
   status: 'idle',
+  width: 320,
+  height: 240,
   progress: 0,
+  frameCount: 0,
   processedFrameCount: 0,
   error: null,
   result: null,
@@ -57,6 +63,9 @@ export const useGifStore = create<GifStore>((set, get) => ({
     // Reset state for a new creation process
     set({
       ...initialState,
+      frameCount: (config.fps * (config.end - config.start)) / 1000,
+      width: config.width,
+      height: config.height,
       _serviceInstance: service
     });
 

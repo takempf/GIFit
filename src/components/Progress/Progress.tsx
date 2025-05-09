@@ -1,8 +1,15 @@
 import css from './Progress.module.css';
 
-import { CSSProperties, MouseEvent } from 'react';
+import { CSSProperties, MouseEvent, useMemo } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 
+import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/stores/gifGeneratorStore';
+import { times } from '@/utils/times';
+import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
+
+import { Button } from '../Button/Button';
+import { getVideoFrameColors } from '@/utils/getVideoFrameColors';
 
 const DEFAULT_IMAGE_DISPLAY_WIDTH = 240;
 
@@ -14,60 +21,138 @@ interface ImageInfo {
 
 interface ProgressProps {}
 
+const chunkVariants = {
+  initial: {
+    x: -100,
+    y: -100,
+    opacity: 0,
+    scale: 0.5
+  },
+  collated: {
+    x: 0,
+    y: 0,
+    opacity: 1,
+    scale: 0.75
+  },
+  processed: {
+    x: 0,
+    y: 0,
+    opacity: 1,
+    scale: 1.01
+  }
+};
+
 export function Progress({}: ProgressProps) {
+  const setStatus = useAppStore((state) => state.setStatus);
+  const videoElement = useAppStore((state) => state.videoElement);
   const result = useGifStore((state) => state.result);
-  const progress = useGifStore((state) => state.progress);
-  const status = useGifStore((state) => state.status);
+  const processedFrameCount = useGifStore((state) => state.processedFrameCount);
+  const frameCount = useGifStore((state) => state.frameCount);
+  const width = useGifStore((state) => state.width);
+  const height = useGifStore((state) => state.height);
+  const [gridColumnsLength, getGridRowsLength] = getClosestGridDimensions(
+    width,
+    height,
+    frameCount
+  );
 
-  const progressPercent = progress * 100;
-
-  let imageUrl: string | undefined;
-  let progressElementsStyle: CSSProperties | undefined;
+  const imageUrl: string | undefined =
+    result?.blob && URL.createObjectURL(result.blob);
 
   // Calculate image dimensions and create object URL if image exists
-  if (result?.blob && result?.width > 0) {
-    // Ensure width is positive to avoid division by zero
-    const imageDisplayHeight =
-      DEFAULT_IMAGE_DISPLAY_WIDTH * (result.height / result.width);
-    imageUrl = URL.createObjectURL(result.blob);
-    progressElementsStyle = {
-      width: `${DEFAULT_IMAGE_DISPLAY_WIDTH}px`,
-      height: imageDisplayHeight
-    };
-  }
+  // Ensure width is positive to avoid division by zero
+  const imageDisplayHeight = DEFAULT_IMAGE_DISPLAY_WIDTH * (height / width);
+  const progressElementsStyle: CSSProperties | undefined = {
+    width: `${DEFAULT_IMAGE_DISPLAY_WIDTH}px`,
+    height: imageDisplayHeight
+  };
 
   const downloadFilename = `gifit_${Date.now()}.gif`;
 
+  const [darkColor, mediumColor, lightColor, saturatedColor] = videoElement
+    ? useMemo(() => getVideoFrameColors(videoElement), [videoElement])
+    : ['#000', '#000', '#000', '#000'];
+
+  function handleCloseClick() {
+    setStatus('configuring');
+  }
+
   return (
-    <div className={css.gifitProgress}>
+    <motion.div
+      className={css.gifitProgress}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 20, mass: 1 }}>
       <div className={css.details}>
-        {status && <div className={css.status}>{status}</div>}
+        <motion.div
+          className={css.elements}
+          style={progressElementsStyle}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: imageUrl ? 1 : 0.9 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          transition={{
+            type: 'spring',
+            stiffness: 450,
+            damping: 20,
+            mass: 1,
+            delay: 0.5
+          }}>
+          <AnimatePresence>
+            <ul
+              className={css.chunkGrid}
+              style={{
+                gridTemplateColumns: `repeat(${gridColumnsLength}, 1fr)`,
+                gridTemplateRows: `repeat(${getGridRowsLength}, 1fr)`
+              }}>
+              {times(processedFrameCount, (i) => (
+                <motion.li
+                  key={i}
+                  className={css.chunk}
+                  variants={chunkVariants}
+                  initial="initial"
+                  animate={imageUrl ? 'processed' : 'collated'}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 1
+                  }}
+                  style={{
+                    backgroundColor: mediumColor
+                  }}
+                />
+              ))}
+            </ul>
+            {imageUrl && (
+              <motion.img
+                className={css.result}
+                src={imageUrl}
+                alt="Generated GIF preview"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 0.5 }}
+              />
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-        <div className={css.elements} style={progressElementsStyle}>
-          <progress
-            className={css.progress}
-            value={progressPercent}
-            max="100"
-          />
-          {imageUrl && (
-            <img
-              className={css.result}
-              src={imageUrl}
-              alt="Generated GIF preview"
-            />
-          )}
+        <div className={css.actions}>
+          <Button className={css.close} size="small" onClick={handleCloseClick}>
+            Close
+          </Button>
+          <a
+            className={css.save}
+            href={imageUrl}
+            download={downloadFilename}
+            onClick={(e) => !imageUrl && e.preventDefault()}
+            aria-disabled={!imageUrl}>
+            Save GIF
+          </a>
         </div>
-
-        <a
-          className={css.save}
-          href={imageUrl}
-          download={downloadFilename}
-          onClick={(e) => !imageUrl && e.preventDefault()}
-          aria-disabled={!imageUrl}>
-          Save GIF
-        </a>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -5,7 +5,9 @@ import { useEffect, useReducer } from 'react';
 import { clamp } from '@/utils/clamp.js';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
 import { secondsToTimecode } from '@/utils/secondsToTimecode';
-import { listenForPausedTimeUpdate } from '@/utils/listenForPausedTimeUpdate';
+import { listenForSeekOnMouseEvents } from '@/utils/listenForSeekOnMouseEvents';
+import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
+
 import { useAppStore } from '@/stores/appStore';
 
 import { Input } from '../Input/Input';
@@ -56,9 +58,6 @@ function reducer(state, action) {
       return newState;
     }
     case 'VIDEO_LOADED_DATA':
-      return {
-        ...state
-      };
     default:
       return {
         ...state
@@ -74,7 +73,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const video = useAppStore((state) => state.videoElement);
 
   const [state, dispatch] = useReducer(reducer, {
-    start: '0:00',
+    start: secondsToTimecode(video?.currentTime ?? 0),
     duration: 1,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
@@ -83,6 +82,15 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     quality: 5,
     aspectRatio: DEFAULT_WIDTH / DEFAULT_HEIGHT
   });
+
+  console.log(
+    'closest grid dimensions',
+    getClosestGridDimensions(
+      state.width,
+      state.height,
+      state.framerate * state.duration
+    )
+  );
 
   useEffect(() => {
     if (!(video instanceof HTMLVideoElement)) {
@@ -101,25 +109,26 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
-    function handlePausedTimeUpdate(currentTime: number) {
-      dispatch({
-        type: 'INPUT_CHANGE',
-        payload: {
-          name: 'start',
-          value: secondsToTimecode(currentTime)
-        }
-      });
+    function handleTimeUpdate() {
+      console.log('time update', arguments);
+      // dispatch({
+      //   type: 'INPUT_CHANGE',
+      //   payload: {
+      //     name: 'start',
+      //     value: secondsToTimecode(currentTime)
+      //   }
+      // });
     }
 
     video.addEventListener('loadeddata', handleVideoLoadedData);
-    const cleanupListenForPausedTimeUpdate = listenForPausedTimeUpdate(
+    const cleanupSeekOnMouseEvents = listenForSeekOnMouseEvents(
       video,
-      handlePausedTimeUpdate
+      handleTimeUpdate
     );
 
     return () => {
       video.removeEventListener('loadeddata', handleVideoLoadedData);
-      cleanupListenForPausedTimeUpdate();
+      cleanupSeekOnMouseEvents();
     };
   }, [video]);
 
@@ -129,7 +138,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       event.target.type === 'checkbox'
         ? event.target.checked
         : event.target.value;
-
+    console.log(fieldName, newValue);
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {

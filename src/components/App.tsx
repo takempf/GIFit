@@ -12,26 +12,30 @@ import { AnimatePresence } from 'motion/react';
 interface AppProps {}
 
 export function App({}: AppProps) {
+  const videoElement = useAppStore((state) => state.videoElement);
   const isOpen = useAppStore((state) => state.isOpen);
   const toggle = useAppStore((state) => state.toggle);
 
   function handleClick() {
-    log('Toggle GIFit panel');
     toggle();
+    videoElement?.pause();
+    log('Pausing video');
   }
 
   return (
     <>
-      <div className={css.app}>
-        {!isOpen && (
-          <button className={css.gifitButton} onClick={handleClick}>
-            <AppFrame>
-              <AppLogo />
-            </AppFrame>
-          </button>
-        )}
-      </div>
-      <AnimatePresence>{isOpen && <Popup />}</AnimatePresence>
+      <AnimatePresence>
+        <div className={css.app}>
+          {!isOpen && (
+            <button className={css.gifitButton} onClick={handleClick}>
+              <AppFrame>
+                <AppLogo />
+              </AppFrame>
+            </button>
+          )}
+        </div>
+        {isOpen && <Popup />}
+      </AnimatePresence>
     </>
   );
 }

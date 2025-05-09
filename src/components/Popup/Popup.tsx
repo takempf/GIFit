@@ -16,8 +16,6 @@ import { AppFrame } from '../AppFrame/AppFrame';
 
 import TKLogo from '@/assets/tk.svg';
 
-import css from './Popup.module.css';
-
 interface PopupProps {}
 
 export function Popup({}: PopupProps) {
@@ -54,10 +52,6 @@ export function Popup({}: PopupProps) {
     [videoElement]
   );
 
-  function handleCloseClick() {
-    setStatus('configuring');
-  }
-
   function handleCloseAppClick() {
     close();
   }
@@ -77,12 +71,6 @@ export function Popup({}: PopupProps) {
           </section>
           {status === 'generating' && (
             <section className={css.generation}>
-              <Button
-                className={css.close}
-                size="small"
-                onClick={handleCloseClick}>
-                Close
-              </Button>
               <Progress />
             </section>
           )}

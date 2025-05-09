@@ -5,17 +5,35 @@ import { Button } from '../Button/Button';
 
 import css from './InputNumber.module.css';
 
-export function InputNumber({ name, label, value, onChange, ...restProps }) {
+interface InputNumberProps {
+  name: string;
+  label: React.ReactNode;
+  value: string;
+  onInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  ref: React.RefObject<HTMLInputElement>;
+}
+
+export function InputNumber({
+  name,
+  label,
+  value,
+  onInput,
+  ...restProps
+}: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
 
   function handleUpClick() {
-    // onChange({ target: { name, type: 'number', value: value + stepNumber } });
+    // onInput({ target: { name, type: 'number', value: value + stepNumber } });
     inputRef.current?.stepUp();
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    inputRef.current?.dispatchEvent(event);
   }
 
   function handleDownClick() {
-    // onChange({ target: { name, type: 'number', value: value - stepNumber } });
+    // onInput({ target: { name, type: 'number', value: value - stepNumber } });
     inputRef.current?.stepDown();
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    inputRef.current?.dispatchEvent(event);
   }
 
   const controls = (
@@ -39,7 +57,7 @@ export function InputNumber({ name, label, value, onChange, ...restProps }) {
       label={label}
       append={controls}
       value={value}
-      onChange={onChange}
+      onInput={onInput}
       {...restProps}
       ref={inputRef}
     />
