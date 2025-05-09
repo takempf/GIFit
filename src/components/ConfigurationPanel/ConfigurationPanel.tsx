@@ -6,7 +6,6 @@ import { clamp } from '@/utils/clamp.js';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
 import { secondsToTimecode } from '@/utils/secondsToTimecode';
 import { listenForSeekOnMouseEvents } from '@/utils/listenForSeekOnMouseEvents';
-import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
 
 import { useAppStore } from '@/stores/appStore';
 
@@ -83,15 +82,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     aspectRatio: DEFAULT_WIDTH / DEFAULT_HEIGHT
   });
 
-  console.log(
-    'closest grid dimensions',
-    getClosestGridDimensions(
-      state.width,
-      state.height,
-      state.framerate * state.duration
-    )
-  );
-
   useEffect(() => {
     if (!(video instanceof HTMLVideoElement)) {
       return;
@@ -132,13 +122,18 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     };
   }, [video]);
 
-  function handleInputChange(event) {
-    const fieldName = event.target.name;
+  function handleInputChange(event: InputEvent) {
+    if (!event.target) {
+      return;
+    }
+
+    const inputElement = event.target as HTMLInputElement;
+    const fieldName = inputElement.name;
     const newValue =
-      event.target.type === 'checkbox'
-        ? event.target.checked
-        : event.target.value;
-    console.log(fieldName, newValue);
+      inputElement.type === 'checkbox'
+        ? inputElement.checked
+        : inputElement.value;
+
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {
@@ -155,7 +150,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     // TODO If start time is greater than end time, adjust
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     onSubmit(state);
   }

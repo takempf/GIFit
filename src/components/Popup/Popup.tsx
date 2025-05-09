@@ -1,7 +1,7 @@
 import css from './Popup.module.css';
 
 import { useCallback } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 
 import { log } from '@/utils/logger';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
@@ -69,11 +69,23 @@ export function Popup({}: PopupProps) {
           <section className={css.config}>
             <ConfigurationPanel onSubmit={handleSubmit} />
           </section>
-          {status === 'generating' && (
-            <section className={css.generation}>
-              <Progress />
-            </section>
-          )}
+          <AnimatePresence>
+            {status === 'generating' && (
+              <motion.section
+                className={css.generation}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 20,
+                  mass: 1
+                }}>
+                <Progress />
+              </motion.section>
+            )}
+          </AnimatePresence>
         </div>
         <footer>
           <a

@@ -64,7 +64,7 @@ export function rgbToHsl(r: number, g: number, b: number): HSLColor {
 export function getVideoFrameColors(
   videoElement: HTMLVideoElement,
   sampleDensity: number = 5 // Default to sampling every 5th pixel for performance
-): string[] {
+): [string, string, string, string] {
   if (
     !videoElement ||
     videoElement.readyState < videoElement.HAVE_CURRENT_DATA ||

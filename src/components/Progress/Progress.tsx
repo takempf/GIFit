@@ -1,6 +1,6 @@
 import css from './Progress.module.css';
 
-import { CSSProperties, MouseEvent, useMemo } from 'react';
+import { CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { useAppStore } from '@/stores/appStore';
@@ -9,7 +9,6 @@ import { times } from '@/utils/times';
 import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
 
 import { Button } from '../Button/Button';
-import { getVideoFrameColors } from '@/utils/getVideoFrameColors';
 
 const DEFAULT_IMAGE_DISPLAY_WIDTH = 240;
 
@@ -23,10 +22,10 @@ interface ProgressProps {}
 
 const chunkVariants = {
   initial: {
-    x: -100,
-    y: -100,
+    x: -200,
+    y: -200,
     opacity: 0,
-    scale: 0.5
+    scale: 2
   },
   collated: {
     x: 0,
@@ -44,7 +43,7 @@ const chunkVariants = {
 
 export function Progress({}: ProgressProps) {
   const setStatus = useAppStore((state) => state.setStatus);
-  const videoElement = useAppStore((state) => state.videoElement);
+  const colors = useGifStore((state) => state.colors);
   const result = useGifStore((state) => state.result);
   const processedFrameCount = useGifStore((state) => state.processedFrameCount);
   const frameCount = useGifStore((state) => state.frameCount);
@@ -69,21 +68,12 @@ export function Progress({}: ProgressProps) {
 
   const downloadFilename = `gifit_${Date.now()}.gif`;
 
-  const [darkColor, mediumColor, lightColor, saturatedColor] = videoElement
-    ? useMemo(() => getVideoFrameColors(videoElement), [videoElement])
-    : ['#000', '#000', '#000', '#000'];
-
   function handleCloseClick() {
     setStatus('configuring');
   }
 
   return (
-    <motion.div
-      className={css.gifitProgress}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20, mass: 1 }}>
+    <div className={css.gifitProgress}>
       <div className={css.details}>
         <motion.div
           className={css.elements}
@@ -119,7 +109,7 @@ export function Progress({}: ProgressProps) {
                     mass: 1
                   }}
                   style={{
-                    backgroundColor: mediumColor
+                    backgroundColor: colors[2]
                   }}
                 />
               ))}
@@ -139,7 +129,11 @@ export function Progress({}: ProgressProps) {
         </motion.div>
 
         <div className={css.actions}>
-          <Button className={css.close} size="small" onClick={handleCloseClick}>
+          <Button
+            className={css.close}
+            size="medium"
+            variant="secondary"
+            onClick={handleCloseClick}>
             Close
           </Button>
           <a
@@ -148,11 +142,11 @@ export function Progress({}: ProgressProps) {
             download={downloadFilename}
             onClick={(e) => !imageUrl && e.preventDefault()}
             aria-disabled={!imageUrl}>
-            Save GIF
+            <Button size="medium">Download GIF</Button>
           </a>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 

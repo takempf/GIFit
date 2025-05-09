@@ -26,12 +26,6 @@
   }
 }
 
-.credit {
-}
-
-.version {
-}
-
 .tkLogo {
   height: 0.8em;
   translate: 0 0.05em;
@@ -40,10 +34,8 @@
 
 .container {
   position: relative;
-  border-radius: 0.5em;
   color: var(--color_panel_text);
   background: rgba(225, 225, 225, 0.69);
-  overflow: hidden;
   box-shadow: rgba(0, 0, 0, 0.5) 0 8px 6px;
   display: flex;
   flex-direction: column;
@@ -79,9 +71,6 @@
   translate: 50% -50%;
   z-index: 100;
   border: white 1px solid !important;
-}
-
-.config {
 }
 
 .generation {

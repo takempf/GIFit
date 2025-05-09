@@ -10,14 +10,6 @@
   text-align: center;
 }
 
-.status {
-  padding-bottom: 10px;
-  font-family: 'Geist', sans-serif;
-  font-style: italic;
-  text-transform: uppercase;
-  text-align: center;
-}
-
 .save {
 }
 
@@ -47,7 +39,7 @@
 }
 
 .chunk {
-  background: hotpink;
+  background: #000000;
   margin: 0;
   padding: 0;
 }
@@ -57,5 +49,10 @@
   top: 0;
   left: 0;
   width: 100%;
-  transition: -webkit-filter 1000ms 250ms;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5em;
+  justify-content: center;
 }

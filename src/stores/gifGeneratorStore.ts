@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import GifService from '@/services/GifService';
 import type { GifConfig, GifCompleteData } from '@/services/GifService'; // Import types
+import { getVideoFrameColors } from '@/utils/getVideoFrameColors';
 
 // Define the possible statuses for the GIF creation process
 type GifStatus =
@@ -20,6 +21,7 @@ interface GifState {
   processedFrameCount: number;
   error: string | null;
   result: GifCompleteData | null;
+  colors: [string, string, string, string];
   _serviceInstance: GifService | null;
 }
 
@@ -43,6 +45,7 @@ const initialState: GifState = {
   processedFrameCount: 0,
   error: null,
   result: null,
+  colors: ['#000', '#000', '#000', '#000'],
   _serviceInstance: null
 };
 
@@ -66,6 +69,7 @@ export const useGifStore = create<GifStore>((set, get) => ({
       frameCount: (config.fps * (config.end - config.start)) / 1000,
       width: config.width,
       height: config.height,
+      colors: getVideoFrameColors(videoElement),
       _serviceInstance: service
     });
 
