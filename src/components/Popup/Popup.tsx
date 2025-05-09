@@ -53,6 +53,7 @@ export function Popup({}: PopupProps) {
   );
 
   function handleCloseAppClick() {
+    setStatus('configuring');
     close();
   }
 
