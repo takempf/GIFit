@@ -102,7 +102,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const [state, dispatch] = useReducer(reducer, {
     start: video?.currentTime ?? 0,
-    duration: 1,
+    duration: 2,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
     linkDimensions: true,
