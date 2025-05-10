@@ -35,3 +35,15 @@ input {
   font-family: inherit;
   letter-spacing: 0.05em;
 }
+
+/* Style for browser's default spinners (optional) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Hide default spinners in WebKit */
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield; /* Hide default spinners in Firefox */
+  appearance: textfield;
+}
