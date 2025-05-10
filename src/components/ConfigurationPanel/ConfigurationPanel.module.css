@@ -36,7 +36,7 @@
   grid-area: height;
 }
 
-.widthHeightLink {
+.linkDimensions {
   grid-column-end: height;
   grid-column-start: width;
   grid-row-end: height;
@@ -44,6 +44,10 @@
   align-self: center;
   justify-self: center;
   z-index: 5;
+}
+
+.linkIcon {
+  height: 1em;
 }
 
 .fps {

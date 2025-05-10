@@ -46,14 +46,14 @@ export function InputNumber({
         <Button
           size="x-small"
           variant="ghost"
-          noPadding={true}
+          padding="none"
           onClick={handleUpClick}>
           ▲
         </Button>
         <Button
           size="x-small"
           variant="ghost"
-          noPadding={true}
+          padding="none"
           onClick={handleDownClick}>
           ▼
         </Button>

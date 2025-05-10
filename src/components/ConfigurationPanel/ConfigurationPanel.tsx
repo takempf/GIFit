@@ -3,16 +3,17 @@ import css from './ConfigurationPanel.module.css';
 import { useEffect, useReducer } from 'react';
 
 import { clamp } from '@/utils/clamp.js';
-import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
-import { secondsToTimecode } from '@/utils/secondsToTimecode';
-
 import { useAppStore } from '@/stores/appStore';
+import { log } from '@/utils/logger';
 
 import { Input } from '../Input/Input';
 import { InputNumber } from '../InputNumber/InputNumber';
 import { InputTime } from '../InputTime/InputTime';
 import { Button } from '../Button/Button';
-import { log } from '@/utils/logger';
+import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
+
+import LinkIcon from '@/assets/link.svg';
+import LinkEmptyIcon from '@/assets/link-empty.svg';
 
 const DEFAULT_WIDTH = 320;
 const DEFAULT_HEIGHT = 180;
@@ -127,25 +128,13 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
-    function handleVideoSeeked() {
-      dispatch({
-        type: 'INPUT_CHANGE',
-        payload: {
-          name: 'start',
-          value: secondsToTimecode(video.currentTime)
-        }
-      });
-    }
-
     // ensure that this fires at least once
     handleLoadedMetadata();
 
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    // video.addEventListener('seeked', handleVideoSeeked);
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      // video.removeEventListener('seeked', handleVideoSeeked);
     };
   }, [video]);
 
@@ -192,6 +181,17 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
   }
 
+  function handleLinkChange(isLinked) {
+    console.log('isLinked', isLinked);
+    dispatch({
+      type: 'INPUT_CHANGE',
+      payload: {
+        name: 'linkDimensions',
+        value: isLinked
+      }
+    });
+  }
+
   function handleSubmit(event: SubmitEvent) {
     event.preventDefault();
     onSubmit(state);
@@ -207,13 +207,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         className={css.form}
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}>
-        {/* <Input
-          className={css.start}
-          name="start"
-          label="Start"
-          value={state.start}
-          onChange={handleInputChange}
-        /> */}
         <InputTime
           className={css.start}
           name="start"
@@ -238,13 +231,23 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={state.width}
           onChange={handleInputChange}
         />
-        <input
-          className={css.widthHeightLink}
+        <ButtonToggle
+          className={css.linkDimensions}
           name="linkDimensions"
-          type="checkbox"
-          checked={state.linkDimensions}
-          onChange={handleInputChange}
-        />
+          label="Link width and height"
+          size="x-small"
+          rounded={true}
+          variant="secondary"
+          padding="small"
+          evenPadding={true}
+          value={state.linkDimensions}
+          onChange={handleLinkChange}>
+          {state.linkDimensions ? (
+            <img className={css.linkIcon} src={LinkIcon} />
+          ) : (
+            <img className={css.linkIcon} src={LinkEmptyIcon} />
+          )}
+        </ButtonToggle>
         <InputNumber
           className={css.height}
           name="height"

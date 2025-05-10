@@ -1,5 +1,7 @@
 /* Base Button Styles */
 .button {
+  --padding: 0.5em;
+
   display: inline-flex; /* Align items nicely if children include icons */
   align-items: center;
   justify-content: center;
@@ -9,7 +11,7 @@
   cursor: pointer;
   text-align: center;
   text-decoration: none;
-  padding: 0.5em 1em;
+  padding: var(--padding) calc(var(--padding) * 2);
 
   transition:
     background-color 200ms ease-in-out,
@@ -19,16 +21,39 @@
 
   -webkit-font-smoothing: antialiased; /* Improve font rendering */
   -moz-osx-font-smoothing: grayscale;
-
-  &.noPadding {
-    padding: 0;
-  }
 }
 
 /* Focus state for accessibility */
 .button:focus-visible {
   outline: 2px solid red; /* Example focus ring, adjust color as needed */
   outline-offset: 2px;
+}
+
+/* --- Padding Variants --- */
+.none {
+  --padding: 0;
+}
+
+.x-small {
+  --padding: 0.125em;
+}
+
+.small {
+  --padding: 0.25em;
+}
+
+.medium {
+  --padding: 0.5em;
+}
+
+.large {
+  --padding: 0.75em;
+}
+
+/* --- Padding Type --- */
+
+.evenPadding {
+  padding: var(--padding);
 }
 
 /* --- Variants --- */

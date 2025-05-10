@@ -293,7 +293,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       <Button
         size="x-small"
         variant="ghost"
-        noPadding={true}
+        padding="none"
         onClick={() => handleStep('up')}
         disabled={disabled || value >= max}
         aria-label="Increment time">
@@ -302,7 +302,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       <Button
         size="x-small"
         variant="ghost"
-        noPadding={true}
+        padding="none"
         onClick={() => handleStep('down')}
         disabled={disabled || value <= min}
         aria-label="Decrement time">

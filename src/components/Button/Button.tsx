@@ -8,8 +8,9 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode; // Content inside the button
   variant?: 'primary' | 'secondary' | 'ghost'; // Style variant
   size?: 'x-small' | 'small' | 'medium' | 'large'; // Size variant
+  padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large'; // Padding variant
+  evenPadding?: boolean;
   rounded?: boolean;
-  noPadding?: boolean;
   onClick?: React.MouseEventHandler<HTMLButtonElement>; // Click handler
   // Allow any other standard button attributes like 'type', 'disabled', 'aria-label', etc.
 }
@@ -21,7 +22,8 @@ export function Button({
   rounded = false,
   className, // Allow passing custom classes
   disabled = false,
-  noPadding = false,
+  padding = 'medium',
+  evenPadding = false,
   type = 'button', // Default type
   onClick,
   ...rest // Capture remaining props
@@ -31,10 +33,11 @@ export function Button({
     css.button,
     css[variant],
     css[size],
+    css[padding],
     {
       [css.rounded]: rounded,
-      [css.noPadding]: noPadding,
-      [css.disabled]: disabled
+      [css.disabled]: disabled,
+      [css.evenPadding]: evenPadding
     },
     className
   );
