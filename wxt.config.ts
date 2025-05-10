@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import svgrPlugin from 'vite-plugin-svgr';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -7,5 +8,8 @@ export default defineConfig({
   },
   srcDir: 'src',
   modules: ['@wxt-dev/module-react'],
-  imports: false
+  imports: false,
+  vite: () => ({
+    plugins: [svgrPlugin()]
+  })
 });

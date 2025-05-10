@@ -12,8 +12,8 @@ import { InputTime } from '../InputTime/InputTime';
 import { Button } from '../Button/Button';
 import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
 
-import LinkIcon from '@/assets/link.svg';
-import LinkEmptyIcon from '@/assets/link-empty.svg';
+import LinkIcon from '@/assets/link.svg?react';
+import LinkEmptyIcon from '@/assets/link-empty.svg?react';
 
 const DEFAULT_WIDTH = 320;
 const DEFAULT_HEIGHT = 180;
@@ -243,9 +243,9 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={state.linkDimensions}
           onChange={handleLinkChange}>
           {state.linkDimensions ? (
-            <img className={css.linkIcon} src={LinkIcon} />
+            <LinkIcon className={css.linkIcon} />
           ) : (
-            <img className={css.linkIcon} src={LinkEmptyIcon} />
+            <LinkEmptyIcon className={css.linkIcon} />
           )}
         </ButtonToggle>
         <InputNumber
