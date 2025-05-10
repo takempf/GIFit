@@ -24,6 +24,7 @@ export function Popup({}: PopupProps) {
   const close = useAppStore((state) => state.close);
   const setStatus = useAppStore((state) => state.setStatus);
   const createGif = useGifStore((state) => state.createGif);
+  const generationId = useGifStore((state) => state.generationId);
 
   const handleSubmit = useCallback(
     function handleSubmit(formValues) {
@@ -72,6 +73,7 @@ export function Popup({}: PopupProps) {
           <AnimatePresence>
             {status === 'generating' && (
               <motion.section
+                key={`generation_${generationId}`}
                 className={css.generation}
                 initial={{ opacity: 0, pointerEvents: 'none' }}
                 animate={{ opacity: 1, pointerEvents: 'unset' }}

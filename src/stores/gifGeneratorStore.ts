@@ -22,6 +22,7 @@ interface GifState {
   error: string | null;
   result: GifCompleteData | null;
   colors: [string, string, string, string];
+  generationId: string | null;
   _serviceInstance: GifService | null;
 }
 
@@ -46,6 +47,7 @@ const initialState: GifState = {
   error: null,
   result: null,
   colors: ['#000', '#000', '#000', '#000'],
+  generationId: null,
   _serviceInstance: null
 };
 
@@ -70,6 +72,8 @@ export const useGifStore = create<GifStore>((set, get) => ({
       width: config.width,
       height: config.height,
       colors: getVideoFrameColors(videoElement),
+      generationId: Date.now().toString(),
+      status: 'processing',
       _serviceInstance: service
     });
 

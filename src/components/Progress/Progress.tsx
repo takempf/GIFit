@@ -1,14 +1,18 @@
 import css from './Progress.module.css';
 
-import { CSSProperties } from 'react';
+import { useEffect, useState, CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/stores/gifGeneratorStore';
 import { times } from '@/utils/times';
 import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
+import { observeBoundingClientRect } from '@/utils/observeBoundingClientRect';
 
 import { Button } from '../Button/Button';
+
+const PROGRESS_FIXED_VERTICAL_CENTER = 120;
+const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
 
 interface ImageInfo {
   blob: Blob;
@@ -18,32 +22,18 @@ interface ImageInfo {
 
 interface ProgressProps {}
 
-const chunkVariants = {
-  initial: {
-    x: -200,
-    y: -200,
-    opacity: 0.25,
-    scale: 0.5,
-    borderRadius: '3em'
-  },
-  collated: {
-    x: 0,
-    y: 0,
-    opacity: 1,
-    scale: 0.75,
-    borderRadius: '0em'
-  },
-  processed: {
-    x: 0,
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    borderRadius: '0em'
-  }
+const chunkTransition = {
+  type: 'spring',
+  stiffness: 600,
+  damping: 40,
+  mass: 1
 };
 
 export function Progress({}: ProgressProps) {
+  const [videoElementWidth, setVideoElementWidth] = useState(0);
+  const [videoElementHeight, setVideoElementHeight] = useState(0);
   const setStatus = useAppStore((state) => state.setStatus);
+  const videoElement = useAppStore((state) => state.videoElement);
   const colors = useGifStore((state) => state.colors);
   const result = useGifStore((state) => state.result);
   const processedFrameCount = useGifStore((state) => state.processedFrameCount);
@@ -64,9 +54,54 @@ export function Progress({}: ProgressProps) {
 
   const downloadFilename = `gifit_${Date.now()}.gif`;
 
+  useEffect(() => {
+    if (!videoElement) {
+      return;
+    }
+
+    function handleVideoBoundingChange(rect) {
+      const { width, height } = rect;
+      setVideoElementWidth(width);
+      setVideoElementHeight(height);
+    }
+
+    const cancelObserveBoundingClientRect = observeBoundingClientRect(
+      videoElement,
+      handleVideoBoundingChange
+    );
+
+    return () => {
+      cancelObserveBoundingClientRect();
+    };
+  }, [videoElement]);
+
   function handleCloseClick() {
     setStatus('configuring');
   }
+
+  const chunkVariants = {
+    initial: {
+      x: PROGRESS_FIXED_HORIZONTAL_CENTER + (-1 * videoElementWidth) / 2,
+      y: -PROGRESS_FIXED_VERTICAL_CENTER + -1 * videoElementHeight * 0.25,
+      opacity: 0.1,
+      scale: 0.5,
+      borderRadius: '3em'
+    },
+    collated: {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      scale: 0.75,
+      borderRadius: '0em'
+    },
+    processed: {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      borderRadius: '0em'
+    }
+  };
 
   return (
     <div className={css.gifitProgress}>
@@ -85,6 +120,7 @@ export function Progress({}: ProgressProps) {
         }}>
         <AnimatePresence>
           <ul
+            key="chunks"
             className={css.chunkGrid}
             style={{
               gridTemplateColumns: `repeat(${gridColumnsLength}, 1fr)`,
@@ -97,12 +133,7 @@ export function Progress({}: ProgressProps) {
                 variants={chunkVariants}
                 initial="initial"
                 animate={imageUrl ? 'processed' : 'collated'}
-                transition={{
-                  type: 'spring',
-                  stiffness: 500,
-                  damping: 30,
-                  mass: 1
-                }}
+                transition={chunkTransition}
                 style={{
                   backgroundColor: colors[2]
                 }}
@@ -111,6 +142,7 @@ export function Progress({}: ProgressProps) {
           </ul>
           {imageUrl && (
             <motion.img
+              key="result"
               className={css.result}
               src={imageUrl}
               alt="Generated GIF preview"
