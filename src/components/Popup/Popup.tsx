@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { log } from '@/utils/logger';
-import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
 import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/stores/gifGeneratorStore';
 
@@ -33,7 +32,7 @@ export function Popup({}: PopupProps) {
         return;
       }
 
-      const start = timecodeToSeconds(formValues.start) * 1000;
+      const start = formValues.start * 1000;
       const end = start + formValues.duration * 1000;
 
       createGif(

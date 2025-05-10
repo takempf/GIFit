@@ -10,7 +10,6 @@
 }
 
 .buttonGrid {
-  margin: -0.5em -0.75em -0.5em 0;
   display: flex;
   flex-direction: column;
   justify-content: center;

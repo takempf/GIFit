@@ -43,10 +43,18 @@ export function InputNumber({
       <div
         className={css.buttonGrid} // Use CSS Module class
       >
-        <Button size="x-small" variant="ghost" onClick={handleUpClick}>
+        <Button
+          size="x-small"
+          variant="ghost"
+          noPadding={true}
+          onClick={handleUpClick}>
           ▲
         </Button>
-        <Button size="x-small" variant="ghost" onClick={handleDownClick}>
+        <Button
+          size="x-small"
+          variant="ghost"
+          noPadding={true}
+          onClick={handleDownClick}>
           ▼
         </Button>
       </div>

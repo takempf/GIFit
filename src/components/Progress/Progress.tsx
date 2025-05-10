@@ -84,15 +84,15 @@ export function Progress({}: ProgressProps) {
       x: PROGRESS_FIXED_HORIZONTAL_CENTER + (-1 * videoElementWidth) / 2,
       y: -PROGRESS_FIXED_VERTICAL_CENTER + -1 * videoElementHeight * 0.25,
       opacity: 0.1,
-      scale: 0.5,
-      borderRadius: '3em'
+      scale: 3,
+      borderRadius: '0.5em'
     },
     collated: {
       x: 0,
       y: 0,
       opacity: 1,
       scale: 0.75,
-      borderRadius: '0em'
+      borderRadius: '0.2em'
     },
     processed: {
       x: 0,
@@ -175,6 +175,7 @@ export function Progress({}: ProgressProps) {
           className={css.close}
           size="small"
           variant="secondary"
+          rounded={true}
           onClick={handleCloseClick}>
           Close
         </Button>
@@ -184,7 +185,9 @@ export function Progress({}: ProgressProps) {
           download={downloadFilename}
           onClick={(e) => !imageUrl && e.preventDefault()}
           aria-disabled={!imageUrl}>
-          <Button size="small">Download GIF</Button>
+          <Button size="small" rounded={true}>
+            Download GIF
+          </Button>
         </a>
       </div>
     </div>

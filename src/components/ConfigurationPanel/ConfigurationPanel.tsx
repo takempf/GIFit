@@ -10,6 +10,7 @@ import { useAppStore } from '@/stores/appStore';
 
 import { Input } from '../Input/Input';
 import { InputNumber } from '../InputNumber/InputNumber';
+import { InputTime } from '../InputTime/InputTime';
 import { Button } from '../Button/Button';
 import { log } from '@/utils/logger';
 
@@ -17,7 +18,7 @@ const DEFAULT_WIDTH = 320;
 const DEFAULT_HEIGHT = 180;
 
 interface ConfigState {
-  start: string;
+  start: number;
   duration: number;
   width: number;
   height: number;
@@ -99,7 +100,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const video = useAppStore((state) => state.videoElement);
 
   const [state, dispatch] = useReducer(reducer, {
-    start: secondsToTimecode(video?.currentTime ?? 0),
+    start: video?.currentTime ?? 0,
     duration: 1,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
@@ -168,20 +169,27 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       }
     });
 
-    // If we're changing the start, show that in the video
-    if (fieldName === 'start' && newValue && video) {
-      seekTo(video, timecodeToSeconds(newValue as string));
-    }
-
     // if we're changing the duration, seek to it
     if (fieldName === 'duration' && newValue && video) {
-      const start = timecodeToSeconds(state.start as string);
       const duration = Number(newValue);
-      const end = start + duration;
+      const end = state.start + duration;
       seekTo(video, end);
     }
 
     // TODO If start time is greater than end time, adjust
+  }
+
+  function handleStartChange(newStart) {
+    dispatch({
+      type: 'INPUT_CHANGE',
+      payload: {
+        name: 'start',
+        value: newStart
+      }
+    });
+    if (video) {
+      seekTo(video, newStart);
+    }
   }
 
   function handleSubmit(event: SubmitEvent) {
@@ -199,12 +207,19 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         className={css.form}
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}>
-        <Input
+        {/* <Input
           className={css.start}
           name="start"
           label="Start"
           value={state.start}
           onChange={handleInputChange}
+        /> */}
+        <InputTime
+          className={css.start}
+          name="start"
+          label="Start"
+          value={state.start}
+          onChange={handleStartChange}
         />
         <InputNumber
           className={css.duration}
