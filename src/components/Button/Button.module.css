@@ -72,6 +72,11 @@
 /* --- Sizes --- */
 
 /* Small Size */
+.x-small {
+  font-size: 0.75em; /* 12px */
+  padding: 0.25em 0.5em;
+}
+
 .small {
   padding: 0.25em 0.5em;
   font-size: 0.875em; /* 14px */

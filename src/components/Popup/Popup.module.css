@@ -35,21 +35,9 @@
 .container {
   position: relative;
   color: var(--color_panel_text);
-  background: rgba(225, 225, 225, 0.69);
-  box-shadow: rgba(0, 0, 0, 0.5) 0 8px 6px;
   display: flex;
   flex-direction: column;
   gap: 1px;
-}
-
-.container::after {
-  content: '';
-  border-top: rgba(255, 255, 255, 0.75) 1px solid;
-  border-left: rgba(255, 255, 255, 0.5) 1px solid;
-  position: absolute;
-  inset: 1px;
-  border-radius: inherit;
-  pointer-events: none;
 }
 
 .header {
@@ -82,6 +70,7 @@
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(5px);
+  border-radius: var(--border-radius);
 }
 
 .close {

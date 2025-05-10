@@ -24,7 +24,7 @@ const chunkVariants = {
   initial: {
     x: -200,
     y: -200,
-    opacity: 0,
+    opacity: 0.25,
     scale: 2
   },
   collated: {

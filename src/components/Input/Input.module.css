@@ -1,5 +1,7 @@
 .input {
   --input-transition-duration: 225ms;
+  --label_font-size: 0.75em;
+
   position: relative;
   transition:
     background-color 550ms,
@@ -40,10 +42,10 @@
 .label {
   transition: letter-spacing var(--input-transition-duration);
   text-transform: uppercase;
-  font-size: var(--label_font_size);
+  font-size: var(--label_font-size);
   font-family: 'Geist', sans-serif;
-  font-style: italic;
-  line-height: var(--label_font_size);
+  font-weight: 500;
+  line-height: 100%;
   letter-spacing: 0.75px;
 }
 
@@ -56,7 +58,7 @@ input[type='text'],
 input[type='number'] {
   font-family: 'Geist', sans-serif;
   font-variant-numeric: tabular-nums;
-  font-size: 1em;
+  font-weight: 500;
   color: var(--color_input_text);
   background: none;
   border: none;
@@ -79,7 +81,7 @@ input[type='range'] {
   width: 100%;
   border-radius: 3px;
   background: var(--color_slider_background);
-  box-shadow: inset 0 1px 0 0 var(--color_subtle_shadow);
+  box-shadow: inset 0 1px 0 0 rgba(0, 0, 0, 0.2);
   transition: background-color var(--input-transition-duration);
 
   &::-webkit-slider-thumb {
@@ -91,7 +93,7 @@ input[type='range'] {
     border-radius: 50%;
     background: var(--color_slider_thumb);
     border: rgb(25, 25, 25) 2px solid;
-    box-shadow: 0 2px 1px 0 var(--color_subtle_shadow);
+    box-shadow: 0 2px 1px 0 rgba(0, 0, 0, 0.2);
     transition:
       border-width var(--input-transition-duration),
       background-color var(--input-transition-duration);

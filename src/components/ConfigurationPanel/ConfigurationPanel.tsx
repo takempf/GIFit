@@ -5,7 +5,6 @@ import { useEffect, useReducer } from 'react';
 import { clamp } from '@/utils/clamp.js';
 import { timecodeToSeconds } from '@/utils/timecodeToSeconds';
 import { secondsToTimecode } from '@/utils/secondsToTimecode';
-import { listenForSeekOnMouseEvents } from '@/utils/listenForSeekOnMouseEvents';
 
 import { useAppStore } from '@/stores/appStore';
 
@@ -199,7 +198,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         <InputNumber
           className={css.duration}
           name="duration"
-          label="Time"
+          label="Duration"
           type="number"
           value={state.duration}
           step={1 / state.framerate}
