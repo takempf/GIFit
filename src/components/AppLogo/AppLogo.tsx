@@ -9,7 +9,7 @@ export function AppLogo() {
       className={css.appLogo}
       src={GIFitLogo}
       layoutId="appLogo"
-      transition={{ type: 'spring', stiffness: 350, damping: 35 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.5 }}
       alt="Gifit Logo"
     />
   );

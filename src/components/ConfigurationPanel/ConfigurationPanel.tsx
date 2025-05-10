@@ -75,7 +75,15 @@ function reducer(state: ConfigState, action: ConfigAction) {
 
       return newState;
     }
-    case 'VIDEO_LOADED_DATA':
+
+    case 'VIDEO_LOADED_DATA': {
+      return {
+        ...state,
+        aspectRatio: action.payload.aspectRatio,
+        height: Math.round(state.width / action.payload.aspectRatio)
+      };
+    }
+
     default:
       return {
         ...state
@@ -106,7 +114,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       return;
     }
 
-    function handleVideoLoadedData() {
+    function handleLoadedMetadata() {
       // set some default values here
       const aspectRatio = getVideoAspectRatio(video);
 
@@ -128,11 +136,14 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
-    video.addEventListener('loadeddata', handleVideoLoadedData);
+    // ensure that this fires at least once
+    handleLoadedMetadata();
+
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
     // video.addEventListener('seeked', handleVideoSeeked);
 
     return () => {
-      video.removeEventListener('loadeddata', handleVideoLoadedData);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       // video.removeEventListener('seeked', handleVideoSeeked);
     };
   }, [video]);

@@ -11,7 +11,7 @@ export function AppFrame({ children }: AppFrameProps) {
     <motion.div
       className={css.appFrame}
       layoutId="appFrame"
-      transition={{ type: 'spring', stiffness: 350, damping: 35 }}>
+      transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.5 }}>
       {children}
     </motion.div>
   );
