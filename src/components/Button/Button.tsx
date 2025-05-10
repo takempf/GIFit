@@ -6,7 +6,7 @@ import cx from 'classnames';
 // Define the props interface
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode; // Content inside the button
-  variant?: 'primary' | 'secondary' | 'ghost'; // Style variant
+  variant?: 'primary' | 'secondary' | 'ghost' | 'input'; // Style variant
   size?: 'x-small' | 'small' | 'medium' | 'large'; // Size variant
   padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large'; // Padding variant
   evenPadding?: boolean;
@@ -33,7 +33,7 @@ export function Button({
     css.button,
     css[variant],
     css[size],
-    css[padding],
+    css[`padding_${padding}`],
     {
       [css.rounded]: rounded,
       [css.disabled]: disabled,

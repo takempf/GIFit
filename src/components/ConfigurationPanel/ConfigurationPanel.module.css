@@ -44,6 +44,7 @@
   align-self: center;
   justify-self: center;
   z-index: 5;
+  backdrop-filter: blur(2px);
 }
 
 .linkIcon {

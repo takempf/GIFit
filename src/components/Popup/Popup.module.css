@@ -7,6 +7,10 @@
   width: 100%;
   max-width: 420px;
 
+  header {
+    color: white;
+  }
+
   footer {
     padding: 0 0.25em;
     align-self: stretch;
@@ -40,27 +44,6 @@
   gap: 1px;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 0 0 0.75em;
-  background: rgba(255, 255, 255, 0.45);
-}
-
-.title {
-  font-size: 0.75em;
-  color: rgba(0, 0, 0, 0.75);
-}
-
-.close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  translate: 50% -50%;
-  z-index: 100;
-  border: white 1px solid !important;
-}
-
 .generation {
   position: absolute;
   inset: 0;
@@ -69,12 +52,13 @@
   align-items: center;
   justify-content: center;
   background-color: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(4px);
   border-radius: var(--border-radius);
 }
 
 .close {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 1px;
+  right: 1px;
+  z-index: 100;
 }

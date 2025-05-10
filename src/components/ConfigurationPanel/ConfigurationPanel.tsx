@@ -237,7 +237,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           label="Link width and height"
           size="x-small"
           rounded={true}
-          variant="secondary"
+          variant="input"
           padding="small"
           evenPadding={true}
           value={state.linkDimensions}

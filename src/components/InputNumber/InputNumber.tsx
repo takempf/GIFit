@@ -10,6 +10,7 @@ interface InputNumberProps {
   label: React.ReactNode;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  append?: React.ReactNode;
   ref: React.RefObject<HTMLInputElement>;
 }
 
@@ -18,6 +19,7 @@ export function InputNumber({
   label,
   value,
   onChange,
+  append,
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
@@ -58,6 +60,7 @@ export function InputNumber({
           ▼
         </Button>
       </div>
+      {append}
     </>
   );
 

@@ -1,4 +1,5 @@
 .input {
+  --padding: 0.5em;
   --input-transition-duration: 225ms;
   --label_font-size: 0.75em;
 
@@ -7,7 +8,7 @@
     background-color 550ms,
     border-color 550ms,
     box-shadow 550ms;
-  padding: 0.5em 0.75em;
+  padding: var(--padding) calc(var(--padding) * 2);
   display: flex;
   flex-direction: row;
   gap: 0.25em;

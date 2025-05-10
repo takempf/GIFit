@@ -177,7 +177,7 @@ export function Progress({}: ProgressProps) {
           variant="secondary"
           rounded={true}
           onClick={handleCloseClick}>
-          Close
+          Back
         </Button>
         <a
           className={css.save}

@@ -17,10 +17,19 @@
     background-color 200ms ease-in-out,
     border-color 200ms ease-in-out,
     color 200ms ease-in-out,
-    box-shadow 200ms ease-in-out;
+    box-shadow 200ms ease-in-out,
+    translate 100ms;
 
   -webkit-font-smoothing: antialiased; /* Improve font rendering */
   -moz-osx-font-smoothing: grayscale;
+
+  &:hover {
+    translate: 0 -0.1em;
+  }
+
+  &:active {
+    translate: 0;
+  }
 }
 
 /* Focus state for accessibility */
@@ -30,23 +39,23 @@
 }
 
 /* --- Padding Variants --- */
-.none {
+.padding_none {
   --padding: 0;
 }
 
-.x-small {
+.padding_x-small {
   --padding: 0.125em;
 }
 
-.small {
+.padding_small {
   --padding: 0.25em;
 }
 
-.medium {
+.padding_medium {
   --padding: 0.5em;
 }
 
-.large {
+.padding_large {
   --padding: 0.75em;
 }
 
@@ -88,15 +97,19 @@
 
 .ghost {
   background-color: transparent;
-  color: rgba(0, 0, 0, 0.35);
+  color: currentColor;
+
+  &:disabled {
+    color: color-mix(in srgb, currentColor 50%, transparent 50%);
+  }
 }
 
-.ghost:hover:not(:disabled) {
-  color: rgba(0, 0, 0, 0.45);
-}
+.input {
+  background-color: rgba(255, 255, 255, 0.45);
 
-.ghost:active:not(:disabled) {
-  color: rgba(0, 0, 0, 0.5);
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.6);
+  }
 }
 
 /* --- Sizes --- */

@@ -64,7 +64,17 @@ export function Popup({}: PopupProps) {
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.9, opacity: 0 }}>
       <AppFrame>
-        <AppLogo />
+        <header>
+          <AppLogo />
+          <Button
+            className={css.close}
+            size="small"
+            variant="ghost"
+            rounded={true}
+            onClick={handleCloseAppClick}>
+            ✕
+          </Button>
+        </header>
         <div className={css.container}>
           <section className={css.config}>
             <ConfigurationPanel onSubmit={handleSubmit} />
@@ -98,15 +108,6 @@ export function Popup({}: PopupProps) {
           <span className={css.version}>v3.0.0</span>
         </footer>
       </AppFrame>
-
-      <Button
-        className={css.close}
-        size="small"
-        variant="secondary"
-        rounded={true}
-        onClick={handleCloseAppClick}>
-        ✕
-      </Button>
     </motion.div>
   );
 }
