@@ -6,6 +6,9 @@ import cx from 'classnames';
 // Define the props interface
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode; // Content inside the button
+  prepend?: React.ReactNode;
+  append?: React.ReactNode;
+  className?: string; // Allow passing custom classes
   variant?: 'primary' | 'secondary' | 'ghost' | 'input'; // Style variant
   size?: 'x-small' | 'small' | 'medium' | 'large'; // Size variant
   padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large'; // Padding variant
@@ -17,6 +20,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export function Button({
   children,
+  append,
+  prepend,
   variant = 'primary', // Default variant
   size = 'medium', // Default size
   rounded = false,
@@ -50,7 +55,9 @@ export function Button({
       disabled={disabled}
       {...rest} // Spread remaining props (important for accessibility attributes like aria-label)
     >
+      {prepend}
       {children}
+      {append}
     </button>
   );
 }

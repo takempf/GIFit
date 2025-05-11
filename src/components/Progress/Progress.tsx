@@ -11,6 +11,9 @@ import { observeBoundingClientRect } from '@/utils/observeBoundingClientRect';
 
 import { Button } from '../Button/Button';
 
+import ArrowRightIcon from '@/assets/arrow-right.svg?react';
+import ArrowDownIcon from '@/assets/arrow-down.svg?react';
+
 const PROGRESS_FIXED_VERTICAL_CENTER = 120;
 const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
 
@@ -176,7 +179,10 @@ export function Progress({}: ProgressProps) {
           size="small"
           variant="secondary"
           rounded={true}
-          onClick={handleCloseClick}>
+          onClick={handleCloseClick}
+          prepend={
+            <ArrowRightIcon className={css.icon} style={{ rotate: '180deg' }} />
+          }>
           Back
         </Button>
         <a
@@ -185,7 +191,10 @@ export function Progress({}: ProgressProps) {
           download={downloadFilename}
           onClick={(e) => !imageUrl && e.preventDefault()}
           aria-disabled={!imageUrl}>
-          <Button size="small" rounded={true}>
+          <Button
+            size="small"
+            rounded={true}
+            append={<ArrowDownIcon className={css.icon} />}>
             Download GIF
           </Button>
         </a>
