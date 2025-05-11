@@ -31,6 +31,10 @@
   &:active {
     translate: 0;
   }
+
+  &:disabled {
+    filter: saturate(0.5);
+  }
 }
 
 /* Focus state for accessibility */

@@ -194,6 +194,7 @@ export function Progress({}: ProgressProps) {
           <Button
             size="small"
             rounded={true}
+            disabled={!imageUrl}
             append={<ArrowDownIcon className={css.icon} />}>
             Download GIF
           </Button>
