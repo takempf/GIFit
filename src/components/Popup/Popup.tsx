@@ -22,6 +22,7 @@ export function Popup({}: PopupProps) {
   const status = useAppStore((state) => state.status);
   const close = useAppStore((state) => state.close);
   const setStatus = useAppStore((state) => state.setStatus);
+  const setName = useGifStore((state) => state.setName);
   const createGif = useGifStore((state) => state.createGif);
   const generationId = useGifStore((state) => state.generationId);
 
@@ -47,6 +48,7 @@ export function Popup({}: PopupProps) {
         videoElement
       );
 
+      setName(document.querySelector('#title')?.innerText ?? 'untitled');
       setStatus('generating');
     },
     [videoElement]

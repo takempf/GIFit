@@ -14,6 +14,7 @@ type GifStatus =
 
 interface GifState {
   status: GifStatus;
+  name: string;
   width: number;
   height: number;
   progress: number; // 0 to 1
@@ -33,12 +34,14 @@ interface GifActions {
   ) => Promise<void>; // Make async if needed for setup before returning
   abortGif: () => void;
   reset: () => void;
+  setName: (name: string) => void;
 }
 
 type GifStore = GifState & GifActions;
 
 const initialState: GifState = {
   status: 'idle',
+  name: 'untitled',
   width: 320,
   height: 240,
   progress: 0,
@@ -69,6 +72,7 @@ export const useGifStore = create<GifStore>((set, get) => ({
     set({
       ...initialState,
       frameCount: (config.fps * (config.end - config.start)) / 1000,
+      name: config.name,
       width: config.width,
       height: config.height,
       colors: getVideoFrameColors(videoElement),
@@ -148,5 +152,9 @@ export const useGifStore = create<GifStore>((set, get) => ({
   reset() {
     get().abortGif(); // Ensure any active process is stopped and cleaned up
     set(initialState); // Reset state to initial values
+  },
+
+  setName(name: string) {
+    set({ name });
   }
 }));

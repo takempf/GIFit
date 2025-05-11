@@ -43,6 +43,7 @@ export function Progress({}: ProgressProps) {
   const frameCount = useGifStore((state) => state.frameCount);
   const width = useGifStore((state) => state.width);
   const height = useGifStore((state) => state.height);
+  const name = useGifStore((state) => state.name);
   const [gridColumnsLength, getGridRowsLength] = getClosestGridDimensions(
     width,
     height,
@@ -55,7 +56,7 @@ export function Progress({}: ProgressProps) {
     aspectRatio: `auto ${width} / ${height}`
   };
 
-  const downloadFilename = `gifit_${Date.now()}.gif`;
+  const downloadFilename = `${name}.gif`;
 
   useEffect(() => {
     if (!videoElement) {
