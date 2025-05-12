@@ -1,9 +1,9 @@
 .app {
   position: absolute;
-  bottom: -0.5em;
-  right: 0;
+  bottom: 0;
+  right: 0.6em;
   translate: 0 100%;
-  z-index: 10;
+  z-index: 1;
 }
 
 .gifitButton {
@@ -12,13 +12,12 @@
   cursor: pointer;
   background: none;
   border: none;
-  translate: 0 -0.25em;
-  opacity: 0.5;
+  translate: 0 0;
+  transform-origin: top center;
   transition:
     translate 125ms,
-    opacity 125ms,
     scale 125ms,
-    background-color 125ms;
+    background-color 125ms filter 125ms;
 
   strong {
     font-weight: 900;

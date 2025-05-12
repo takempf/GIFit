@@ -27,8 +27,11 @@ export function App({}: AppProps) {
       <AnimatePresence>
         <div className={css.app}>
           {!isOpen && (
-            <button className={css.gifitButton} onClick={handleClick}>
-              <AppFrame>
+            <button
+              className={css.gifitButton}
+              onClick={handleClick}
+              type="button">
+              <AppFrame variant="attached">
                 <AppLogo />
               </AppFrame>
             </button>

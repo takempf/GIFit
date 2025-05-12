@@ -12,3 +12,10 @@
   border-right-color: rgba(255, 255, 255, 0.2);
   border-bottom-color: rgba(255, 255, 255, 0.15);
 }
+
+.attached {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top-color: rgba(255, 255, 255, 0);
+  padding: 0.5em 1em;
+}
