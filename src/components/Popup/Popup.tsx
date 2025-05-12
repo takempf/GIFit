@@ -1,6 +1,6 @@
 import css from './Popup.module.css';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { log } from '@/utils/logger';
@@ -18,6 +18,7 @@ import TKLogo from '@/assets/tk.svg';
 interface PopupProps {}
 
 export function Popup({}: PopupProps) {
+  const popupElementRef = useRef(null);
   const videoElement = useAppStore((state) => state.videoElement);
   const status = useAppStore((state) => state.status);
   const close = useAppStore((state) => state.close);
@@ -25,6 +26,13 @@ export function Popup({}: PopupProps) {
   const setName = useGifStore((state) => state.setName);
   const createGif = useGifStore((state) => state.createGif);
   const generationId = useGifStore((state) => state.generationId);
+
+  useEffect(() => {
+    const popupElement = popupElementRef.current;
+    if (popupElement) {
+      popupElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, []);
 
   const handleSubmit = useCallback(
     function handleSubmit(formValues) {
@@ -61,6 +69,7 @@ export function Popup({}: PopupProps) {
 
   return (
     <motion.div
+      ref={popupElementRef}
       className={css.popup}
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
