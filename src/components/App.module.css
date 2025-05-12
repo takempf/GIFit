@@ -15,21 +15,20 @@
   translate: 0 0;
   transform-origin: top center;
   transition:
-    translate 125ms,
     scale 125ms,
-    background-color 125ms filter 125ms;
+    background-color 125ms,
+    filter 125ms;
+  transition-timing-function: var(--ease_out_expo);
 
   strong {
     font-weight: 900;
   }
 
   &:hover {
-    translate: 0 0;
-    opacity: 1;
     scale: 1.05;
   }
 
   &:active {
-    translate: 0 0.125em;
+    scale: 0.95;
   }
 }
