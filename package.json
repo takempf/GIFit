@@ -32,6 +32,6 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vite-plugin-svgr": "^4.3.0",
-    "wxt": "^0.20.0"
+    "wxt": "^0.20.6"
   }
 }
