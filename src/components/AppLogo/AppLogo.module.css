@@ -1,3 +1,7 @@
 .appLogo {
-  height: 0.8em;
+}
+
+.logo {
+  display: block;
+  height: 1em;
 }
