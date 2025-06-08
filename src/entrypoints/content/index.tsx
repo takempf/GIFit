@@ -8,6 +8,7 @@ import { log } from '@/utils/logger';
 import { useAppStore } from '@/stores/appStore';
 
 import { App } from '../../components/App';
+import { useGifStore } from '@/stores/gifGeneratorStore';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/watch*'],
@@ -17,6 +18,19 @@ export default defineContentScript({
 
   async main(ctx) {
     log('Running content script');
+
+    ctx.addEventListener(window, 'wxt:locationchange', (event) => {
+      log('URL changed, checking video id', event);
+      const prevVideoId = useAppStore.getState().videoId;
+      const videoId = event.newUrl.searchParams.get('v');
+
+      if (prevVideoId !== videoId) {
+        const videoElement = useAppStore.getState().videoElement;
+        useGifStore.getState().reset();
+        useAppStore.getState().reset({ videoElement });
+        useAppStore.getState().setVideoId(videoId);
+      }
+    });
 
     const ui = await createShadowRootUi(ctx, {
       name: 'gif-it',

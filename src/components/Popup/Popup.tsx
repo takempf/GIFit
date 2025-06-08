@@ -21,11 +21,12 @@ export function Popup({}: PopupProps) {
   const popupElementRef = useRef(null);
   const videoElement = useAppStore((state) => state.videoElement);
   const status = useAppStore((state) => state.status);
+  const generationId = useGifStore((state) => state.generationId);
   const close = useAppStore((state) => state.close);
   const setStatus = useAppStore((state) => state.setStatus);
   const setName = useGifStore((state) => state.setName);
   const createGif = useGifStore((state) => state.createGif);
-  const generationId = useGifStore((state) => state.generationId);
+  const reset = useGifStore((state) => state.reset);
 
   useEffect(() => {
     const popupElement = popupElementRef.current;
@@ -63,7 +64,7 @@ export function Popup({}: PopupProps) {
   );
 
   function handleCloseAppClick() {
-    setStatus('configuring');
+    reset();
     close();
   }
 

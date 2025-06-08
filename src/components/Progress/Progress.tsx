@@ -1,6 +1,6 @@
 import css from './Progress.module.css';
 
-import { useEffect, useState, CSSProperties } from 'react';
+import { useEffect, useState, CSSProperties, use } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 
 import { useAppStore } from '@/stores/appStore';
@@ -44,6 +44,7 @@ export function Progress({}: ProgressProps) {
   const width = useGifStore((state) => state.width);
   const height = useGifStore((state) => state.height);
   const name = useGifStore((state) => state.name);
+  const reset = useGifStore((state) => state.reset);
   const [gridColumnsLength, getGridRowsLength] = getClosestGridDimensions(
     width,
     height,
@@ -81,6 +82,7 @@ export function Progress({}: ProgressProps) {
 
   function handleCloseClick() {
     setStatus('configuring');
+    reset();
   }
 
   const chunkVariants = {
