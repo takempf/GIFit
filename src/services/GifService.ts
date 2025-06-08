@@ -110,10 +110,12 @@ class GifService extends EventEmitter {
 
     try {
       this.encoder = GIFEncoder();
-    } catch (error: any) {
+    } catch (error: unknown) {
       this.emit(
         'error',
-        new Error(`Failed to initialize GIFEncoder: ${error?.message || error}`)
+        new Error(
+          `Failed to initialize GIFEncoder: ${error instanceof Error ? error.message : String(error)}`
+        )
       );
       return;
     }
@@ -194,11 +196,13 @@ class GifService extends EventEmitter {
       this.emit('processing');
       await this._asyncSeek(videoElement, config.start / 1000);
       this._addFrame(config, videoElement, actualMaxColors);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error during initial seek:', error);
       this.emit(
         'error',
-        new Error(`Error during initial video seek: ${error?.message || error}`)
+        new Error(
+          `Error during initial video seek: ${error instanceof Error ? error.message : String(error)}`
+        )
       );
       this.abort(); // Abort on initial seek failure
     }
@@ -280,11 +284,13 @@ class GifService extends EventEmitter {
           : 1;
       this.framesComplete++;
       this.emit('frames progress', progress, this.framesComplete);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error processing frame:', error);
       this.emit(
         'error',
-        new Error(`Error processing frame: ${error?.message || error}`)
+        new Error(
+          `Error processing frame: ${error instanceof Error ? error.message : String(error)}`
+        )
       );
       this.abort();
       return;
@@ -304,11 +310,13 @@ class GifService extends EventEmitter {
             width: config.width,
             height: config.height
           });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error finalizing GIF:', error);
           this.emit(
             'error',
-            new Error(`GIF finalization failed: ${error?.message || error}`)
+            new Error(
+              `GIF finalization failed: ${error instanceof Error ? error.message : String(error)}`
+            )
           );
         } finally {
           this.encoder = null; // Clean up encoder
@@ -326,11 +334,13 @@ class GifService extends EventEmitter {
         this.pendingFrameTimeoutId = null; // Clear ID once callback executes
         this._addFrame(config, videoElement, actualMaxColors);
       }, 0); // Yield to event loop, prevent stack overflow
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error seeking for next frame:', error);
       this.emit(
         'error',
-        new Error(`Error seeking next frame: ${error?.message || error}`)
+        new Error(
+          `Error seeking next frame: ${error instanceof Error ? error.message : String(error)}`
+        )
       );
       this.abort(); // Abort on seek failure
     }

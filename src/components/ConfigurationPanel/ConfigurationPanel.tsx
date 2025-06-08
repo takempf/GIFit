@@ -31,7 +31,11 @@ interface ConfigState {
 
 interface ConfigAction {
   type: string;
-  payload: any;
+  // More specific payload type
+  payload:
+    | Partial<ConfigState>
+    | { name: string; value: string | number | boolean }
+    | { aspectRatio: number };
 }
 
 function seekTo(videoElement: HTMLVideoElement, time: number) {
@@ -94,7 +98,7 @@ function reducer(state: ConfigState, action: ConfigAction) {
 }
 
 interface ConfigurationPanelProps {
-  onSubmit: Function;
+  onSubmit: (config: ConfigState) => void;
 }
 
 function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
@@ -231,6 +235,11 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={state.width}
           onChange={handleInputChange}
         />
+        {}
+        {}
+        {}
+        {}
+        {}
         <ButtonToggle
           className={css.linkDimensions}
           name="linkDimensions"
@@ -248,6 +257,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             <LinkEmptyIcon className={css.linkIcon} />
           )}
         </ButtonToggle>
+        {}
+        {}
         <InputNumber
           className={css.height}
           name="height"

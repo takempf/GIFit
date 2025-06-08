@@ -15,7 +15,7 @@ import { AppFrame } from '../AppFrame/AppFrame';
 
 import TKLogo from '@/assets/tk.svg';
 
-interface PopupProps {}
+type PopupProps = Record<string, never>;
 
 export function Popup({}: PopupProps) {
   const popupElementRef = useRef(null);
@@ -59,7 +59,7 @@ export function Popup({}: PopupProps) {
       setName(document.querySelector('#title')?.innerText ?? 'untitled');
       setStatus('generating');
     },
-    [videoElement]
+    [videoElement, createGif, setName, setStatus] // Added missing dependencies
   );
 
   function handleCloseAppClick() {
@@ -113,8 +113,9 @@ export function Popup({}: PopupProps) {
           <a
             className={css.credit}
             href="https://kempf.dev/#gifit"
-            target="_blank">
-            Crafted by <img className={css.tkLogo} src={TKLogo} />
+            target="_blank"
+            rel="noreferrer">
+            Crafted by <img className={css.tkLogo} src={TKLogo} alt="" />
           </a>
           <span className={css.version}>v3.0.0</span>
         </footer>

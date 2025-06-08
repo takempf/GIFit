@@ -128,9 +128,13 @@ export const useGifStore = create<GifStore>((set, get) => ({
       // but the process it starts is async via events.
       service.createGif(config, videoElement);
       // No need to await here, events will update the state
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Catch synchronous errors during setup (e.g., context creation)
-      onError(err);
+      if (err instanceof Error) {
+        onError(err);
+      } else {
+        onError(new Error(String(err)));
+      }
     }
   },
 

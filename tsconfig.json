@@ -2,6 +2,13 @@
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
-    "jsx": "react-jsx"
-  }
+    "jsx": "react-jsx",
+    "types": ["vitest/globals", "node"]
+  },
+  "include": [
+    "src",
+    // "tests", // Assuming tests are co-located in src for now
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
 }

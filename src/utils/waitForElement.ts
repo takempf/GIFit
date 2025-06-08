@@ -19,11 +19,7 @@ export function waitForElement(
       return;
     }
 
-    let timeoutId: number | undefined;
-    let observer: MutationObserver | undefined;
-
-    // Set up the timeout
-    timeoutId = window.setTimeout(() => {
+    const timeoutId: number = window.setTimeout(() => {
       observer?.disconnect(); // Stop observing if timeout occurs
       reject(
         new Error(`Element "${selector}" did not appear within ${timeout}ms.`)
@@ -31,14 +27,17 @@ export function waitForElement(
     }, timeout);
 
     // Set up the MutationObserver
-    observer = new MutationObserver((mutations) => {
-      const targetElement = parentElement.querySelector(selector);
-      if (targetElement) {
-        clearTimeout(timeoutId); // Clear the timeout
-        observer?.disconnect(); // Stop observing
-        resolve(targetElement); // Resolve with the found element
+    const observer: MutationObserver = new MutationObserver(
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      (_mutations) => {
+        const targetElement = parentElement.querySelector(selector);
+        if (targetElement) {
+          clearTimeout(timeoutId); // Clear the timeout
+          observer?.disconnect(); // Stop observing
+          resolve(targetElement); // Resolve with the found element
+        }
       }
-    });
+    );
 
     // Start observing the parent element for child list and subtree changes
     observer.observe(parentElement, {

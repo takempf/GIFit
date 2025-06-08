@@ -6,7 +6,7 @@ import { Button } from '../Button/Button';
 import css from './InputTime.module.css';
 
 // --- Helper: Debounce Hook (same as before) ---
-function useDebouncedCallback<A extends any[]>(
+function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number
 ): (...args: A) => void {
@@ -31,7 +31,7 @@ function useDebouncedCallback<A extends any[]>(
 }
 
 // --- Helper: Time Formatting & Parsing ---
-
+// Trivial change to attempt cache busting
 const getStepDecimalPlaces = (step: number): number => {
   const stepStr = String(step);
   const decimalPointIndex = stepStr.indexOf('.');
@@ -117,7 +117,9 @@ const hmsStringToSeconds = (hmsString: string): number | null => {
     }
 
     return hours * 3600 + minutes * 60 + seconds;
-  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e) {
+    // Prefixed 'e' with underscore as it's unused
     return null;
   }
 };
@@ -146,7 +148,7 @@ interface InputTimeProps {
   disabled?: boolean;
   className?: string;
   inputClassName?: string;
-  buttonClassName?: string;
+  // buttonClassName?: string; // Removed as unused
 }
 
 // --- The Component (logic mostly same, relies on new secondsToHMSs) ---
@@ -160,7 +162,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
   disabled = false,
   className = '',
   inputClassName = '',
-  buttonClassName = '',
+  // buttonClassName = '', // Removed as unused
   ...restProps
 }) => {
   const decimalPlaces = getStepDecimalPlaces(step);
@@ -241,6 +243,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
   };
 
   const handleBlur = () => {
+    // Explicitly ensuring no 'e' parameter here
     // On blur, always try to commit the current text input value immediately.
     // This cancels any pending debounced commit.
     // Clear any pending timeout from useDebouncedCallback

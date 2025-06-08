@@ -5,7 +5,7 @@
  *
  * @param args - Optional additional values or objects to log.
  */
-export function log(...args: any[]): void {
+export function log(...args: unknown[]): void {
   const prefix = 'GIFit!';
   const prefixStyle = 'color: red; font-weight: bold;';
 

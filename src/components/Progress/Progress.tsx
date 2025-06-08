@@ -17,13 +17,13 @@ import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 const PROGRESS_FIXED_VERTICAL_CENTER = 120;
 const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
 
-interface ImageInfo {
-  blob: Blob;
-  height: number;
-  width: number;
-}
+// interface ImageInfo { // Removed as unused
+//   blob: Blob;
+//   height: number;
+//   width: number;
+// }
 
-interface ProgressProps {}
+type ProgressProps = Record<string, never>;
 
 const chunkTransition = {
   type: 'spring',

@@ -20,6 +20,7 @@ export function InputNumber({
   value,
   onChange,
   append,
+  disabled, // Destructure disabled from restProps
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
@@ -49,14 +50,16 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleUpClick}>
+          onClick={handleUpClick}
+          disabled={disabled}> {/* Pass disabled prop */}
           ▲
         </Button>
         <Button
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleDownClick}>
+          onClick={handleDownClick}
+          disabled={disabled}> {/* Pass disabled prop */}
           ▼
         </Button>
       </div>
@@ -71,6 +74,7 @@ export function InputNumber({
       append={controls}
       value={value}
       onChange={onChange}
+      disabled={disabled} // Pass disabled to the underlying Input
       {...restProps}
       ref={inputRef}
     />

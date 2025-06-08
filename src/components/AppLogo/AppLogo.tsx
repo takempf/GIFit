@@ -1,13 +1,13 @@
 import { motion } from 'motion/react';
 import GIFitLogo from '@/assets/gifit-logo.svg?react';
+import type { HTMLAttributes } from 'react';
 
 import css from './AppLogo.module.css';
 
-interface AppLogoProps {
-  className?: string;
-}
+type AppLogoProps = HTMLAttributes<HTMLSpanElement>;
+// No additional props needed for AppLogo beyond standard HTML attributes for a span
 
-export function AppLogo({ className, ...restProps }: AppLogoProps) {
+export function AppLogo({ ...restProps }: AppLogoProps) {
   return (
     <motion.span
       className={css.appLogo}
