@@ -48,12 +48,12 @@ describe('getClosestGridDimensions', () => {
 
   it('should handle numbers that are products of two close numbers, for 1:1 aspect', () => {
     // The following line was incorrect and is removed by this diff.
-                                                              // 3/4=0.75, diff=0.25. Area 12
-                                                              // The code picks the one with smaller aspect diff first.
-                                                              // If diffs are equal, picks smaller area (not relevant here).
-                                                              // cols=3, rows=4, aspect=0.75, diff=0.25
-                                                              // cols=4, rows=3, aspect=1.33, diff=0.33
-                                                              // So [3,4] is expected.
+    // 3/4=0.75, diff=0.25. Area 12
+    // The code picks the one with smaller aspect diff first.
+    // If diffs are equal, picks smaller area (not relevant here).
+    // cols=3, rows=4, aspect=0.75, diff=0.25
+    // cols=4, rows=3, aspect=1.33, diff=0.33
+    // So [3,4] is expected.
     expect(getClosestGridDimensions(1, 1, 12)).toEqual([3, 4]); // This is the corrected expectation
     // Removed incorrect/duplicate test for 6 items: expect(getClosestGridDimensions(1, 1, 6)).toEqual([3, 2]);
     expect(getClosestGridDimensions(1, 1, 6)).toEqual([2, 3]); // This one is correct as per my trace for 6 items.
@@ -82,12 +82,12 @@ describe('getClosestGridDimensions', () => {
   it('should use square-like fallback for 0 targetWidth', () => {
     expect(getClosestGridDimensions(0, 9, 9)).toEqual([3, 3]);
     expect(getClosestGridDimensions(0, 9, 7)).toEqual([3, 3]); // ceil(sqrt(7))=3. R=ceil(7/3)=3.
-    expect(getClosestGridDimensions(0, 1, 12)).toEqual([4,3]); // ceil(sqrt(12))=4. R=ceil(12/4)=3. [4,3]
+    expect(getClosestGridDimensions(0, 1, 12)).toEqual([4, 3]); // ceil(sqrt(12))=4. R=ceil(12/4)=3. [4,3]
   });
 
   it('should use square-like fallback for 0 targetHeight', () => {
     expect(getClosestGridDimensions(16, 0, 9)).toEqual([3, 3]);
-    expect(getClosestGridDimensions(16, 0, 6)).toEqual([3,2]); // ceil(sqrt(6))=3. R=ceil(6/3)=2. [3,2]
+    expect(getClosestGridDimensions(16, 0, 6)).toEqual([3, 2]); // ceil(sqrt(6))=3. R=ceil(6/3)=2. [3,2]
   });
 
   it('should use square-like fallback for negative targetWidth', () => {

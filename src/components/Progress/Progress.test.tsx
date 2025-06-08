@@ -6,10 +6,10 @@ import ProgressComponent from './Progress'; // Default export
 // Mock Zustand stores
 const mockAppStoreState = {
   setStatus: vi.fn(),
-  videoElement: null as HTMLVideoElement | null, // Mock video element if its properties are used
+  videoElement: null as HTMLVideoElement | null // Mock video element if its properties are used
 };
 vi.mock('@/stores/appStore', () => ({
-  useAppStore: vi.fn((selector) => selector(mockAppStoreState)),
+  useAppStore: vi.fn((selector) => selector(mockAppStoreState))
 }));
 
 const mockGifStoreState = {
@@ -19,28 +19,32 @@ const mockGifStoreState = {
   frameCount: 10,
   width: 320,
   height: 240,
-  name: 'test-gif',
+  name: 'test-gif'
 };
 vi.mock('@/stores/gifGeneratorStore', () => ({
-  useGifStore: vi.fn((selector) => selector(mockGifStoreState)),
+  useGifStore: vi.fn((selector) => selector(mockGifStoreState))
 }));
 
 // Mock utility functions
 vi.mock('@/utils/getClosestGridDimensions', () => ({
   getClosestGridDimensions: vi.fn((w, h, len) => {
-    if (len === 0) return [0,0];
+    if (len === 0) return [0, 0];
     const c = Math.ceil(Math.sqrt(len));
     const r = Math.ceil(len / c);
-    return [c,r]; // Simplified mock
-  }),
+    return [c, r]; // Simplified mock
+  })
 }));
 vi.mock('@/utils/observeBoundingClientRect', () => ({
-  observeBoundingClientRect: vi.fn(() => vi.fn()), // Returns a cancel function
+  observeBoundingClientRect: vi.fn(() => vi.fn()) // Returns a cancel function
 }));
 
 // Mock SVGs
-vi.mock('@/assets/arrow-right.svg?react', () => ({ default: () => <svg data-testid="arrow-right-icon" /> }));
-vi.mock('@/assets/arrow-down.svg?react', () => ({ default: () => <svg data-testid="arrow-down-icon" /> }));
+vi.mock('@/assets/arrow-right.svg?react', () => ({
+  default: () => <svg data-testid="arrow-right-icon" />
+}));
+vi.mock('@/assets/arrow-down.svg?react', () => ({
+  default: () => <svg data-testid="arrow-down-icon" />
+}));
 
 // Mock motion components to simplify testing animations
 vi.mock('motion/react', async (importOriginal) => {
@@ -50,14 +54,16 @@ vi.mock('motion/react', async (importOriginal) => {
     motion: {
       // Mock specific motion components used, e.g., div, span, img, li
       div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
-      span: vi.fn(({ children, ...props }) => <span {...props}>{children}</span>),
+      span: vi.fn(({ children, ...props }) => (
+        <span {...props}>{children}</span>
+      )), // Corrected: removed extra parentheses
+      // eslint-disable-next-line jsx-a11y/alt-text -- This is a mock definition, props including alt are spread.
       img: vi.fn((props) => <img {...props} />),
-      li: vi.fn(({ children, ...props }) => <li {...props}>{children}</li>),
+      li: vi.fn(({ children, ...props }) => <li {...props}>{children}</li>)
     },
-    AnimatePresence: vi.fn(({ children }) => <>{children}</>), // Pass through children
+    AnimatePresence: vi.fn(({ children }) => <>{children}</>) // Pass through children
   };
 });
-
 
 describe('Progress', () => {
   beforeEach(() => {
@@ -74,14 +80,18 @@ describe('Progress', () => {
     mockGifStoreState.colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00'];
 
     // Mock URL.createObjectURL
-    global.URL.createObjectURL = vi.fn((blob) => `blob:${blob?.type || 'image/gif'}`);
+    global.URL.createObjectURL = vi.fn(
+      (blob) => `blob:${blob?.type || 'image/gif'}`
+    );
     global.URL.revokeObjectURL = vi.fn();
   });
 
   it('should render without crashing', () => {
     render(<ProgressComponent />);
     expect(screen.getByRole('button', { name: /Back/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Download GIF/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Download GIF/i })
+    ).toBeInTheDocument();
   });
 
   it('should display chunk items based on processedFrameCount', () => {
@@ -96,7 +106,9 @@ describe('Progress', () => {
   it('should not display image if result is null', () => {
     mockGifStoreState.result = null;
     render(<ProgressComponent />);
-    expect(screen.queryByAltText('Generated GIF preview')).not.toBeInTheDocument();
+    expect(
+      screen.queryByAltText('Generated GIF preview')
+    ).not.toBeInTheDocument();
   });
 
   it('should display image and correct download link if result is present', () => {
@@ -105,7 +117,9 @@ describe('Progress', () => {
     mockGifStoreState.name = 'my-awesome-gif';
     render(<ProgressComponent />);
 
-    const img = screen.getByAltText('Generated GIF preview') as HTMLImageElement;
+    const img = screen.getByAltText(
+      'Generated GIF preview'
+    ) as HTMLImageElement;
     expect(img).toBeInTheDocument();
     expect(img.src).toBe(`blob:image/gif`);
 

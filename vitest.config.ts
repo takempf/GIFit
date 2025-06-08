@@ -16,7 +16,8 @@ export default defineConfig({
       reportsDirectory: './coverage',
       all: true, // Include all files in coverage report, not just tested ones
       include: ['src/**/*.{ts,tsx}'], // Specify files to include in coverage
-      exclude: [ // Specify files/patterns to exclude
+      exclude: [
+        // Specify files/patterns to exclude
         'src/entrypoints/**', // Entrypoints might be hard to test in unit/integration tests
         'src/**/index.ts', // Often just re-exports
         'src/**/*.d.ts',
@@ -27,12 +28,13 @@ export default defineConfig({
         'src/env.d.ts', // if it exists
         '.wxt/**',
         'node_modules/**',
-        'dist/**',
+        'dist/**'
         // Add any other patterns to exclude, like stories, types, constants if not testable
-      ],
+      ]
     },
-    alias: { // Replicate aliases from tsconfig.json or vite.config.js if any
-      '@/': new URL('./src/', import.meta.url).pathname,
-    },
-  },
+    alias: {
+      // Replicate aliases from tsconfig.json or vite.config.js if any
+      '@/': new URL('./src/', import.meta.url).pathname
+    }
+  }
 });

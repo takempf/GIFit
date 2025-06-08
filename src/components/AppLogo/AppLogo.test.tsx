@@ -1,11 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { AppLogo } from './AppLogo';
-import GIFitLogo from '@/assets/gifit-logo.svg?react'; // To check if it's the rendered component
+// import GIFitLogo from '@/assets/gifit-logo.svg?react'; // Unused due to mock
 
 // Mock the SVG component if it's complex or to simplify testing
 vi.mock('@/assets/gifit-logo.svg?react', () => ({
-  default: (props: React.SVGProps<SVGSVGElement>) => <svg data-testid="gifit-logo-svg" {...props} />,
+  default: (props: React.SVGProps<SVGSVGElement>) => (
+    <svg data-testid="gifit-logo-svg" {...props} />
+  )
 }));
 
 describe('AppLogo', () => {
@@ -37,7 +39,9 @@ describe('AppLogo', () => {
   });
 
   it('should pass through additional HTML attributes to the span element', () => {
-    render(<AppLogo data-testid="custom-applogo" aria-label="Application Logo" />);
+    render(
+      <AppLogo data-testid="custom-applogo" aria-label="Application Logo" />
+    );
     const logoSpan = screen.getByTestId('custom-applogo');
     expect(logoSpan).toBeInTheDocument();
     expect(logoSpan).toHaveAttribute('aria-label', 'Application Logo');

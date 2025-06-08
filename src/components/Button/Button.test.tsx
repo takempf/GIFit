@@ -8,7 +8,9 @@ import { Button } from './Button';
 describe('Button', () => {
   it('should render children text correctly', () => {
     render(<Button>Click Me</Button>);
-    expect(screen.getByRole('button', { name: /Click Me/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Click Me/i })
+    ).toBeInTheDocument();
   });
 
   it('should call onClick handler when clicked', async () => {
@@ -21,7 +23,11 @@ describe('Button', () => {
 
   it('should not call onClick handler when disabled and clicked', async () => {
     const handleClick = vi.fn();
-    render(<Button onClick={handleClick} disabled>Disabled</Button>);
+    render(
+      <Button onClick={handleClick} disabled>
+        Disabled
+      </Button>
+    );
     const buttonElement = screen.getByRole('button', { name: /Disabled/i });
     await userEvent.click(buttonElement).catch(() => {}); // userEvent might throw on disabled, catch it.
     expect(handleClick).not.toHaveBeenCalled();
@@ -40,7 +46,9 @@ describe('Button', () => {
 
   it('should render prepend and append props content', () => {
     render(
-      <Button prepend={<span data-testid="prepend-prop">Pre</span>} append={<span data-testid="append-prop">App</span>}>
+      <Button
+        prepend={<span data-testid="prepend-prop">Pre</span>}
+        append={<span data-testid="append-prop">App</span>}>
         Button Text
       </Button>
     );
@@ -55,10 +63,14 @@ describe('Button', () => {
     const button = screen.getByRole('button', { name: /Default/i });
     expect(button).toHaveClass(/button/); // From css.button
     expect(button).toHaveClass(/primary/); // Default variant
-    expect(button).toHaveClass(/medium/);  // Default size
+    expect(button).toHaveClass(/medium/); // Default size
     expect(button).toHaveClass(/padding_medium/); // Default padding
 
-    rerender(<Button variant="secondary" size="large" padding="small">Changed</Button>);
+    rerender(
+      <Button variant="secondary" size="large" padding="small">
+        Changed
+      </Button>
+    );
     const changedButton = screen.getByRole('button', { name: /Changed/i });
     expect(changedButton).toHaveClass(/button/);
     expect(changedButton).toHaveClass(/secondary/);
@@ -68,7 +80,9 @@ describe('Button', () => {
 
   it('should apply rounded class when rounded prop is true', () => {
     render(<Button rounded>Rounded Button</Button>);
-    expect(screen.getByRole('button', { name: /Rounded Button/i })).toHaveClass(/rounded/);
+    expect(screen.getByRole('button', { name: /Rounded Button/i })).toHaveClass(
+      /rounded/
+    );
   });
 
   it('should apply disabled attribute and class when disabled prop is true', () => {
@@ -80,11 +94,17 @@ describe('Button', () => {
 
   it('should apply evenPadding class when evenPadding prop is true', () => {
     render(<Button evenPadding>Even Padding</Button>);
-    expect(screen.getByRole('button', { name: /Even Padding/i })).toHaveClass(/evenPadding/);
+    expect(screen.getByRole('button', { name: /Even Padding/i })).toHaveClass(
+      /evenPadding/
+    );
   });
 
   it('should forward other HTML attributes like type and aria-label', () => {
-    render(<Button type="submit" aria-label="Submit Form">Submit</Button>);
+    render(
+      <Button type="submit" aria-label="Submit Form">
+        Submit
+      </Button>
+    );
     const button = screen.getByRole('button', { name: /Submit Form/i });
     expect(button).toHaveAttribute('type', 'submit');
     // name "Submit Form" already checks aria-label. Explicit check is also fine.
@@ -93,6 +113,8 @@ describe('Button', () => {
 
   it('should pass through a custom className', () => {
     render(<Button className="custom-class">Custom Class</Button>);
-    expect(screen.getByRole('button', { name: /Custom Class/i })).toHaveClass('custom-class');
+    expect(screen.getByRole('button', { name: /Custom Class/i })).toHaveClass(
+      'custom-class'
+    );
   });
 });

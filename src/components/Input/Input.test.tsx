@@ -13,7 +13,7 @@ describe('Input', () => {
     label: 'Test Label',
     value: '',
     onChange: mockOnChange,
-    ref: mockRef,
+    ref: mockRef
   };
 
   beforeEach(() => {
@@ -24,7 +24,9 @@ describe('Input', () => {
   it('should render the label and input element', () => {
     render(<Input {...defaultProps} />);
     expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
-    expect(screen.getByRole('textbox', { name: 'Test Label' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('textbox', { name: 'Test Label' })
+    ).toBeInTheDocument();
   });
 
   it('should call onChange handler when text is typed', async () => {
@@ -33,19 +35,26 @@ describe('Input', () => {
     await userEvent.type(inputElement, 'hello');
     expect(mockOnChange).toHaveBeenCalled();
     // Number of calls depends on how userEvent.type triggers onChange for each char
-    expect(mockOnChange.mock.calls.length).toBeGreaterThanOrEqual('hello'.length);
+    expect(mockOnChange.mock.calls.length).toBeGreaterThanOrEqual(
+      'hello'.length
+    );
   });
 
   it('should display the correct value based on the value prop', () => {
     render(<Input {...defaultProps} value="Initial Value" />);
-    const inputElement = screen.getByLabelText('Test Label') as HTMLInputElement;
+    const inputElement = screen.getByLabelText(
+      'Test Label'
+    ) as HTMLInputElement;
     expect(inputElement.value).toBe('Initial Value');
   });
 
   it('should render with the specified type', () => {
     render(<Input {...defaultProps} type="password" />);
     // Accessible name is still "Test Label"
-    expect(screen.getByLabelText('Test Label')).toHaveAttribute('type', 'password');
+    expect(screen.getByLabelText('Test Label')).toHaveAttribute(
+      'type',
+      'password'
+    );
   });
 
   it('should be disabled when disabled prop is true', () => {
@@ -55,7 +64,10 @@ describe('Input', () => {
 
   it('should render placeholder text', () => {
     render(<Input {...defaultProps} placeholder="Enter text..." />);
-    expect(screen.getByLabelText('Test Label')).toHaveAttribute('placeholder', 'Enter text...');
+    expect(screen.getByLabelText('Test Label')).toHaveAttribute(
+      'placeholder',
+      'Enter text...'
+    );
   });
 
   it('should render prepend and append elements', () => {
@@ -71,7 +83,9 @@ describe('Input', () => {
   });
 
   it('should apply custom className to the wrapper div', () => {
-    const { container } = render(<Input {...defaultProps} className="custom-input-class" />);
+    const { container } = render(
+      <Input {...defaultProps} className="custom-input-class" />
+    );
     expect(container.firstChild).toHaveClass('custom-input-class');
     expect(container.firstChild).toHaveClass(/input/); // Module class
   });

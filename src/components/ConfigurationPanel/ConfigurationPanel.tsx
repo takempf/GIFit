@@ -237,9 +237,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         />
         {}
         {}
-        {}
-        {}
-        {}
         <ButtonToggle
           className={css.linkDimensions}
           name="linkDimensions"
@@ -257,8 +254,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             <LinkEmptyIcon className={css.linkIcon} />
           )}
         </ButtonToggle>
-        {}
-        {}
         <InputNumber
           className={css.height}
           name="height"

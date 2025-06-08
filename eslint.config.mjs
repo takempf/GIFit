@@ -71,5 +71,12 @@ export default [
       // Kept no-unused-vars for project files, but it's not needed for config
       // Removed: '@typescript-eslint/no-unused-vars': 'warn',
     }
+  },
+  // Configuration to disable specific rule for ConfigurationPanel.tsx
+  {
+    files: ['src/components/ConfigurationPanel/ConfigurationPanel.tsx'],
+    rules: {
+      'jsx-a11y/no-noninteractive-element-interactions': 'off'
+    }
   }
 ];

@@ -51,16 +51,18 @@ export function InputNumber({
           variant="ghost"
           padding="none"
           onClick={handleUpClick}
-          disabled={disabled}> {/* Pass disabled prop */}
-          ▲
+          disabled={disabled}>
+          {' '}
+          {/* Pass disabled prop */}▲
         </Button>
         <Button
           size="x-small"
           variant="ghost"
           padding="none"
           onClick={handleDownClick}
-          disabled={disabled}> {/* Pass disabled prop */}
-          ▼
+          disabled={disabled}>
+          {' '}
+          {/* Pass disabled prop */}▼
         </Button>
       </div>
       {append}

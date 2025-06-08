@@ -2,7 +2,14 @@ import { describe, it, expect } from 'vitest';
 import floydSteinberg from './dither'; // Default export
 
 // Helper to create a Uint8ClampedArray for a solid color image
-function createImageData(width: number, height: number, r: number, g: number, b: number, a = 255): Uint8ClampedArray {
+function createImageData(
+  width: number,
+  height: number,
+  r: number,
+  g: number,
+  b: number,
+  a = 255
+): Uint8ClampedArray {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let i = 0; i < data.length; i += 4) {
     data[i] = r;
@@ -14,9 +21,14 @@ function createImageData(width: number, height: number, r: number, g: number, b:
 }
 
 // Helper to get a pixel's RGBA value
-function getPixel(pixels: Uint8ClampedArray, x: number, y: number, width: number): [number, number, number, number] {
+function getPixel(
+  pixels: Uint8ClampedArray,
+  x: number,
+  y: number,
+  width: number
+): [number, number, number, number] {
   const i = (y * width + x) * 4;
-  return [pixels[i], pixels[i+1], pixels[i+2], pixels[i+3]];
+  return [pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3]];
 }
 
 describe('floydSteinberg dithering', () => {
@@ -81,12 +93,17 @@ describe('floydSteinberg dithering', () => {
     const dithered = floydSteinberg(pixels, 2, 2, palette);
 
     for (let i = 0; i < dithered.length; i += 4) {
-      const pixelColor: [number, number, number] = [dithered[i], dithered[i+1], dithered[i+2]];
+      const pixelColor: [number, number, number] = [
+        dithered[i],
+        dithered[i + 1],
+        dithered[i + 2]
+      ];
       // Check if this pixelColor is one of the palette colors
-      const isInPalette = palette.some(paletteColor =>
-        paletteColor[0] === pixelColor[0] &&
-        paletteColor[1] === pixelColor[1] &&
-        paletteColor[2] === pixelColor[2]
+      const isInPalette = palette.some(
+        (paletteColor) =>
+          paletteColor[0] === pixelColor[0] &&
+          paletteColor[1] === pixelColor[1] &&
+          paletteColor[2] === pixelColor[2]
       );
       expect(isInPalette).toBe(true);
     }

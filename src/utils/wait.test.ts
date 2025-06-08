@@ -48,7 +48,7 @@ describe('wait', () => {
 
   it('should handle negative ms by resolving immediately (as setTimeout clamps to 0)', async () => {
     const promise = wait(-100);
-     let resolved = false;
+    let resolved = false;
     promise.then(() => {
       resolved = true;
     });

@@ -39,7 +39,8 @@ interface GifActions {
 
 type GifStore = GifState & GifActions;
 
-const initialState: GifState = {
+export const initialState: GifState = {
+  // Added export
   status: 'idle',
   name: 'untitled',
   width: 320,
@@ -107,14 +108,14 @@ export const useGifStore = create<GifStore>((set, get) => ({
     const onAbort = () => {
       // State might already be 'aborted' if triggered by get().abortGif()
       // This handles cases where the service aborts internally or finishes aborting
+      const serviceToClean = get()._serviceInstance; // Capture instance before state change
       if (get().status !== 'aborted') {
         set({ status: 'aborted', _serviceInstance: null });
-      }
-      // Ensure cleanup even if abort was triggered externally
-      if (get()._serviceInstance) {
-        get()._serviceInstance?.destroy();
+      } else {
+        // If status was already 'aborted' (e.g. by abortGif action), still ensure instance is cleared from state
         set({ _serviceInstance: null });
       }
+      serviceToClean?.destroy(); // Call destroy on the captured instance
     };
 
     service.on('frames progress', onFramesProgress);

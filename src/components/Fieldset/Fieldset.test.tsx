@@ -11,12 +11,18 @@ describe('Fieldset', () => {
       </Fieldset>
     );
     // A fieldset's default accessible name can be derived from its <legend>
-    expect(screen.getByRole('group', { name: /Test Legend/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('group', { name: /Test Legend/i })
+    ).toBeInTheDocument();
     expect(screen.getByLabelText('test-input')).toBeInTheDocument();
   });
 
   it('should apply the fieldset CSS class', () => {
-    const { container } = render(<Fieldset><div data-testid="child" /></Fieldset>);
+    const { container } = render(
+      <Fieldset>
+        <div data-testid="child" />
+      </Fieldset>
+    );
     // Check if the fieldset element (first child of container) has the CSS module class
     const fieldsetElement = container.firstChild;
     expect(fieldsetElement).toHaveClass(/fieldset/); // Regex match for CSS module class

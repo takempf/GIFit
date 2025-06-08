@@ -9,7 +9,8 @@ import { InputTime } from './InputTime';
 // accepted and forwarded a ref to its Input, that would be another test case.
 // For now, the tests will interact with the rendered input element directly.
 
-describe('InputTime', () => { // Reverted timeout increase
+describe('InputTime', () => {
+  // Reverted timeout increase
   const mockOnChange = vi.fn();
   const mockRef = React.createRef<HTMLInputElement>(); // Required by underlying Input
 
@@ -21,10 +22,10 @@ describe('InputTime', () => { // Reverted timeout increase
     // It passes its own label structure to the Input it renders.
     // The aria-label "Time input in H:MM:SS.s or M:SS.s format" is hardcoded in InputTime.
     // Let's use that for querying.
-    'aria-label': "Time input in H:MM:SS.s or M:SS.s format", // Hardcoded in component
+    'aria-label': 'Time input in H:MM:SS.s or M:SS.s format', // Hardcoded in component
     name: 'timeInput', // Passed to underlying Input
     label: 'Time', // Passed to underlying Input
-    ref: mockRef, // Passed to underlying Input
+    ref: mockRef // Passed to underlying Input
   };
 
   beforeEach(() => {
@@ -36,7 +37,10 @@ describe('InputTime', () => { // Reverted timeout increase
     vi.restoreAllMocks(); // Restores timers and spies
   });
 
-  const getInputElement = () => screen.getByLabelText("Time input in H:MM:SS.s or M:SS.s format") as HTMLInputElement;
+  const getInputElement = () =>
+    screen.getByLabelText(
+      'Time input in H:MM:SS.s or M:SS.s format'
+    ) as HTMLInputElement;
 
   it('should render with initial value correctly formatted', () => {
     render(<InputTime {...defaultProps} value={65.5} step={0.1} />); // 1m 5s 500ms
@@ -50,7 +54,7 @@ describe('InputTime', () => { // Reverted timeout increase
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should call onChange with new numeric value when input changes and blurs', async () => {
-    render(<InputTime {...defaultProps} value={0} debounceMs={0} />); // No debounce for direct test
+    render(<InputTime {...defaultProps} value={0} debounceMs={0} />); // Debounce effectively bypassed by mock in test env
     const input = getInputElement();
     await userEvent.clear(input);
     await userEvent.type(input, '1:30.5');
@@ -65,71 +69,89 @@ describe('InputTime', () => { // Reverted timeout increase
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should handle invalid text input by reverting to last valid value on blur', async () => {
-    render(<InputTime {...defaultProps} value={60} debounceMs={0} step={1}/>); // initial 1:00
+    render(<InputTime {...defaultProps} value={60} debounceMs={0} step={1} />); // initial 1:00
     const input = getInputElement();
     await userEvent.clear(input);
     await userEvent.type(input, 'abc');
+    // For blur actions leading to state updates, act might be needed.
     await act(async () => {
       input.blur();
-      vi.runAllTimers();
     });
+    // No vi.runAllTimers() needed due to mocked debounce
     expect(mockOnChange).not.toHaveBeenCalled(); // Should not call onChange with invalid
     expect(input.value).toBe('1:00'); // Reverted
   });
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should call onChange when increment button is clicked', async () => {
-    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0}/>);
-    const incrementButton = screen.getByRole('button', { name: 'Increment time' });
+    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0} />);
+    const incrementButton = screen.getByRole('button', {
+      name: 'Increment time'
+    });
     await userEvent.click(incrementButton);
-    await act(async () => { vi.runAllTimers(); }); // Ensure debounce and state updates settle
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(11);
   });
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should call onChange when decrement button is clicked', async () => {
-    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0}/>);
-    const decrementButton = screen.getByRole('button', { name: 'Decrement time' });
+    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0} />);
+    const decrementButton = screen.getByRole('button', {
+      name: 'Decrement time'
+    });
     await userEvent.click(decrementButton);
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(9);
   });
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should respect min/max with stepper buttons', async () => {
-    render(<InputTime {...defaultProps} value={0} step={1} min={0} max={1} debounceMs={0}/>);
-    const incrementButton = screen.getByRole('button', { name: 'Increment time' });
-    const decrementButton = screen.getByRole('button', { name: 'Decrement time' });
+    render(
+      <InputTime
+        {...defaultProps}
+        value={0}
+        step={1}
+        min={0}
+        max={1}
+        debounceMs={0}
+      />
+    );
+    const incrementButton = screen.getByRole('button', {
+      name: 'Increment time'
+    });
+    const decrementButton = screen.getByRole('button', {
+      name: 'Decrement time'
+    });
 
     await userEvent.click(decrementButton); // Try to go below min
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledWith(0); // Stays at min
 
     mockOnChange.mockClear();
     await userEvent.click(incrementButton); // 0 -> 1
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledWith(1);
 
     mockOnChange.mockClear();
     await userEvent.click(incrementButton); // Try to go above max
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledWith(1); // Stays at max
   });
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('should handle ArrowUp and ArrowDown key presses for stepping', async () => {
-    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0}/>);
+    render(<InputTime {...defaultProps} value={10} step={1} debounceMs={0} />);
     const input = getInputElement();
 
     await userEvent.type(input, '{arrowup}');
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledWith(11);
 
     mockOnChange.mockClear();
     await userEvent.type(input, '{arrowdown}');
-    await act(async () => { vi.runAllTimers(); });
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledWith(10); // Back to 10 from 11
   });
 
@@ -140,7 +162,7 @@ describe('InputTime', () => { // Reverted timeout increase
     await userEvent.clear(input);
     await userEvent.type(input, '0:15');
     await userEvent.type(input, '{enter}');
-    await act(async () => { vi.runAllTimers(); }); // Ensure commit logic completes
+    // No vi.runAllTimers() needed
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(15);
   });
@@ -148,13 +170,19 @@ describe('InputTime', () => { // Reverted timeout increase
   it('should be disabled when disabled prop is true', () => {
     render(<InputTime {...defaultProps} value={10} disabled />);
     expect(getInputElement()).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Increment time' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Decrement time' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Increment time' })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Decrement time' })
+    ).toBeDisabled();
   });
 
   // TODO: Fix test timeout - issue with debouncing and fake timers
   it.skip('debounces onChange calls when typing quickly', async () => {
-    render(<InputTime {...defaultProps} value={0} debounceMs={500} step={0.1} />);
+    render(
+      <InputTime {...defaultProps} value={0} debounceMs={500} step={0.1} />
+    );
     const input = getInputElement();
 
     await userEvent.type(input, '1'); // displayValue "1"
@@ -169,7 +197,9 @@ describe('InputTime', () => { // Reverted timeout increase
     await userEvent.type(input, '3'); // displayValue "12.3"
     expect(mockOnChange).not.toHaveBeenCalled();
 
-    act(() => { vi.advanceTimersByTime(500); }); // Advance timer to trigger debounced call
+    act(() => {
+      vi.advanceTimersByTime(500);
+    }); // Advance timer to trigger debounced call
     expect(mockOnChange).toHaveBeenCalledTimes(1);
     expect(mockOnChange).toHaveBeenCalledWith(12.3);
   });

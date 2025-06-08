@@ -43,7 +43,7 @@ describe('secondsToTimecode', () => {
 
   it('should ensure minutes are padded in HH:MM:SS format but not in M:SS', () => {
     expect(secondsToTimecode(3605)).toBe('1:00:05'); // 1h 0m 5s
-    expect(secondsToTimecode(5)).toBe('0:05');       // 0h 0m 5s
-    expect(secondsToTimecode(65)).toBe('1:05');       // 0h 1m 5s
+    expect(secondsToTimecode(5)).toBe('0:05'); // 0h 0m 5s
+    expect(secondsToTimecode(65)).toBe('1:05'); // 0h 1m 5s
   });
 });

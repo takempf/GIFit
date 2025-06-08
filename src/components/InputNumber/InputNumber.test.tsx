@@ -13,13 +13,12 @@ describe('InputNumber', () => {
   // However, the InputProps requires a ref. Let's provide one.
   const mockExternalRef = React.createRef<HTMLInputElement>();
 
-
   const defaultProps = {
     name: 'testNumberInput',
     label: 'Test Number Label',
     value: '10', // Value is a string
     onChange: mockOnChange,
-    ref: mockExternalRef, // Prop for the underlying Input component
+    ref: mockExternalRef // Prop for the underlying Input component
   };
 
   beforeEach(() => {
@@ -33,12 +32,17 @@ describe('InputNumber', () => {
     // For now, test as is. If it's meant to be number, it should pass type="number" to Input.
     render(<InputNumber {...defaultProps} type="number" />); // Explicitly pass type for testing
     expect(screen.getByLabelText('Test Number Label')).toBeInTheDocument();
-    expect(screen.getByLabelText('Test Number Label')).toHaveAttribute('type', 'number');
+    expect(screen.getByLabelText('Test Number Label')).toHaveAttribute(
+      'type',
+      'number'
+    );
   });
 
   it('should display the correct string value', () => {
     render(<InputNumber {...defaultProps} value="123" type="number" />);
-    const inputElement = screen.getByLabelText('Test Number Label') as HTMLInputElement;
+    const inputElement = screen.getByLabelText(
+      'Test Number Label'
+    ) as HTMLInputElement;
     expect(inputElement.value).toBe('123');
   });
 
@@ -74,7 +78,15 @@ describe('InputNumber', () => {
     // Note: stepUp/stepDown behavior with min/max can be browser-dependent if not strictly controlled.
     // Here we assume standard HTML behavior that stepUp won't go beyond max.
     // The component doesn't add extra logic for disabling buttons based on min/max yet.
-    render(<InputNumber {...defaultProps} value="9" type="number" step="1" max="10" />);
+    render(
+      <InputNumber
+        {...defaultProps}
+        value="9"
+        type="number"
+        step="1"
+        max="10"
+      />
+    );
     const incrementButton = screen.getByRole('button', { name: '▲' });
     await userEvent.click(incrementButton); // value becomes "10"
     expect(mockOnChange).toHaveBeenCalled();
@@ -87,7 +99,9 @@ describe('InputNumber', () => {
   });
 
   it('decrement button should respect min attribute if stepDown does', async () => {
-    render(<InputNumber {...defaultProps} value="1" type="number" step="1" min="0" />);
+    render(
+      <InputNumber {...defaultProps} value="1" type="number" step="1" min="0" />
+    );
     const decrementButton = screen.getByRole('button', { name: '▼' });
     await userEvent.click(decrementButton); // value becomes "0"
     expect(mockOnChange).toHaveBeenCalled();
@@ -104,7 +118,13 @@ describe('InputNumber', () => {
   });
 
   it('should render append prop content correctly', () => {
-    render(<InputNumber {...defaultProps} type="number" append={<span data-testid="unit">kg</span>} />);
+    render(
+      <InputNumber
+        {...defaultProps}
+        type="number"
+        append={<span data-testid="unit">kg</span>}
+      />
+    );
     expect(screen.getByTestId('unit')).toBeInTheDocument();
     // Ensure original controls are also there
     expect(screen.getByRole('button', { name: '▲' })).toBeInTheDocument();

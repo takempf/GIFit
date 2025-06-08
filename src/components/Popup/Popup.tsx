@@ -20,12 +20,22 @@ type PopupProps = Record<string, never>;
 export function Popup({}: PopupProps) {
   const popupElementRef = useRef(null);
   const videoElement = useAppStore((state) => state.videoElement);
-  const status = useAppStore((state) => state.status);
+  // const appStatus = useAppStore((state) => state.status); // Renamed to avoid conflict - REMOVED AS UNUSED
   const close = useAppStore((state) => state.close);
-  const setStatus = useAppStore((state) => state.setStatus);
-  const setName = useGifStore((state) => state.setName);
-  const createGif = useGifStore((state) => state.createGif);
-  const generationId = useGifStore((state) => state.generationId);
+  const setStatus = useAppStore((state) => state.setStatus); // This is appStore's setStatus
+
+  // Select gifStore properties, including its own status
+  const {
+    status: gifStatus,
+    setName,
+    createGif,
+    generationId
+  } = useGifStore((state) => ({
+    status: state.status,
+    setName: state.setName,
+    createGif: state.createGif,
+    generationId: state.generationId
+  }));
 
   useEffect(() => {
     const popupElement = popupElementRef.current;
@@ -87,11 +97,13 @@ export function Popup({}: PopupProps) {
           </Button>
         </header>
         <div className={css.container}>
-          <section className={css.config}>
-            <ConfigurationPanel onSubmit={handleSubmit} />
-          </section>
+          {gifStatus === 'idle' && (
+            <section className={css.config}>
+              <ConfigurationPanel onSubmit={handleSubmit} />
+            </section>
+          )}
           <AnimatePresence>
-            {status === 'generating' && (
+            {gifStatus === 'generating' && ( // Use gifStatus here
               <motion.section
                 key={`generation_${generationId}`}
                 className={css.generation}
@@ -114,8 +126,10 @@ export function Popup({}: PopupProps) {
             className={css.credit}
             href="https://kempf.dev/#gifit"
             target="_blank"
-            rel="noreferrer">
-            Crafted by <img className={css.tkLogo} src={TKLogo} alt="" />
+            rel="noreferrer"
+            referrerPolicy="unsafe-url">
+            Crafted by{' '}
+            <TKLogo className={css.tkLogo} data-testid="tk-logo-svg" />
           </a>
           <span className={css.version}>v3.0.0</span>
         </footer>
