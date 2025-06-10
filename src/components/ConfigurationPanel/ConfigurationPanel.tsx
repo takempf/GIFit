@@ -86,6 +86,13 @@ function reducer(state: ConfigState, action: ConfigAction) {
       };
     }
 
+    case 'VIDEO_SEEKED': {
+      return {
+        ...state,
+        start: action.payload.currentTime
+      };
+    }
+
     default:
       return {
         ...state
@@ -135,6 +142,32 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [video]);
+
+  useEffect(() => {
+    if (!(video instanceof HTMLVideoElement)) {
+      return;
+    }
+
+    function handleVideoSeeked() {
+      const { isOpen, status } = useAppStore.getState();
+
+      if (isOpen && status === 'configuring') {
+        log('Video seeked, updating start time to:', video.currentTime);
+        dispatch({
+          type: 'VIDEO_SEEKED',
+          payload: {
+            currentTime: video.currentTime
+          }
+        });
+      }
+    }
+
+    video.addEventListener('seeked', handleVideoSeeked);
+
+    return () => {
+      video.removeEventListener('seeked', handleVideoSeeked);
     };
   }, [video]);
 
