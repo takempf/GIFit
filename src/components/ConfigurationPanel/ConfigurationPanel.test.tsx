@@ -5,9 +5,12 @@ import { useAppStore } from '@/stores/appStore'; // Adjust path if necessary
 import { secondsToTimecode } from '@/utils/secondsToTimecode'; // Helper for assertions
 
 // Mock the useAppStore
-vi.mock('@/stores/appStore', () => ({
-  useAppStore: vi.fn()
-}));
+vi.mock('@/stores/appStore', () => {
+  const mockGetStateFn = vi.fn();
+  return {
+    useAppStore: Object.assign(vi.fn(), { getState: mockGetStateFn })
+  };
+});
 
 // Mock the logger utility
 vi.mock('@/utils/logger', () => ({
@@ -45,28 +48,35 @@ const createMockVideoElement = () => {
 describe('ConfigurationPanel', () => {
   let mockVideoElement: HTMLVideoElement;
   let mockAppStoreState: any;
+  let actualAppStore: any; // To get the hoisted mockGetState
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks before each test
     vi.clearAllMocks();
+
+    // Dynamically import the mocked store to access its functions
+    actualAppStore = await import('@/stores/appStore');
 
     mockVideoElement = createMockVideoElement();
     mockAppStoreState = {
       isOpen: true,
       status: 'configuring',
-      videoElement: mockVideoElement,
-      // Mock other state properties and actions as needed by the component
-      // For example, if ConfigurationPanel calls any actions on the store directly
-      getState: () => mockAppStoreState // For listeners accessing store directly
+      videoElement: mockVideoElement
     };
+    // Now use actualAppStore.useAppStore.getState to set the mock return value
+    (
+      actualAppStore.useAppStore.getState as ReturnType<typeof vi.fn>
+    ).mockReturnValue(mockAppStoreState);
 
     // @ts-ignore
-    useAppStore.mockImplementation((selector) => {
-      if (typeof selector === 'function') {
-        return selector(mockAppStoreState);
+    (actualAppStore.useAppStore as ReturnType<typeof vi.fn>).mockImplementation(
+      (selector) => {
+        if (typeof selector === 'function') {
+          return selector(mockAppStoreState);
+        }
+        return mockAppStoreState;
       }
-      return mockAppStoreState; // Fallback for direct store access if any part expects that
-    });
+    );
   });
 
   test('updates start time on video seek when app is open and configuring', () => {
@@ -81,15 +91,20 @@ describe('ConfigurationPanel', () => {
     });
 
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
-    // Assuming InputTime component formats the value, we need to check against the formatted string
-    // If secondsToTimecode is used internally, use it for expected value
-    expect(startTimeInput.value).toBe(secondsToTimecode(newTime));
+    // InputTime component formats with one decimal for seconds (e.g., "0:05.0")
+    expect(startTimeInput.value).toBe(`${secondsToTimecode(newTime)}.0`);
   });
 
   test('does NOT update start time if app is not open', () => {
     mockAppStoreState.isOpen = false;
+    // Update the mock return value for getState for this specific test case
+    (
+      actualAppStore.useAppStore.getState as ReturnType<typeof vi.fn>
+    ).mockReturnValue(mockAppStoreState);
     // @ts-ignore
-    useAppStore.mockImplementation((selector) => selector(mockAppStoreState));
+    (actualAppStore.useAppStore as ReturnType<typeof vi.fn>).mockImplementation(
+      (selector) => selector(mockAppStoreState)
+    );
 
     render(<ConfigurationPanel onSubmit={vi.fn()} />);
     const initialStartTime = mockVideoElement.currentTime; // Should be 0 from createMockVideoElement
@@ -101,13 +116,21 @@ describe('ConfigurationPanel', () => {
     });
 
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
-    expect(startTimeInput.value).toBe(secondsToTimecode(initialStartTime));
+    expect(startTimeInput.value).toBe(
+      `${secondsToTimecode(initialStartTime)}.0`
+    );
   });
 
   test('does NOT update start time if status is not "configuring"', () => {
     mockAppStoreState.status = 'generating';
+    // Update the mock return value for getState for this specific test case
+    (
+      actualAppStore.useAppStore.getState as ReturnType<typeof vi.fn>
+    ).mockReturnValue(mockAppStoreState);
     // @ts-ignore
-    useAppStore.mockImplementation((selector) => selector(mockAppStoreState));
+    (actualAppStore.useAppStore as ReturnType<typeof vi.fn>).mockImplementation(
+      (selector) => selector(mockAppStoreState)
+    );
 
     render(<ConfigurationPanel onSubmit={vi.fn()} />);
     const initialStartTime = mockVideoElement.currentTime;
@@ -119,7 +142,9 @@ describe('ConfigurationPanel', () => {
     });
 
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
-    expect(startTimeInput.value).toBe(secondsToTimecode(initialStartTime));
+    expect(startTimeInput.value).toBe(
+      `${secondsToTimecode(initialStartTime)}.0`
+    );
   });
 
   test('cleans up "seeked" event listener on unmount', () => {
@@ -127,28 +152,33 @@ describe('ConfigurationPanel', () => {
 
     expect(mockVideoElement.addEventListener).toHaveBeenCalledWith(
       'seeked',
-      expect.any(Function), // The handler function
-      undefined // Or whatever options are used, if any
+      expect.any(Function) // The handler function
     );
 
     unmount();
 
     expect(mockVideoElement.removeEventListener).toHaveBeenCalledWith(
       'seeked',
-      expect.any(Function), // Should be the same handler function instance
-      undefined
+      expect.any(Function) // Should be the same handler function instance
     );
   });
 
   test('initial start time is set from video current time', () => {
     mockVideoElement.currentTime = 3; // Set an initial time before render
     mockAppStoreState.videoElement = mockVideoElement;
+    // Update the mock return value for getState for this specific test case
+    (
+      actualAppStore.useAppStore.getState as ReturnType<typeof vi.fn>
+    ).mockReturnValue(mockAppStoreState);
     // @ts-ignore
-    useAppStore.mockImplementation((selector) => selector(mockAppStoreState));
+    (actualAppStore.useAppStore as ReturnType<typeof vi.fn>).mockImplementation(
+      (selector) => selector(mockAppStoreState)
+    );
 
     render(<ConfigurationPanel onSubmit={vi.fn()} />);
 
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
-    expect(startTimeInput.value).toBe(secondsToTimecode(3));
+    // InputTime component formats with one decimal for seconds (e.g., "0:03.0")
+    expect(startTimeInput.value).toBe(`${secondsToTimecode(3)}.0`);
   });
 });
