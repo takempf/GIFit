@@ -152,8 +152,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
     function handleVideoSeeked() {
       const { isOpen, status } = useAppStore.getState();
-
-      if (isOpen && status === 'configuring') {
+      if (video && isOpen && status === 'configuring' && video.paused) {
         log('Video seeked, updating start time to:', video.currentTime);
         dispatch({
           type: 'VIDEO_SEEKED',
@@ -215,7 +214,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   }
 
   function handleLinkChange(isLinked) {
-    console.log('isLinked', isLinked);
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {

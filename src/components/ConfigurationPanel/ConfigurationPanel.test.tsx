@@ -1,7 +1,6 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { vi } from 'vitest';
+import { render, screen, act } from '@testing-library/react';
+import { vi, describe, beforeEach, test, expect } from 'vitest';
 import ConfigurationPanel from './ConfigurationPanel'; // Adjust path if necessary
-import { useAppStore } from '@/stores/appStore'; // Adjust path if necessary
 import { secondsToTimecode } from '@/utils/secondsToTimecode'; // Helper for assertions
 
 // Mock the useAppStore
@@ -41,6 +40,10 @@ const createMockVideoElement = () => {
     writable: true,
     value: 720
   });
+  Object.defineProperty(videoElement, 'paused', {
+    writable: true,
+    value: true
+  });
 
   return videoElement;
 };
@@ -79,7 +82,7 @@ describe('ConfigurationPanel', () => {
     );
   });
 
-  test('updates start time on video seek when app is open and configuring', () => {
+  test('updates start time on video seek when app is open and configuring and video is paused', () => {
     render(<ConfigurationPanel onSubmit={vi.fn()} />);
 
     const newTime = 5;
@@ -93,6 +96,23 @@ describe('ConfigurationPanel', () => {
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
     // InputTime component formats with one decimal for seconds (e.g., "0:05.0")
     expect(startTimeInput.value).toBe(`${secondsToTimecode(newTime)}.0`);
+  });
+
+  test('does not update start time on video seek when app is open and configuring and video is not paused', () => {
+    render(<ConfigurationPanel onSubmit={vi.fn()} />);
+
+    Object.defineProperty(mockVideoElement, 'paused', { value: false });
+    const newTime = 5;
+    act(() => {
+      mockVideoElement.currentTime = newTime;
+      // Directly dispatch the event from the video element
+      const event = new Event('seeked');
+      mockVideoElement.dispatchEvent(event);
+    });
+
+    const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
+    // InputTime component formats with one decimal for seconds (e.g., "0:05.0")
+    expect(startTimeInput.value).toBe(`0:00.0`);
   });
 
   test('does NOT update start time if app is not open', () => {
