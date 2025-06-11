@@ -1,5 +1,6 @@
 import { defineConfig } from 'wxt';
 import svgrPlugin from 'vite-plugin-svgr';
+import path from 'path';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -10,6 +11,11 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   imports: false,
   vite: () => ({
-    plugins: [svgrPlugin()]
+    plugins: [svgrPlugin()],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
   })
 });

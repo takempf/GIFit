@@ -86,6 +86,13 @@ function reducer(state: ConfigState, action: ConfigAction) {
       };
     }
 
+    case 'VIDEO_SEEKED': {
+      return {
+        ...state,
+        start: action.payload.currentTime
+      };
+    }
+
     default:
       return {
         ...state
@@ -138,6 +145,31 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     };
   }, [video]);
 
+  useEffect(() => {
+    if (!(video instanceof HTMLVideoElement)) {
+      return;
+    }
+
+    function handleVideoSeeked() {
+      const { isOpen, status } = useAppStore.getState();
+      if (video && isOpen && status === 'configuring' && video.paused) {
+        log('Video seeked, updating start time to:', video.currentTime);
+        dispatch({
+          type: 'VIDEO_SEEKED',
+          payload: {
+            currentTime: video.currentTime
+          }
+        });
+      }
+    }
+
+    video.addEventListener('seeked', handleVideoSeeked);
+
+    return () => {
+      video.removeEventListener('seeked', handleVideoSeeked);
+    };
+  }, [video]);
+
   function handleInputChange(event: InputEvent) {
     if (!event.target) {
       return;
@@ -182,7 +214,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   }
 
   function handleLinkChange(isLinked) {
-    console.log('isLinked', isLinked);
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {
