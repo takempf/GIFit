@@ -45,6 +45,7 @@ function seekTo(videoElement: HTMLVideoElement, time: number) {
   }
 
   videoElement.currentTime = clamp(0, videoElement.duration, time);
+  videoElement.pause(); // ensure video does not play on its own
 }
 
 function getVideoAspectRatio(videoElement: HTMLVideoElement) {
