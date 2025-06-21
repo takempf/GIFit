@@ -31,8 +31,8 @@ const initialState: AppState = {
 // Apply the interface to the create function
 export const useAppStore = create<AppStore>((set) => {
   const actions: AppActions = {
-    open: () => set({ isOpen: true }),
-    close: () => set({ isOpen: false }),
+    open: () => set({ isOpen: true, status: 'configuring' }),
+    close: () => set({ isOpen: false, status: 'configuring' }),
     toggle: () => set((state) => ({ isOpen: !state.isOpen })),
     setVideoId: (id: string) => set({ videoId: id }),
     setVideoElement: (element: HTMLVideoElement) =>
