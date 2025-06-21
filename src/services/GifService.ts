@@ -66,7 +66,10 @@ class GifService extends EventEmitter {
    * @param config - GIF creation parameters.
    * @param videoElement - The HTMLVideoElement source.
    */
-  createGif(config: GifConfig, videoElement: HTMLVideoElement): void {
+  async createGif(
+    config: GifConfig,
+    videoElement: HTMLVideoElement
+  ): Promise<void> {
     log('Creating GIF with config:', config);
     this.abort(); // Stop any existing process
     this.aborted = false;
@@ -80,33 +83,12 @@ class GifService extends EventEmitter {
       return;
     }
 
-    let finalMaxColors: number;
-    if (config.maxColors !== undefined) {
-      if (config.maxColors < 2 || config.maxColors > 256) {
-        this.emit(
-          'error',
-          new Error(
-            `config.maxColors must be 2-256. Received: ${config.maxColors}`
-          )
-        );
-        return;
-      }
-      finalMaxColors = config.maxColors;
-    } else {
-      const quality = Number(config.quality);
-      finalMaxColors =
-        quality <= 0 || MAX_QUALITY <= 0
-          ? 256
-          : Math.floor((quality / MAX_QUALITY) * 256);
-      finalMaxColors = Math.max(2, Math.min(256, finalMaxColors)); // Clamp
-    }
+    const maxColors = this.getMaxColors(config);
 
     this.canvasEl.width = config.width;
     this.canvasEl.height = config.height;
     this.canvasEl.style.width = `${config.width}px`;
     this.canvasEl.style.height = `${config.height}px`;
-
-    if (!videoElement.paused) videoElement.pause(); // For consistent frame grabs
 
     try {
       this.encoder = GIFEncoder();
@@ -118,7 +100,32 @@ class GifService extends EventEmitter {
       return;
     }
 
-    this._startFrameProcessing(config, videoElement, finalMaxColors);
+    await this._startFrameProcessing(config, videoElement, maxColors);
+  }
+
+  getMaxColors(config: GifConfig): number {
+    let finalMaxColors: number;
+    if (config.maxColors !== undefined) {
+      if (config.maxColors < 2 || config.maxColors > 256) {
+        this.emit(
+          'error',
+          new Error(
+            `config.maxColors must be 2-256. Received: ${config.maxColors}`
+          )
+        );
+        return 256;
+      }
+      finalMaxColors = config.maxColors;
+    } else {
+      const quality = Number(config.quality);
+      finalMaxColors =
+        quality <= 0 || MAX_QUALITY <= 0
+          ? 256
+          : Math.floor((quality / MAX_QUALITY) * 256);
+      finalMaxColors = Math.max(2, Math.min(256, finalMaxColors)); // Clamp
+    }
+
+    return finalMaxColors;
   }
 
   /** Aborts the current GIF creation process. */
@@ -181,6 +188,7 @@ class GifService extends EventEmitter {
       video.addEventListener('seeked', doneSeeking);
       video.addEventListener('error', onError);
       video.currentTime = time;
+      video.pause(); // ensure we don't accidentally play
     });
   }
 
