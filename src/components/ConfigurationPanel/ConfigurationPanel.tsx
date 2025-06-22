@@ -125,6 +125,10 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
 
     function handleLoadedMetadata() {
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+
       // set some default values here
       const aspectRatio = getVideoAspectRatio(video);
 
