@@ -71,7 +71,6 @@ class GifService extends EventEmitter {
     videoElement: HTMLVideoElement
   ): Promise<void> {
     log('Creating GIF with config:', config);
-    this.abort(); // Stop any existing process
     this.aborted = false;
     this.framesComplete = 0;
 
@@ -135,7 +134,7 @@ class GifService extends EventEmitter {
     }
     log('Aborting GIF creation');
     this.aborted = true;
-
+    console.log('this.aborted was just set to true, right?', this.aborted);
     if (this.pendingFrameTimeoutId) {
       clearTimeout(this.pendingFrameTimeoutId);
       this.pendingFrameTimeoutId = null;
@@ -328,7 +327,7 @@ class GifService extends EventEmitter {
     try {
       await this._asyncSeek(videoElement, nextFrameTimeMs / 1000);
       if (this.aborted) return; // Check abort status post-async operation
-
+      console.log('is aborted?', this.aborted);
       if (this.pendingFrameTimeoutId) clearTimeout(this.pendingFrameTimeoutId);
       this.pendingFrameTimeoutId = setTimeout(() => {
         this.pendingFrameTimeoutId = null; // Clear ID once callback executes
