@@ -8,6 +8,7 @@ interface ButtonToggleProps {
   children: React.ReactNode;
   className: string;
   value: boolean;
+  name: string;
   onChange: (value: boolean) => void;
 }
 
@@ -16,6 +17,7 @@ export function ButtonToggle({
   className,
   value,
   onChange,
+  name,
   ...restProps
 }: ButtonToggleProps) {
   return (
@@ -23,6 +25,7 @@ export function ButtonToggle({
       {children}
       <input
         className={css.checkbox}
+        name={name}
         type="checkbox"
         checked={value}
         onChange={(e) => onChange(e.target.checked)}

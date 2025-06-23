@@ -2,7 +2,8 @@ import css from './Input.module.css';
 
 import cx from 'classnames';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   prepend?: React.ReactNode;
   append?: React.ReactNode;
   name: string;
@@ -10,7 +11,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   type?: HTMLInputElement['type'];
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  ref: React.RefObject<HTMLInputElement>;
+  ref: React.RefObject<HTMLInputElement | null>;
 }
 
 export function Input({

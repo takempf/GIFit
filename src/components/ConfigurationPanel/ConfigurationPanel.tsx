@@ -29,10 +29,17 @@ interface ConfigState {
   aspectRatio: number;
 }
 
-interface ConfigAction {
-  type: string;
-  payload: any;
-}
+// This creates a union of all possible input change payloads, e.g.,
+// { name: 'start'; value: number } | { name: 'linkDimensions'; value: boolean }
+type InputActionPayload = {
+  [K in keyof ConfigState]: { name: K; value: ConfigState[K] };
+}[keyof ConfigState];
+
+// FIX: Created a discriminated union for all possible actions for type safety in the reducer.
+type ConfigAction =
+  | { type: 'INPUT_CHANGE'; payload: InputActionPayload }
+  | { type: 'VIDEO_LOADED_DATA'; payload: { aspectRatio: number } }
+  | { type: 'VIDEO_SEEKED'; payload: { currentTime: number } };
 
 function seekTo(videoElement: HTMLVideoElement, time: number) {
   if (typeof time !== 'number' || time < 0) {
@@ -52,21 +59,29 @@ function getVideoAspectRatio(videoElement: HTMLVideoElement) {
   return videoElement.videoWidth / videoElement.videoHeight;
 }
 
-function reducer(state: ConfigState, action: ConfigAction) {
+// FIX: Added explicit return type annotation for the reducer.
+function reducer(state: ConfigState, action: ConfigAction): ConfigState {
   switch (action.type) {
     case 'INPUT_CHANGE': {
+      // Because of the improved ConfigAction type, TypeScript now knows that
+      // action.payload.name and action.payload.value are correctly linked.
+      const { name, value } = action.payload;
+
       const newState = {
         ...state,
-        [action.payload.name]: action.payload.value
+        [name]: value
       };
 
       // adjust other dimension if they are linked
       if (state.linkDimensions) {
+        // The payload is a discriminated union, so we check the 'name' property
         if (action.payload.name === 'width') {
+          // TS now knows action.payload.value is a number
           newState.height = Math.round(
             action.payload.value / state.aspectRatio
           );
         } else if (action.payload.name === 'height') {
+          // TS now knows action.payload.value is a number
           newState.width = Math.round(action.payload.value * state.aspectRatio);
         }
       }
@@ -95,14 +110,14 @@ function reducer(state: ConfigState, action: ConfigAction) {
     }
 
     default:
-      return {
-        ...state
-      };
+      // FIX: No need to spread state here, just return it.
+      return state;
   }
 }
 
 interface ConfigurationPanelProps {
-  onSubmit: Function;
+  // FIX: Changed 'Function' to a specific signature for type safety.
+  onSubmit: (config: ConfigState) => void;
 }
 
 function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
@@ -125,13 +140,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
 
     function handleLoadedMetadata() {
-      if (!(video instanceof HTMLVideoElement)) {
-        return;
-      }
-
-      // set some default values here
+      // FIX: Redundant check removed. The useEffect already ensures 'video' is an HTMLVideoElement.
       const aspectRatio = getVideoAspectRatio(video);
-
       dispatch({
         type: 'VIDEO_LOADED_DATA',
         payload: {
@@ -140,9 +150,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       });
     }
 
-    // ensure that this fires at least once
     handleLoadedMetadata();
-
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
 
     return () => {
@@ -175,37 +183,43 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     };
   }, [video]);
 
-  function handleInputChange(event: InputEvent) {
-    if (!event.target) {
+  // FIX: Changed event type from 'InputEvent' to React's 'ChangeEvent'.
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const inputElement = event.target;
+    const fieldName = inputElement.name;
+
+    // FIX: Input values are always strings. They must be parsed to numbers.
+    const numericValue = parseFloat(inputElement.value);
+
+    // Prevent dispatching NaN if the input is cleared or invalid.
+    if (isNaN(numericValue)) {
       return;
     }
 
-    const inputElement = event.target as HTMLInputElement;
-    const fieldName = inputElement.name;
-    const newValue =
-      inputElement.type === 'checkbox'
-        ? inputElement.checked
-        : inputElement.value;
-
-    dispatch({
-      type: 'INPUT_CHANGE',
-      payload: {
-        name: fieldName,
-        value: newValue
-      }
-    });
-
-    // if we're changing the duration, seek to it
-    if (fieldName === 'duration' && newValue && video) {
-      const duration = Number(newValue);
-      const end = state.start + duration;
-      seekTo(video, end);
+    // This check helps TypeScript narrow the type of 'fieldName'
+    if (
+      fieldName === 'duration' ||
+      fieldName === 'width' ||
+      fieldName === 'height' ||
+      fieldName === 'framerate' ||
+      fieldName === 'quality'
+    ) {
+      dispatch({
+        type: 'INPUT_CHANGE',
+        payload: {
+          name: fieldName,
+          value: numericValue
+        }
+      });
     }
 
-    // TODO If start time is greater than end time, adjust
+    if (fieldName === 'duration' && video) {
+      const end = state.start + numericValue;
+      seekTo(video, end);
+    }
   }
 
-  function handleStartChange(newStart) {
+  function handleStartChange(newStart: number) {
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {
@@ -218,7 +232,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
   }
 
-  function handleLinkChange(isLinked) {
+  function handleLinkChange(isLinked: boolean) {
     dispatch({
       type: 'INPUT_CHANGE',
       payload: {
@@ -228,12 +242,14 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     });
   }
 
-  function handleSubmit(event: SubmitEvent) {
+  // FIX: Changed event type from 'SubmitEvent' to React's 'FormEvent'.
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     onSubmit(state);
   }
 
-  function handleKeyDown(event: KeyboardEvent) {
+  // FIX: Changed event type from 'KeyboardEvent' to React's 'KeyboardEvent'.
+  function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
     event.stopPropagation();
   }
 
@@ -255,7 +271,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           name="duration"
           label="Duration"
           type="number"
-          value={state.duration}
+          value={String(state.duration)}
           step={1 / state.framerate}
           onChange={handleInputChange}
         />
@@ -264,13 +280,12 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           name="width"
           label="Width"
           type="number"
-          value={state.width}
+          value={String(state.width)}
           onChange={handleInputChange}
         />
         <ButtonToggle
           className={css.linkDimensions}
           name="linkDimensions"
-          label="Link width and height"
           size="x-small"
           rounded={true}
           variant="input"
@@ -289,7 +304,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           name="height"
           label="Height"
           type="number"
-          value={state.height}
+          value={String(state.height)}
           onChange={handleInputChange}
         />
         <InputNumber
@@ -299,7 +314,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           type="number"
           min={1}
           max={60}
-          value={state.framerate}
+          value={String(state.framerate)}
           onChange={handleInputChange}
         />
         <Input
@@ -309,7 +324,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           type="range"
           min={1}
           max={10}
-          value={state.quality}
+          value={String(state.quality)}
           onChange={handleInputChange}
         />
         <Button id="gifit-submit" className={css.submit} type="submit">

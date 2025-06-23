@@ -5,13 +5,14 @@ import { Button } from '../Button/Button';
 
 import css from './InputNumber.module.css';
 
-interface InputNumberProps {
+import type { InputProps } from '../Input/Input';
+
+interface InputNumberProps extends InputProps {
   name: string;
   label: React.ReactNode;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   append?: React.ReactNode;
-  ref: React.RefObject<HTMLInputElement>;
 }
 
 export function InputNumber({
