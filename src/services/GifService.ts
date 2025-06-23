@@ -25,6 +25,13 @@ export interface GifCompleteData {
   height: number;
 }
 
+export interface IndexingOptions {
+  noDither?: boolean;
+  palette: any;
+  width: number;
+  height: number;
+}
+
 // --- Service Implementation ---
 
 /**
@@ -43,7 +50,7 @@ class GifService extends EventEmitter {
   private framesComplete: number = 0;
   private canvasEl: HTMLCanvasElement | null;
   private context: CanvasRenderingContext2D | null;
-  private pendingFrameTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private currentVideoEl: HTMLVideoElement | null = null;
 
   constructor() {
     super();
@@ -62,24 +69,28 @@ class GifService extends EventEmitter {
   }
 
   /**
-   * Creates a GIF from a video element.
+   * Creates a GIF from a video element. This method awaits the
+   * full frame processing and returns the final GIF data.
    * @param config - GIF creation parameters.
    * @param videoElement - The HTMLVideoElement source.
+   * @returns A promise that resolves with the GIF data, or void if an error occurs.
    */
   async createGif(
     config: GifConfig,
     videoElement: HTMLVideoElement
-  ): Promise<void> {
+  ): Promise<GifCompleteData | void> {
     log('Creating GIF with config:', config);
+
     this.aborted = false;
     this.framesComplete = 0;
+    this.currentVideoEl = videoElement;
 
     if (!this.canvasEl || !this.context) {
-      this.emit(
-        'error',
-        new Error('Canvas context unavailable. Service may be destroyed.')
+      const error = new Error(
+        'Canvas context unavailable. Service may be destroyed.'
       );
-      return;
+      this.emit('error', error);
+      throw error;
     }
 
     const maxColors = this.getMaxColors(config);
@@ -92,14 +103,57 @@ class GifService extends EventEmitter {
     try {
       this.encoder = GIFEncoder();
     } catch (error: any) {
-      this.emit(
-        'error',
-        new Error(`Failed to initialize GIFEncoder: ${error?.message || error}`)
+      const initError = new Error(
+        `Failed to initialize GIFEncoder: ${error?.message || error}`
       );
-      return;
+      this.emit('error', initError);
+      throw initError;
     }
 
-    await this._startFrameProcessing(config, videoElement, maxColors);
+    try {
+      this.emit('processing');
+
+      // Perform initial seek before starting the loop
+      await this.asyncSeek(videoElement, config.start / 1000);
+
+      // Loop through and process all the frames
+      await this.processFrames(config, videoElement, maxColors);
+
+      // Check if the loop was exited due to an abort action.
+      if (this.aborted) {
+        throw new Error('GIF generation was aborted by the user.');
+      }
+
+      // Finalize GIF
+      const blob = this.finalizeGif();
+
+      const gifData = {
+        blob,
+        width: config.width,
+        height: config.height
+      };
+
+      // Frame collection complete, finish up
+      log('GIF processing complete.');
+      this.emit('complete', gifData);
+
+      return gifData;
+    } catch (error: any) {
+      console.error('GIF creation failed:', error);
+      if (!this.aborted) {
+        this.emit(
+          'error',
+          new Error(`GIF creation failed: ${error?.message || error}`)
+        );
+      }
+      this.abort(); // Ensure cleanup on failure
+    } finally {
+      this.encoder = null; // Clean up encoder regardless of outcome
+
+      // Return to original video timecode and clean up
+      this.seek(videoElement, config.start / 1000);
+      this.currentVideoEl = null;
+    }
   }
 
   getMaxColors(config: GifConfig): number {
@@ -127,27 +181,22 @@ class GifService extends EventEmitter {
     return finalMaxColors;
   }
 
-  /** Aborts the current GIF creation process. */
   abort(): void {
-    if (this.aborted && !this.pendingFrameTimeoutId && !this.encoder) {
-      return; // Nothing to abort or already fully aborted
+    if (this.aborted) {
+      return; // Nothing to abort
     }
     log('Aborting GIF creation');
     this.aborted = true;
-    console.log('this.aborted was just set to true, right?', this.aborted);
-    if (this.pendingFrameTimeoutId) {
-      clearTimeout(this.pendingFrameTimeoutId);
-      this.pendingFrameTimeoutId = null;
-    }
 
+    // The async loop in processFrames will check this.aborted and stop.
     this.encoder = null; // Allow GC, stops further frame writes
+
     if (this.listenerCount('abort') > 0) {
       this.emit('abort');
     }
     log('GIF creation aborted');
   }
 
-  /** Cleans up resources. Call when service is no longer needed. */
   destroy(): void {
     log('Destroying GifService');
     this.abort(); // Stop any ongoing process
@@ -158,12 +207,13 @@ class GifService extends EventEmitter {
     log('GifService destroyed');
   }
 
-  // --- Private Helper Methods ---
+  private seek(video: HTMLVideoElement, time: number): void {
+    video.currentTime = time;
+    video.pause(); // ensure we don't accidentally play
+  }
 
-  /**
-   * Seeks video to a time, resolving on 'seeked' event.
-   */
-  private _asyncSeek(video: HTMLVideoElement, time: number): Promise<void> {
+  // Seeks video to a time, resolving on 'seeked' event. (Unchanged)
+  private asyncSeek(video: HTMLVideoElement, time: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const doneSeeking = () => {
         video.removeEventListener('seeked', doneSeeking);
@@ -186,161 +236,138 @@ class GifService extends EventEmitter {
 
       video.addEventListener('seeked', doneSeeking);
       video.addEventListener('error', onError);
-      video.currentTime = time;
-      video.pause(); // ensure we don't accidentally play
+
+      this.seek(video, time);
     });
   }
 
-  /** Initiates frame processing after initial seek. */
-  private async _startFrameProcessing(
-    config: GifConfig,
+  private getFrameImageData(
     videoElement: HTMLVideoElement,
-    actualMaxColors: number
-  ): Promise<void> {
-    try {
-      this.emit('processing');
-      await this._asyncSeek(videoElement, config.start / 1000);
-      this._addFrame(config, videoElement, actualMaxColors);
-    } catch (error: any) {
-      console.error('Error during initial seek:', error);
-      this.emit(
-        'error',
-        new Error(`Error during initial video seek: ${error?.message || error}`)
-      );
-      this.abort(); // Abort on initial seek failure
+    width: number,
+    height: number
+  ): ImageData {
+    if (!this.context || !this.canvasEl) {
+      throw new Error('Canvas context or canvas element not found.');
     }
+
+    // We can't access image data directly from the video
+    // So we copy image data from video to canvas
+    this.context.drawImage(
+      videoElement,
+      0,
+      0,
+      videoElement.videoWidth,
+      videoElement.videoHeight,
+      0,
+      0,
+      width,
+      height
+    );
+
+    // We can access the image data directly from the canvas
+    const imageData = this.context.getImageData(0, 0, width, height);
+
+    return imageData;
+  }
+
+  private indexImageData(
+    imageData: ImageData,
+    { palette, noDither = false, width, height }: IndexingOptions
+  ): Uint8Array {
+    let indexedData: Uint8Array;
+
+    if (noDither) {
+      indexedData = applyPalette(imageData.data, palette, 'nearest');
+    } else {
+      const ditheredRgbaData = floydSteinberg(
+        new Uint8ClampedArray(imageData.data),
+        width,
+        height,
+        palette
+      );
+      indexedData = applyPalette(ditheredRgbaData, palette, 'nearest');
+    }
+
+    return indexedData;
   }
 
   /**
-   * Adds current video frame to GIF, schedules next frame.
-   * Recursively calls itself via setTimeout after seeking.
+   * Asynchronously loops through video frames, processes them, and
+   * finalizes the GIF.
+   * This method is designed to be awaited.
    */
-  private async _addFrame(
+  private async processFrames(
     config: GifConfig,
     videoElement: HTMLVideoElement,
     actualMaxColors: number
   ): Promise<void> {
-    if (this.aborted || !this.encoder || !this.context || !this.canvasEl) {
-      log('Frame processing aborted or essential resources missing.');
-      if (this.pendingFrameTimeoutId) {
-        clearTimeout(this.pendingFrameTimeoutId);
-        this.pendingFrameTimeoutId = null;
-      }
-      return;
-    }
-
-    const currentTimeMs = videoElement.currentTime * 1000;
     const frameIntervalMs = 1000 / config.fps;
     const gifDurationMs = config.end - config.start;
+    const trueGifDuration = gifDurationMs - (gifDurationMs % frameIntervalMs);
 
-    const effectiveGifDuration =
-      gifDurationMs > frameIntervalMs ? gifDurationMs : frameIntervalMs;
-    const trueGifDuration =
-      effectiveGifDuration - (effectiveGifDuration % frameIntervalMs);
-
-    try {
-      this.context.drawImage(
-        videoElement,
-        0,
-        0,
-        videoElement.videoWidth,
-        videoElement.videoHeight,
-        0,
-        0,
-        config.width,
-        config.height
-      );
-
-      const imageData = this.context.getImageData(
-        0,
-        0,
-        config.width,
-        config.height
-      );
-
-      const palette = quantize(imageData.data, actualMaxColors);
-
-      let indexedData: Uint8Array;
-      if (config.noDither) {
-        indexedData = applyPalette(imageData.data, palette, 'nearest');
-      } else {
-        // Apply custom Floyd-Steinberg, then map to palette.
-        // Create a copy to avoid mutating original imageData.data if floydSteinberg modifies input.
-        const ditheredRgbaData = floydSteinberg(
-          new Uint8ClampedArray(imageData.data),
-          config.width,
-          config.height,
-          palette
+    // Loop until the video's current time passes the desired end time or is aborted.
+    while (videoElement.currentTime * 1000 < config.end && !this.aborted) {
+      if (!this.encoder || !this.context || !this.canvasEl) {
+        throw new Error(
+          'GIF Encoder or Canvas context lost during processing.'
         );
-        indexedData = applyPalette(ditheredRgbaData, palette, 'nearest');
       }
 
+      // Get image data
+      const imageData = this.getFrameImageData(
+        videoElement,
+        config.width,
+        config.height
+      );
+
+      // Use a color palette
+      const palette = quantize(imageData.data, actualMaxColors);
+      const indexedData = this.indexImageData(imageData, {
+        palette,
+        noDither: config.noDither,
+        width: config.width,
+        height: config.height
+      });
+
+      // Actually write frame data
       this.encoder.writeFrame(indexedData, config.width, config.height, {
         palette,
         delay: frameIntervalMs
       });
 
-      const elapsed = currentTimeMs - config.start;
+      // Progress reporting
+      this.framesComplete++;
+      const elapsed = videoElement.currentTime * 1000 - config.start;
       const progress =
         trueGifDuration > 0
           ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
           : 1;
-      this.framesComplete++;
       this.emit('frames progress', progress, this.framesComplete);
-    } catch (error: any) {
-      console.error('Error processing frame:', error);
-      this.emit(
-        'error',
-        new Error(`Error processing frame: ${error?.message || error}`)
-      );
-      this.abort();
-      return;
-    }
 
-    const nextFrameTimeMs = currentTimeMs + frameIntervalMs;
-
-    if (nextFrameTimeMs >= config.end) {
-      this.emit('frames complete');
-      if (this.encoder && !this.aborted) {
-        try {
-          this.encoder.finish();
-          const buffer = this.encoder.bytesView();
-          const imageBlob = new Blob([buffer], { type: 'image/gif' });
-          this.emit('complete', {
-            blob: imageBlob,
-            width: config.width,
-            height: config.height
-          });
-        } catch (error: any) {
-          console.error('Error finalizing GIF:', error);
-          this.emit(
-            'error',
-            new Error(`GIF finalization failed: ${error?.message || error}`)
-          );
-        } finally {
-          this.encoder = null; // Clean up encoder
-        }
+      // Seek to next frame start
+      const nextFrameTimeMs = videoElement.currentTime * 1000 + frameIntervalMs;
+      // Ensure we don't seek past the end time.
+      if (nextFrameTimeMs >= config.end) {
+        break; // Exit the loop to finalize the GIF
       }
-      return;
+
+      await this.asyncSeek(videoElement, nextFrameTimeMs / 1000);
+    }
+  }
+
+  private finalizeGif(): Blob {
+    // Finalize the GIF
+    this.emit('frames complete');
+
+    if (!this.encoder) {
+      throw new Error('Encoder was not available for finalization.');
     }
 
-    try {
-      await this._asyncSeek(videoElement, nextFrameTimeMs / 1000);
-      if (this.aborted) return; // Check abort status post-async operation
-      console.log('is aborted?', this.aborted);
-      if (this.pendingFrameTimeoutId) clearTimeout(this.pendingFrameTimeoutId);
-      this.pendingFrameTimeoutId = setTimeout(() => {
-        this.pendingFrameTimeoutId = null; // Clear ID once callback executes
-        this._addFrame(config, videoElement, actualMaxColors);
-      }, 0); // Yield to event loop, prevent stack overflow
-    } catch (error: any) {
-      console.error('Error seeking for next frame:', error);
-      this.emit(
-        'error',
-        new Error(`Error seeking next frame: ${error?.message || error}`)
-      );
-      this.abort(); // Abort on seek failure
-    }
+    this.encoder.finish();
+    const buffer = this.encoder.bytesView();
+    const imageBlob = new Blob([buffer], { type: 'image/gif' });
+
+    return imageBlob;
   }
 }
 
