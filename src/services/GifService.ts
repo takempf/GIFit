@@ -9,6 +9,7 @@ const MAX_QUALITY = 10;
 // --- Configuration and Event Data Interfaces ---
 
 export interface GifConfig {
+  name: string;
   quality: number; // 1 (lowest) - 10 (highest)
   width: number;
   height: number;

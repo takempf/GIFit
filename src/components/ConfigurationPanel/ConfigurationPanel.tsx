@@ -129,8 +129,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
 
     function handleLoadedMetadata() {
-      // FIX: Redundant check removed. The useEffect already ensures 'video' is an HTMLVideoElement.
-      const aspectRatio = getVideoAspectRatio(video);
+      const aspectRatio = getVideoAspectRatio(video as HTMLVideoElement);
       dispatch({
         type: 'VIDEO_LOADED_DATA',
         payload: {
@@ -280,7 +279,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           variant="input"
           padding="small"
           evenPadding={true}
-          value={state.linkDimensions}
+          checked={state.linkDimensions}
           onChange={handleLinkChange}>
           {state.linkDimensions ? (
             <LinkIcon className={css.linkIcon} />

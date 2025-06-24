@@ -137,6 +137,8 @@ const roundToStep = (
 
 // --- Component Props (same as before) ---
 interface InputTimeProps {
+  name: string;
+  label: string;
   value: number;
   onChange: (newValue: number) => void;
   step?: number;
@@ -151,6 +153,8 @@ interface InputTimeProps {
 
 // --- The Component (logic mostly same, relies on new secondsToHMSs) ---
 export const InputTime: React.FC<InputTimeProps> = ({
+  name,
+  label,
   value,
   onChange,
   step = 0.1,
@@ -314,6 +318,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
   return (
     <div className={`time-input-container ${className}`}>
       <Input
+        name={name}
+        label={label}
         type="text"
         inputMode="decimal"
         value={displayValue}

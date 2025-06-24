@@ -5,10 +5,12 @@ import type { ButtonProps } from '../Button/Button';
 
 import css from './ButtonToggle.module.css';
 
-interface ButtonToggleProps {
+type CleanButtonProps = Omit<ButtonProps, 'onChange'>;
+
+interface ButtonToggleProps extends CleanButtonProps {
   children: React.ReactNode;
   className: string;
-  value: boolean;
+  checked: boolean;
   name: string;
   onChange: (value: boolean) => void;
 }
@@ -16,7 +18,7 @@ interface ButtonToggleProps {
 export function ButtonToggle({
   children,
   className,
-  value,
+  checked,
   onChange,
   name,
   ...restProps
@@ -28,7 +30,7 @@ export function ButtonToggle({
         className={css.checkbox}
         name={name}
         type="checkbox"
-        checked={value}
+        checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
     </Button>
