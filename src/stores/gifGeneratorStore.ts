@@ -117,10 +117,10 @@ export const useGifStore = create<GifStore>((set, get) => ({
       }
     };
 
-    service.on('frames progress', onFramesProgress);
-    service.on('complete', onComplete);
-    service.on('error', onError);
-    service.on('abort', onAbort);
+    service.on('FRAMES_PROGRESS', onFramesProgress);
+    service.on('COMPLETE', onComplete);
+    service.on('ERROR', onError);
+    service.on('ABORT', onAbort);
 
     // --- Start GIF Creation ---
     try {
@@ -141,7 +141,7 @@ export const useGifStore = create<GifStore>((set, get) => ({
     if (service && currentStatus === 'processing') {
       set({ status: 'aborted' }); // Set status immediately for responsiveness
       service.abort(); // Trigger the service's abort logic
-      // The 'abort' event handler will do the final cleanup (_serviceInstance = null)
+      // The 'ABORT' event handler will do the final cleanup (_serviceInstance = null)
     } else if (service) {
       // If service exists but not processing, ensure cleanup
       service.destroy();

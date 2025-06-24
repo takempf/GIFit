@@ -38,11 +38,11 @@ export interface IndexingOptions {
  * Service for creating GIFs from HTMLVideoElement frames using gifenc.
  *
  * Emits:
- * - 'complete' (data: GifCompleteData)
- * - 'frames progress' (ratio: number, frameCount: number)
- * - 'frames complete'
- * - 'abort'
- * - 'error' (error: Error)
+ * - 'COMPLETE' (data: GifCompleteData)
+ * - 'FRAMES_PROGRESS' (ratio: number, frameCount: number)
+ * - 'FRAMES_COMPLETE'
+ * - 'ABORT'
+ * - 'ERROR' (error: Error)
  */
 class GifService extends EventEmitter {
   private encoder: GIFEncoder | null = null;
@@ -50,7 +50,6 @@ class GifService extends EventEmitter {
   private framesComplete: number = 0;
   private canvasEl: HTMLCanvasElement | null;
   private context: CanvasRenderingContext2D | null;
-  private currentVideoEl: HTMLVideoElement | null = null;
 
   constructor() {
     super();
@@ -83,13 +82,12 @@ class GifService extends EventEmitter {
 
     this.aborted = false;
     this.framesComplete = 0;
-    this.currentVideoEl = videoElement;
 
     if (!this.canvasEl || !this.context) {
       const error = new Error(
         'Canvas context unavailable. Service may be destroyed.'
       );
-      this.emit('error', error);
+      this.emit('ERROR', error);
       throw error;
     }
 
@@ -106,7 +104,7 @@ class GifService extends EventEmitter {
       const initError = new Error(
         `Failed to initialize GIFEncoder: ${error?.message || error}`
       );
-      this.emit('error', initError);
+      this.emit('ERROR', initError);
       throw initError;
     }
 
@@ -135,14 +133,14 @@ class GifService extends EventEmitter {
 
       // Frame collection complete, finish up
       log('GIF processing complete.');
-      this.emit('complete', gifData);
+      this.emit('COMPLETE', gifData);
 
       return gifData;
     } catch (error: any) {
       console.error('GIF creation failed:', error);
       if (!this.aborted) {
         this.emit(
-          'error',
+          'ERROR',
           new Error(`GIF creation failed: ${error?.message || error}`)
         );
       }
@@ -152,7 +150,6 @@ class GifService extends EventEmitter {
 
       // Return to original video timecode and clean up
       this.seek(videoElement, config.start / 1000);
-      this.currentVideoEl = null;
     }
   }
 
@@ -161,7 +158,7 @@ class GifService extends EventEmitter {
     if (config.maxColors !== undefined) {
       if (config.maxColors < 2 || config.maxColors > 256) {
         this.emit(
-          'error',
+          'ERROR',
           new Error(
             `config.maxColors must be 2-256. Received: ${config.maxColors}`
           )
@@ -191,8 +188,8 @@ class GifService extends EventEmitter {
     // The async loop in processFrames will check this.aborted and stop.
     this.encoder = null; // Allow GC, stops further frame writes
 
-    if (this.listenerCount('abort') > 0) {
-      this.emit('abort');
+    if (this.listenerCount('ABORT') > 0) {
+      this.emit('ABORT');
     }
     log('GIF creation aborted');
   }
@@ -342,7 +339,7 @@ class GifService extends EventEmitter {
         trueGifDuration > 0
           ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
           : 1;
-      this.emit('frames progress', progress, this.framesComplete);
+      this.emit('FRAMES_PROGRESS', progress, this.framesComplete);
 
       // Seek to next frame start
       const nextFrameTimeMs = videoElement.currentTime * 1000 + frameIntervalMs;
@@ -357,7 +354,7 @@ class GifService extends EventEmitter {
 
   private finalizeGif(): Blob {
     // Finalize the GIF
-    this.emit('frames complete');
+    this.emit('FRAMES_COMPLETE');
 
     if (!this.encoder) {
       throw new Error('Encoder was not available for finalization.');
