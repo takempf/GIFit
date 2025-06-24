@@ -47,10 +47,6 @@ function seekTo(videoElement: HTMLVideoElement, time: number) {
     return;
   }
 
-  if (!videoElement.paused) {
-    videoElement.pause();
-  }
-
   videoElement.currentTime = clamp(0, videoElement.duration, time);
   videoElement.pause(); // ensure video does not play on its own
 }
@@ -99,13 +95,6 @@ function reducer(state: ConfigState, action: ConfigAction): ConfigState {
         ...state,
         aspectRatio: action.payload.aspectRatio,
         height: Math.round(state.width / action.payload.aspectRatio)
-      };
-    }
-
-    case 'VIDEO_SEEKED': {
-      return {
-        ...state,
-        start: action.payload.currentTime
       };
     }
 
@@ -166,7 +155,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     function handleVideoSeeked() {
       const { isOpen, status } = useAppStore.getState();
       if (video && isOpen && status === 'configuring' && video.paused) {
-        log('Video seeked, updating start time to:', video.currentTime);
         dispatch({
           type: 'VIDEO_SEEKED',
           payload: {
@@ -227,6 +215,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         value: newStart
       }
     });
+
     if (video) {
       seekTo(video, newStart);
     }

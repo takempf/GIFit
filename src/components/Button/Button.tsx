@@ -4,7 +4,8 @@ import React from 'react';
 import cx from 'classnames';
 
 // Define the props interface
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode; // Content inside the button
   prepend?: React.ReactNode;
   append?: React.ReactNode;

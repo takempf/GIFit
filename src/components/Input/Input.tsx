@@ -11,7 +11,7 @@ export interface InputProps
   type?: HTMLInputElement['type'];
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  ref: React.RefObject<HTMLInputElement | null>;
+  ref?: React.RefObject<HTMLInputElement | null>;
 }
 
 export function Input({

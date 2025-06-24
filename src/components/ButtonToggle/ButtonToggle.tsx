@@ -1,6 +1,7 @@
 import cx from 'classnames';
 
 import { Button } from '../Button/Button';
+import type { ButtonProps } from '../Button/Button';
 
 import css from './ButtonToggle.module.css';
 
