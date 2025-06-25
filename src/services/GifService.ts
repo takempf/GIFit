@@ -100,7 +100,7 @@ class GifService extends EventEmitter {
     this.canvasEl.style.height = `${config.height}px`;
 
     try {
-      this.encoder = GIFEncoder();
+      this.encoder = new GIFEncoder();
     } catch (error: any) {
       const initError = new Error(
         `Failed to initialize GIFEncoder: ${error?.message || error}`
