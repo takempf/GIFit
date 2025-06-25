@@ -50,14 +50,16 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleUpClick}>
+          onClick={handleUpClick}
+          disabled={restProps.disabled}>
           ▲
         </Button>
         <Button
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleDownClick}>
+          onClick={handleDownClick}
+          disabled={restProps.disabled}>
           ▼
         </Button>
       </div>
@@ -72,6 +74,7 @@ export function InputNumber({
       append={controls}
       value={value}
       onChange={onChange}
+      type="number"
       {...restProps}
       ref={inputRef}
     />
