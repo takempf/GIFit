@@ -100,7 +100,7 @@ class GifService extends EventEmitter {
     this.canvasEl.style.height = `${config.height}px`;
 
     try {
-      this.encoder = new GIFEncoder();
+      this.encoder = GIFEncoder();
     } catch (error: any) {
       const initError = new Error(
         `Failed to initialize GIFEncoder: ${error?.message || error}`
@@ -275,7 +275,7 @@ class GifService extends EventEmitter {
     let indexedData: Uint8Array;
 
     if (noDither) {
-      indexedData = applyPalette(imageData.data, palette, 'nearest');
+      indexedData = applyPalette(imageData.data, palette, { format: 'rgb565' });
     } else {
       const ditheredRgbaData = floydSteinberg(
         new Uint8ClampedArray(imageData.data),
@@ -283,7 +283,9 @@ class GifService extends EventEmitter {
         height,
         palette
       );
-      indexedData = applyPalette(ditheredRgbaData, palette, 'nearest');
+      indexedData = applyPalette(ditheredRgbaData, palette, {
+        format: 'rgb565'
+      });
     }
 
     return indexedData;
