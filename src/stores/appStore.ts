@@ -13,7 +13,7 @@ interface AppActions {
   open: () => void;
   close: () => void;
   toggle: () => void;
-  setVideoId: (id: string) => void;
+  setVideoId: (id: string | null) => void;
   setVideoElement: (videoElement: HTMLVideoElement) => void;
   setStatus: (status: Status) => void;
   reset: (resetState?: Partial<AppState>) => void;
@@ -34,7 +34,7 @@ export const useAppStore = create<AppStore>((set) => {
     open: () => set({ isOpen: true, status: 'configuring' }),
     close: () => set({ isOpen: false, status: 'configuring' }),
     toggle: () => set((state) => ({ isOpen: !state.isOpen })),
-    setVideoId: (id: string) => set({ videoId: id }),
+    setVideoId: (id: string | null) => set({ videoId: id }),
     setVideoElement: (element: HTMLVideoElement) =>
       set({ videoElement: element }),
     setStatus: (status: Status) => set({ status }),

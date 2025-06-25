@@ -17,8 +17,18 @@ import TKLogo from '@/assets/tk.svg';
 
 interface PopupProps {}
 
+interface FormValues {
+  start: number;
+  duration: number;
+  width: number;
+  height: number;
+  linkDimensions: boolean;
+  framerate: number;
+  quality: number;
+}
+
 export function Popup({}: PopupProps) {
-  const popupElementRef = useRef(null);
+  const popupElementRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const videoElement = useAppStore((state) => state.videoElement);
   const status = useAppStore((state) => state.status);
   const generationId = useGifStore((state) => state.generationId);
@@ -36,17 +46,20 @@ export function Popup({}: PopupProps) {
   }, []);
 
   const handleSubmit = useCallback(
-    function handleSubmit(formValues) {
+    function handleSubmit(formValues: FormValues) {
       if (!(videoElement instanceof HTMLVideoElement)) {
         log('Could not generate GIF because no video element was found.');
         return;
       }
 
-      const start = formValues.start * 1000;
-      const end = start + formValues.duration * 1000;
+      const start = formValues.start * 1000; // seconds to ms
+      const end = start + formValues.duration * 1000; // seconds to ms
+      const titleElement: HTMLElement | null = document.querySelector('#title');
+      const name = titleElement?.innerText ?? 'untitled';
 
       createGif(
         {
+          name,
           quality: formValues.quality,
           width: formValues.width,
           height: formValues.height,
@@ -57,7 +70,7 @@ export function Popup({}: PopupProps) {
         videoElement
       );
 
-      setName(document.querySelector('#title')?.innerText ?? 'untitled');
+      setName(name);
       setStatus('generating');
     },
     [videoElement]

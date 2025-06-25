@@ -64,7 +64,7 @@ export function Progress({}: ProgressProps) {
       return;
     }
 
-    function handleVideoBoundingChange(rect) {
+    function handleVideoBoundingChange(rect: DOMRect) {
       const { width, height } = rect;
       setVideoElementWidth(width);
       setVideoElementHeight(height);
