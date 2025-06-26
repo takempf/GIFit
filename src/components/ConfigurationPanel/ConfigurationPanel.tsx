@@ -98,6 +98,13 @@ function reducer(state: ConfigState, action: ConfigAction): ConfigState {
       };
     }
 
+    case 'VIDEO_SEEKED': {
+      return {
+        ...state,
+        start: action.payload.currentTime
+      };
+    }
+
     default:
       // FIX: No need to spread state here, just return it.
       return state;
