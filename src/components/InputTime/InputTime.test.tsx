@@ -3,10 +3,6 @@ import userEvent from '@testing-library/user-event';
 import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
 import { InputTime } from './InputTime';
 
-// NOTE: Several tests involving debounce and complex async interactions are currently skipped
-// due to persistent timeout issues in the Vitest/JSDOM environment with fake timers.
-// These require further investigation into the interplay of userEvent, React's scheduler,
-// and the custom useDebouncedCallback hook with fake timers.
 describe('InputTime', { timeout: 10000 }, () => {
   let user: ReturnType<typeof userEvent.setup>;
   const getInput = () => screen.getByLabelText('Time') as HTMLInputElement;
@@ -16,13 +12,11 @@ describe('InputTime', { timeout: 10000 }, () => {
     screen.getByLabelText('Decrement time') as HTMLButtonElement;
 
   beforeEach(() => {
-    vi.useFakeTimers();
-    user = userEvent.setup(); // No advanceTimers here, will manage manually
+    user = userEvent.setup();
   });
 
   afterEach(() => {
-    vi.clearAllTimers();
-    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   const defaultProps = {
@@ -32,7 +26,6 @@ describe('InputTime', { timeout: 10000 }, () => {
     onChange: vi.fn()
   };
 
-  // Helper to reset mocks for onChange in defaultProps before each test
   beforeEach(() => {
     defaultProps.onChange.mockClear();
   });
@@ -55,10 +48,15 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('1:01:01.2');
   });
 
-  it.skip('updates display value on user input and calls onChange after debounce', async () => {
+  it('updates display value on user input and calls onChange after debounce', async () => {
     const handleChange = vi.fn();
+    const debounceMs = 500;
     render(
-      <InputTime {...defaultProps} onChange={handleChange} debounceMs={500} />
+      <InputTime
+        {...defaultProps}
+        onChange={handleChange}
+        debounceMs={debounceMs}
+      />
     );
     const input = getInput();
 
@@ -66,14 +64,16 @@ describe('InputTime', { timeout: 10000 }, () => {
     await user.type(input, '1:23.4');
     expect(input.value).toBe('1:23.4');
 
-    await act(async () => {
-      vi.advanceTimersByTime(500);
-    });
-
-    expect(handleChange).toHaveBeenCalledWith(83.4);
+    // Wait for the debounce period for onChange to be called
+    await vi.waitFor(
+      () => {
+        expect(handleChange).toHaveBeenCalledWith(83.4);
+      },
+      { timeout: debounceMs + 200 }
+    ); // Wait a bit longer than debounce
   });
 
-  it.skip('handles invalid user input and reverts on blur', async () => {
+  it('handles invalid user input and reverts on blur', async () => {
     const handleChange = vi.fn();
     render(<InputTime {...defaultProps} value={10} onChange={handleChange} />);
     const input = getInput();
@@ -88,7 +88,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(handleChange).not.toHaveBeenCalled();
   });
 
-  it.skip('calls onChange with new value when step buttons are clicked', async () => {
+  it('calls onChange with new value when step buttons are clicked', async () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -121,7 +121,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(handleChange).toHaveBeenCalledWith(5);
   });
 
-  it.skip('respects min and max props on step button clicks', async () => {
+  it('respects min and max props on step button clicks', async () => {
     const handleChange = vi.fn();
     let value = 0.5;
     const { rerender } = render(
@@ -174,7 +174,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getIncrementButton().disabled).toBe(true);
   });
 
-  it.skip('respects min and max props on direct input', async () => {
+  it('respects min and max props on direct input', async () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -216,7 +216,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(handleChange).toHaveBeenCalledWith(0);
   });
 
-  it.skip('handles keyboard arrow up/down for stepping', async () => {
+  it('handles keyboard arrow up/down for stepping', async () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -252,18 +252,30 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(handleChange).toHaveBeenCalledWith(5);
   });
 
-  it.skip('commits change on Enter key press', async () => {
+  it('commits change on Enter key press', async () => {
     const handleChange = vi.fn();
+    const debounceMs = 50;
     render(
-      <InputTime {...defaultProps} onChange={handleChange} debounceMs={50} />
-    ); // Fast debounce for test
+      <InputTime
+        {...defaultProps}
+        onChange={handleChange}
+        debounceMs={debounceMs}
+      />
+    );
     const input = getInput();
 
     await user.clear(input);
     await user.type(input, '3:00');
     await user.keyboard('{Enter}');
-    // Enter calls blur which calls commitChange directly, cancelling debounce.
-    expect(handleChange).toHaveBeenCalledWith(180);
+
+    // Enter calls blur which calls commitChange directly.
+    // If commitChange itself has async aspects or if state updates are not immediate, waitFor might be needed.
+    await vi.waitFor(
+      () => {
+        expect(handleChange).toHaveBeenCalledWith(180);
+      },
+      { timeout: debounceMs + 200 }
+    ); // Allow time for any debounce to be cancelled and commit to occur
   });
 
   it('is disabled when disabled prop is true', () => {
@@ -291,49 +303,96 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('0:20.5');
   });
 
-  it.skip('does not re-format prop value change if editing', async () => {
-    const { rerender } = render(
-      <InputTime {...defaultProps} value={10} debounceMs={50} />
-    );
-    const input = getInput();
-
-    await user.click(input);
-    await user.clear(input);
-    await user.type(input, '1:0');
-
-    rerender(<InputTime {...defaultProps} value={30} debounceMs={50} />);
-    expect(input.value).toBe('1:0');
-
-    await act(async () => {
-      vi.advanceTimersByTime(50); // allow debounce to try to commit
-    });
-    // Depending on exact commit logic, onChange might be called with 60 (for "1:0")
-    // or the test might focus on displayValue not changing from user input
-  });
-
-  it.skip('handles input of just seconds like "3.5"', async () => {
-    const handleChange = vi.fn();
-    let value = 0;
+  it('does not re-format prop value change if editing', async () => {
+    const handleChange = vi.fn(); // Add a handler to see if it's called
+    const debounceMs = 50;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
+        value={10}
+        onChange={handleChange}
+        debounceMs={debounceMs}
+      />
+    );
+    const input = getInput();
+
+    await user.click(input); // Focus
+    await user.clear(input);
+    await user.type(input, '1:0'); // User is typing "1 minute" (60s)
+
+    // Simulate prop update while user is typing
+    rerender(
+      <InputTime
+        {...defaultProps}
+        value={30}
+        onChange={handleChange}
+        debounceMs={debounceMs}
+      />
+    );
+    expect(input.value).toBe('1:0'); // User's input should be preserved
+
+    // Wait for any potential debounced call triggered by '1:0'
+    // If it was called, it would be with 60.
+    // We are primarily checking that the display value didn't change due to prop update.
+    // The onChange for "1:0" might or might not fire depending on how quickly the prop changed.
+    // Let's ensure it's stable and onChange wasn't called with 30 (the new prop value)
+    await vi.waitFor(
+      async () => {
+        /* allow potential state updates */
+      },
+      { timeout: debounceMs + 200 }
+    );
+    expect(handleChange).not.toHaveBeenCalledWith(30);
+    // It might have been called with 60 if the debounce for '1:0' completed.
+    // If it was, that's fine. The main point is '1:0' display and no overwrite from '30'.
+  });
+
+  it('handles input of just seconds like "3.5"', async () => {
+    const handleChange = vi.fn();
+    let value = 0; // Simulating parent state for value prop
+    const debounceMs = 50;
+    const { rerender } = render(
+      <InputTime
+        {...defaultProps}
+        value={value} // Start with initial value
         onChange={(newVal) => {
           handleChange(newVal);
-          value = newVal;
+          value = newVal; // Update "parent state"
         }}
-        debounceMs={50}
+        debounceMs={debounceMs}
       />
     );
     const input = getInput();
 
     await user.clear(input);
     await user.type(input, '3.5');
-    await act(async () => {
-      vi.advanceTimersByTime(50);
-    });
-    expect(handleChange).toHaveBeenCalledWith(3.5);
 
+    await vi.waitFor(
+      () => {
+        expect(handleChange).toHaveBeenCalledWith(3.5);
+      },
+      { timeout: debounceMs + 200 }
+    );
+
+    // Rerender with the new value to check formatting
     rerender(
+      <InputTime
+        {...defaultProps}
+        value={value} // Use updated "parent state" value
+        onChange={(newVal) => {
+          /* ... */
+        }}
+        debounceMs={debounceMs}
+      />
+    );
+    expect(input.value).toBe('0:03.5');
+  });
+
+  it('handles input of "MM:SS" like "2:30"', async () => {
+    const handleChange = vi.fn();
+    let value = 0;
+    const debounceMs = 50;
+    const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
@@ -341,33 +400,38 @@ describe('InputTime', { timeout: 10000 }, () => {
           handleChange(newVal);
           value = newVal;
         }}
-      />
-    );
-    expect(input.value).toBe('0:03.5');
-  });
-
-  it.skip('handles input of "MM:SS" like "2:30"', async () => {
-    const handleChange = vi.fn();
-    let value = 0;
-    const { rerender } = render(
-      <InputTime
-        {...defaultProps}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
-        }}
-        debounceMs={50}
+        debounceMs={debounceMs}
       />
     );
     const input = getInput();
 
     await user.clear(input);
     await user.type(input, '2:30');
-    await act(async () => {
-      vi.advanceTimersByTime(50);
-    });
-    expect(handleChange).toHaveBeenCalledWith(150);
+    await vi.waitFor(
+      () => {
+        expect(handleChange).toHaveBeenCalledWith(150);
+      },
+      { timeout: debounceMs + 200 }
+    );
+
     rerender(
+      <InputTime
+        {...defaultProps}
+        value={value}
+        onChange={(newVal) => {
+          /* ... */
+        }}
+        debounceMs={debounceMs}
+      />
+    );
+    expect(input.value).toBe('2:30.0');
+  });
+
+  it('handles input of "HH:MM:SS" like "1:05:10"', async () => {
+    const handleChange = vi.fn();
+    let value = 0;
+    const debounceMs = 50;
+    const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
@@ -375,46 +439,34 @@ describe('InputTime', { timeout: 10000 }, () => {
           handleChange(newVal);
           value = newVal;
         }}
-      />
-    );
-    expect(input.value).toBe('2:30.0');
-  });
-
-  it.skip('handles input of "HH:MM:SS" like "1:05:10"', async () => {
-    const handleChange = vi.fn();
-    let value = 0;
-    const { rerender } = render(
-      <InputTime
-        {...defaultProps}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
-        }}
-        debounceMs={50}
+        debounceMs={debounceMs}
       />
     );
     const input = getInput();
 
     await user.clear(input);
     await user.type(input, '1:05:10');
-    await act(async () => {
-      vi.advanceTimersByTime(50);
-    });
-    expect(handleChange).toHaveBeenCalledWith(3910);
+    await vi.waitFor(
+      () => {
+        expect(handleChange).toHaveBeenCalledWith(3910);
+      },
+      { timeout: debounceMs + 200 }
+    );
+
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
         onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+          /* ... */
         }}
+        debounceMs={debounceMs}
       />
     );
     expect(input.value).toBe('1:05:10.0');
   });
 
-  it.skip('correctly parses and formats time around 60 seconds, like "0:59.9" stepping up', async () => {
+  it('correctly parses and formats time around 60 seconds, like "0:59.9" stepping up', async () => {
     const handleChange = vi.fn();
     let value = 59.9;
     const { rerender } = render(
@@ -446,7 +498,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('1:00.0');
   });
 
-  it.skip('correctly parses and formats time around 60 minutes, like "59:59.0" stepping up with step 1s', async () => {
+  it('correctly parses and formats time around 60 minutes, like "59:59.0" stepping up with step 1s', async () => {
     const handleChange = vi.fn();
     let value = 3599; // 59m 59s
     const { rerender } = render(

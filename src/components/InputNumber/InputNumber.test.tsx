@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, vi, describe, it, beforeEach } from 'vitest';
+import { expect, vi, describe, it } from 'vitest';
 import { InputNumber } from './InputNumber';
 
 describe('InputNumber', () => {
