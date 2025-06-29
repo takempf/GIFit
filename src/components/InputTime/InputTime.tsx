@@ -5,6 +5,8 @@ import { Button } from '../Button/Button';
 
 import css from './InputTime.module.css';
 
+const SPIN_INTERVAL = 150;
+
 // --- Helper: Debounce Hook (same as before) ---
 function useDebouncedCallback<A extends any[]>(
   callback: (...args: A) => void,
@@ -256,31 +258,17 @@ export const InputTime: React.FC<InputTimeProps> = ({
     commitChange(parsed); // Commit immediately
   };
 
-  const handleStep = (direction: 'up' | 'down') => {
-    setIsEditing(false); // Stepping commits immediately
-    let currentValueToStepFrom = value;
-    // If displayValue is valid and different from `value`'s representation, prefer it as base for stepping
-    const parsedDisplay = hmsStringToSeconds(displayValue);
-    if (parsedDisplay !== null && !isNaN(parsedDisplay)) {
-      const roundedParsedDisplay = roundToStep(
-        parsedDisplay,
-        step,
-        decimalPlaces
-      );
-      // Check if parsed display is significantly different from current prop value
-      if (Math.abs(roundedParsedDisplay - value) > step / 2) {
-        currentValueToStepFrom = roundedParsedDisplay;
-      }
-    }
-
-    let newValue = currentValueToStepFrom + (direction === 'up' ? step : -step);
-    // Ensure we don't get stuck if current value is not a multiple of step
-    // also handles potential floating point issues before min/max clamping
-    newValue = roundToStep(newValue, step, decimalPlaces);
-
-    newValue = Math.max(min, Math.min(max, newValue)); // Clamp
-    commitChange(newValue);
-  };
+  const handleStep = useCallback(
+    (direction: 'up' | 'down') => {
+      let newValue = value + (direction === 'up' ? step : -step);
+      // Ensure we don't get stuck if current value is not a multiple of step
+      // also handles potential floating point issues before min/max clamping
+      newValue = roundToStep(newValue, step, decimalPlaces);
+      newValue = Math.max(min, Math.min(max, newValue)); // Clamp
+      commitChange(newValue);
+    },
+    [value, step, min, max, decimalPlaces, commitChange]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowUp') {
@@ -295,6 +283,42 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
+  const downTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
+  const upTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
+
+  function stepUp() {
+    console.log('calling up');
+    handleStep('up');
+
+    upTimeoutRef.current = setTimeout(stepUp, SPIN_INTERVAL);
+  }
+
+  function stepDown() {
+    handleStep('down');
+
+    downTimeoutRef.current = setTimeout(stepDown, SPIN_INTERVAL);
+  }
+
+  function handleDownPressStart() {
+    stepDown();
+  }
+
+  function handleDownPressEnd() {
+    if (downTimeoutRef.current) {
+      clearTimeout(downTimeoutRef.current);
+    }
+  }
+
+  function handleUpPressStart() {
+    stepUp();
+  }
+
+  function handleUpPressEnd() {
+    if (upTimeoutRef.current) {
+      clearTimeout(upTimeoutRef.current);
+    }
+  }
+
   const appendWithStepper = (
     <>
       {append}
@@ -303,7 +327,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={() => handleStep('up')}
+          onPointerDown={handleUpPressStart}
+          onPointerUp={handleUpPressEnd}
           disabled={disabled || value >= max}
           aria-label="Increment time">
           ▲
@@ -312,7 +337,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={() => handleStep('down')}
+          onPointerDown={handleDownPressStart}
+          onPointerUp={handleDownPressEnd}
           disabled={disabled || value <= min}
           aria-label="Decrement time">
           ▼
