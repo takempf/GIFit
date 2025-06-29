@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
 import { InputTime } from './InputTime';
@@ -528,5 +528,295 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
     expect(getInput().value).toBe('1:00:00');
+  });
+
+  describe('InputTime Stepper Hold Functionality', { timeout: 20000 }, () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    });
+
+    it('increment button hold calls onChange multiple times and updates value', async () => {
+      const handleChange = vi.fn();
+      let currentValue = 0;
+      const step = 0.1;
+      const SPIN_INTERVAL = 150; // Should match component's SPIN_INTERVAL
+
+      const { rerender } = render(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+
+      const incrementButton = getIncrementButton();
+
+      // Simulate pointer down
+      // await user.pointer({ keys: '[MouseLeft>]', target: incrementButton });
+      fireEvent.pointerDown(incrementButton);
+      await act(async () => {}); // Flush updates
+
+      // First immediate call
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(currentValue).toBeCloseTo(0.1);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.1');
+
+      // Advance time for the first interval
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      // expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(handleChange).toHaveBeenNthCalledWith(2, 0.2);
+      expect(currentValue).toBeCloseTo(0.2); // This will still fail if called with 0.1
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.2');
+
+      // Advance time for the second interval
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      expect(handleChange).toHaveBeenCalledTimes(3);
+      expect(currentValue).toBeCloseTo(0.3);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.3');
+
+      // Simulate pointer up
+      // await user.pointer({ keys: '[/MouseLeft]', target: incrementButton });
+      fireEvent.pointerUp(incrementButton);
+      await act(async () => {}); // Flush updates
+
+      // Advance time a bit more to ensure no more calls
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      expect(handleChange).toHaveBeenCalledTimes(3); // Should not have changed
+    });
+
+    it('decrement button hold calls onChange multiple times and updates value', async () => {
+      const handleChange = vi.fn();
+      let currentValue = 0.3;
+      const step = 0.1;
+      const SPIN_INTERVAL = 150;
+
+      const { rerender } = render(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.3');
+      const decrementButton = getDecrementButton();
+
+      // await user.pointer({ keys: '[MouseLeft>]', target: decrementButton });
+      fireEvent.pointerDown(decrementButton);
+      await act(async () => {});
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(currentValue).toBeCloseTo(0.2);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.2');
+
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(currentValue).toBeCloseTo(0.1);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getInput().value).toBe('0:00.1');
+
+      // await user.pointer({ keys: '[/MouseLeft]', target: decrementButton });
+      fireEvent.pointerUp(decrementButton);
+      await act(async () => {});
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      expect(handleChange).toHaveBeenCalledTimes(2);
+    });
+
+    it('increment button hold stops at max value', async () => {
+      const handleChange = vi.fn();
+      let currentValue = 0.8;
+      const step = 0.1;
+      const max = 1.0;
+      const SPIN_INTERVAL = 150;
+
+      const { rerender } = render(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          max={max}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+
+      const incrementButton = getIncrementButton();
+      // await user.pointer({ keys: '[MouseLeft>]', target: incrementButton }); // 0.8 -> 0.9 (call 1)
+      fireEvent.pointerDown(incrementButton);
+      await act(async () => {});
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(currentValue).toBeCloseTo(0.9);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          max={max}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL); // 0.9 -> 1.0 (call 2)
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(currentValue).toBeCloseTo(1.0);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          max={max}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getIncrementButton().disabled).toBe(true);
+
+      // Try to advance time again, should not call handleChange or change value
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      expect(handleChange).toHaveBeenCalledTimes(2); // Still 2
+      expect(currentValue).toBeCloseTo(1.0);
+
+      // await user.pointer({ keys: '[/MouseLeft]', target: incrementButton });
+      fireEvent.pointerUp(incrementButton);
+      await act(async () => {});
+    });
+
+    it('decrement button hold stops at min value', async () => {
+      const handleChange = vi.fn();
+      let currentValue = 0.2;
+      const step = 0.1;
+      const min = 0.0;
+      const SPIN_INTERVAL = 150;
+
+      const { rerender } = render(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          min={min}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+
+      const decrementButton = getDecrementButton();
+      // await user.pointer({ keys: '[MouseLeft>]', target: decrementButton }); // 0.2 -> 0.1 (call 1)
+      fireEvent.pointerDown(decrementButton);
+      await act(async () => {});
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(currentValue).toBeCloseTo(0.1);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          min={min}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL); // 0.1 -> 0.0 (call 2)
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(currentValue).toBeCloseTo(0.0);
+      rerender(
+        <InputTime
+          {...defaultProps}
+          value={currentValue}
+          step={step}
+          min={min}
+          onChange={(newValue) => {
+            handleChange(newValue);
+            currentValue = newValue;
+          }}
+        />
+      );
+      expect(getDecrementButton().disabled).toBe(true);
+
+      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(currentValue).toBeCloseTo(0.0);
+
+      // await user.pointer({ keys: '[/MouseLeft]', target: decrementButton });
+      fireEvent.pointerUp(decrementButton);
+      await act(async () => {});
+    });
   });
 });

@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, vi, describe, it } from 'vitest';
+import { expect, vi, describe, it, beforeEach, afterEach } from 'vitest'; // Added beforeEach/afterEach
 import { InputNumber } from './InputNumber';
 
 describe('InputNumber', () => {
@@ -164,5 +164,165 @@ describe('InputNumber', () => {
     // If Button itself doesn't become disabled, this would need more specific checks or component changes.
     expect(screen.getByText('▲').closest('button')?.disabled).toBe(true);
     expect(screen.getByText('▼').closest('button')?.disabled).toBe(true);
+  });
+
+  describe('InputNumber Stepper Hold Functionality', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    });
+
+    const SPIN_INTERVAL = 150; // Should match component's SPIN_INTERVAL
+
+    it('increment button hold calls onChange multiple times and updates value', async () => {
+      let value = '0';
+      const handleChange = vi.fn((e: React.ChangeEvent<HTMLInputElement>) => {
+        value = e.target.value;
+      });
+
+      const { rerender } = render(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1" // Important for stepUp/stepDown behavior
+        />
+      );
+
+      const incrementButton = screen.getByText('▲').closest('button')!;
+      const inputElement = getInputElement();
+
+      // Simulate pointer down
+      fireEvent.pointerDown(incrementButton);
+      // userEvent dispatches events that might be caught by `act` automatically.
+      // For fireEvent, especially with timers, explicit act might be needed if state isn't updating for timers.
+      // The component's stepUp/Down dispatches 'input' event synchronously after stepUp/Down call.
+      // The setTimeout is for the next step.
+
+      // First immediate call due to stepUp()
+      // Need to wait for React to process the dispatched 'input' event and subsequent onChange
+      await act(async () => {});
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(value).toBe('1');
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+      expect(inputElement.value).toBe('1');
+
+      // Advance time for the first interval
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      });
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(value).toBe('2');
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+      expect(inputElement.value).toBe('2');
+
+      // Advance time for the second interval
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      });
+      expect(handleChange).toHaveBeenCalledTimes(3);
+      expect(value).toBe('3');
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+      expect(inputElement.value).toBe('3');
+
+      // Simulate pointer up
+      fireEvent.pointerUp(incrementButton);
+      await act(async () => {});
+
+      // Advance time a bit more to ensure no more calls
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      });
+      expect(handleChange).toHaveBeenCalledTimes(3);
+    });
+
+    it('decrement button hold calls onChange multiple times and updates value', async () => {
+      let value = '3';
+      const handleChange = vi.fn((e: React.ChangeEvent<HTMLInputElement>) => {
+        value = e.target.value;
+      });
+
+      const { rerender } = render(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+
+      const decrementButton = screen.getByText('▼').closest('button')!;
+      const inputElement = getInputElement();
+      expect(inputElement.value).toBe('3');
+
+      fireEvent.pointerDown(decrementButton);
+      await act(async () => {});
+
+      expect(handleChange).toHaveBeenCalledTimes(1);
+      expect(value).toBe('2');
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+      expect(inputElement.value).toBe('2');
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      });
+      expect(handleChange).toHaveBeenCalledTimes(2);
+      expect(value).toBe('1');
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          step="1"
+        />
+      );
+      expect(inputElement.value).toBe('1');
+
+      fireEvent.pointerUp(decrementButton);
+      await act(async () => {});
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      });
+      expect(handleChange).toHaveBeenCalledTimes(2);
+    });
   });
 });

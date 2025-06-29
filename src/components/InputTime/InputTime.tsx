@@ -258,16 +258,25 @@ export const InputTime: React.FC<InputTimeProps> = ({
     commitChange(parsed); // Commit immediately
   };
 
+  const performStep = useCallback(
+    (currentVal: number, direction: 'up' | 'down'): number => {
+      let newValue = currentVal + (direction === 'up' ? step : -step);
+      newValue = roundToStep(newValue, step, decimalPlaces);
+      newValue = Math.max(min, Math.min(max, newValue));
+      return newValue;
+    },
+    [step, min, max, decimalPlaces]
+  );
+
   const handleStep = useCallback(
     (direction: 'up' | 'down') => {
-      let newValue = value + (direction === 'up' ? step : -step);
-      // Ensure we don't get stuck if current value is not a multiple of step
-      // also handles potential floating point issues before min/max clamping
-      newValue = roundToStep(newValue, step, decimalPlaces);
-      newValue = Math.max(min, Math.min(max, newValue)); // Clamp
+      const newValue = performStep(value, direction);
+      // For single clicks, we want to commit the change fully.
+      // For spinning, onChange will be called directly.
+      // commitChange will also update display value.
       commitChange(newValue);
     },
-    [value, step, min, max, decimalPlaces, commitChange]
+    [value, performStep, commitChange]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -283,41 +292,131 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
-  const downTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
-  const upTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
+  const spinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const currentSpinDirection = useRef<'up' | 'down' | null>(null);
 
-  function stepUp() {
-    console.log('calling up');
-    handleStep('up');
+  const stepContinuously = useCallback(
+    (currentValForStep: number) => {
+      if (!currentSpinDirection.current) return;
 
-    upTimeoutRef.current = setTimeout(stepUp, SPIN_INTERVAL);
-  }
+      const newValue = performStep(
+        currentValForStep,
+        currentSpinDirection.current
+      );
 
-  function stepDown() {
-    handleStep('down');
+      const prevStepRounded = parseFloat(
+        currentValForStep.toFixed(decimalPlaces + 1)
+      );
+      const nextStepRounded = parseFloat(newValue.toFixed(decimalPlaces + 1));
 
-    downTimeoutRef.current = setTimeout(stepDown, SPIN_INTERVAL);
-  }
+      let continueSpinning = true;
 
-  function handleDownPressStart() {
-    stepDown();
-  }
+      if (nextStepRounded !== prevStepRounded) {
+        onChange(newValue);
+        setDisplayValue(secondsToHMSs(newValue, decimalPlaces));
+      } else {
+        // Value did not change, likely hit a boundary already or step is too small
+        // Ensure display is correct for the boundary value
+        setDisplayValue(secondsToHMSs(newValue, decimalPlaces)); // newValue is same as currentValForStep here
+        continueSpinning = false; // Stop if value didn't change
+      }
 
-  function handleDownPressEnd() {
-    if (downTimeoutRef.current) {
-      clearTimeout(downTimeoutRef.current);
+      // Check boundaries for stopping
+      if (
+        (currentSpinDirection.current === 'up' && newValue >= max) ||
+        (currentSpinDirection.current === 'down' && newValue <= min)
+      ) {
+        continueSpinning = false;
+      }
+
+      if (currentSpinDirection.current && continueSpinning) {
+        spinTimeoutRef.current = setTimeout(
+          () => stepContinuously(newValue), // Pass the new value for the next iteration
+          SPIN_INTERVAL
+        );
+      } else {
+        // Stop spinning
+        if (spinTimeoutRef.current) {
+          clearTimeout(spinTimeoutRef.current);
+          spinTimeoutRef.current = null;
+        }
+        currentSpinDirection.current = null;
+        // Ensure display is up-to-date with the final value from spin
+        setDisplayValue(secondsToHMSs(newValue, decimalPlaces));
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [performStep, onChange, decimalPlaces, min, max, SPIN_INTERVAL] // Removed value, displayValue
+  );
+
+  const handlePressStart = (direction: 'up' | 'down') => {
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current);
     }
-  }
+    currentSpinDirection.current = direction;
 
-  function handleUpPressStart() {
-    stepUp();
-  }
+    const initialNumericValue = hmsStringToSeconds(displayValue) ?? value;
+    const firstStepValue = performStep(initialNumericValue, direction);
 
-  function handleUpPressEnd() {
-    if (upTimeoutRef.current) {
-      clearTimeout(upTimeoutRef.current);
+    const initialRounded = parseFloat(
+      initialNumericValue.toFixed(decimalPlaces + 1)
+    );
+    const firstStepRounded = parseFloat(
+      firstStepValue.toFixed(decimalPlaces + 1)
+    );
+
+    if (firstStepRounded !== initialRounded) {
+      onChange(firstStepValue);
     }
-  }
+    setDisplayValue(secondsToHMSs(firstStepValue, decimalPlaces));
+    setIsEditing(true);
+
+    // Start continuous stepping if not already at a boundary
+    if (
+      (direction === 'up' && firstStepValue < max) ||
+      (direction === 'down' && firstStepValue > min)
+    ) {
+      spinTimeoutRef.current = setTimeout(
+        () => stepContinuously(firstStepValue),
+        SPIN_INTERVAL
+      );
+    }
+  };
+
+  const handlePressEnd = () => {
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current);
+      spinTimeoutRef.current = null;
+    }
+    currentSpinDirection.current = null;
+    // After spinning, ensure the final value is committed to canonicalize format, etc.
+    // The `value` prop might not be updated yet if onChange is async in parent,
+    // so parse from displayValue which should be the most current.
+    const finalNumericValue = hmsStringToSeconds(displayValue);
+    if (finalNumericValue !== null) {
+      // We don't want to call the full commitChange as it might have a debounce
+      // and also calls onChange again. The onChange has already been called for each step.
+      // We just need to ensure the editing state and potentially canonical display.
+      let processedValue = roundToStep(finalNumericValue, step, decimalPlaces);
+      processedValue = Math.max(min, Math.min(max, processedValue));
+      // If the final value from spin is different than prop `value`, call onChange
+      // This case should ideally be covered by the last onChange in 지속적으로_단계_수행
+      // but as a safeguard:
+      if (
+        parseFloat(processedValue.toFixed(decimalPlaces + 1)) !==
+        parseFloat(value.toFixed(decimalPlaces + 1))
+      ) {
+        // This might lead to an extra onChange call if the parent hasn't updated `value` prop yet.
+        // It's safer to rely on the `onChange` calls within the spin loop.
+      }
+      // Ensure the display is canonical.
+      setDisplayValue(secondsToHMSs(processedValue, decimalPlaces));
+      setIsEditing(false); // Ensure editing mode is turned off
+    } else {
+      // If display value became invalid somehow, revert to last known good prop value
+      setDisplayValue(secondsToHMSs(value, decimalPlaces));
+    }
+  };
 
   const appendWithStepper = (
     <>
@@ -327,8 +426,9 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onPointerDown={handleUpPressStart}
-          onPointerUp={handleUpPressEnd}
+          onPointerDown={() => handlePressStart('up')}
+          onPointerUp={handlePressEnd}
+          onPointerLeave={handlePressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={disabled || value >= max}
           aria-label="Increment time">
           ▲
@@ -337,8 +437,9 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onPointerDown={handleDownPressStart}
-          onPointerUp={handleDownPressEnd}
+          onPointerDown={() => handlePressStart('down')}
+          onPointerUp={handlePressEnd}
+          onPointerLeave={handlePressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={disabled || value <= min}
           aria-label="Decrement time">
           ▼
