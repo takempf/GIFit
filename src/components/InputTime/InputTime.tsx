@@ -166,6 +166,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
   className = '',
   inputClassName = '',
   buttonClassName: _buttonClassName = '',
+  append = null,
   ...restProps
 }) => {
   const decimalPlaces = getStepDecimalPlaces(step);
@@ -293,27 +294,30 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
-  const append = (
-    <div className={css.stepper}>
-      <Button
-        size="x-small"
-        variant="ghost"
-        padding="none"
-        onClick={() => handleStep('up')}
-        disabled={disabled || value >= max}
-        aria-label="Increment time">
-        ▲
-      </Button>
-      <Button
-        size="x-small"
-        variant="ghost"
-        padding="none"
-        onClick={() => handleStep('down')}
-        disabled={disabled || value <= min}
-        aria-label="Decrement time">
-        ▼
-      </Button>
-    </div>
+  const appendWithStepper = (
+    <>
+      {append}
+      <div className={css.stepper}>
+        <Button
+          size="x-small"
+          variant="ghost"
+          padding="none"
+          onClick={() => handleStep('up')}
+          disabled={disabled || value >= max}
+          aria-label="Increment time">
+          ▲
+        </Button>
+        <Button
+          size="x-small"
+          variant="ghost"
+          padding="none"
+          onClick={() => handleStep('down')}
+          disabled={disabled || value <= min}
+          aria-label="Decrement time">
+          ▼
+        </Button>
+      </div>
+    </>
   );
 
   return (
@@ -335,7 +339,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
         aria-valuemax={max === Infinity ? undefined : max}
         aria-label="Time input in H:MM:SS.s or M:SS.s format"
         placeholder="M:SS.s or H:MM:SS.s"
-        append={append}
+        append={appendWithStepper}
         {...restProps}
       />
     </div>

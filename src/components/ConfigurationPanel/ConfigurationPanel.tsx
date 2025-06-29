@@ -39,7 +39,8 @@ type InputActionPayload = {
 type ConfigAction =
   | { type: 'INPUT_CHANGE'; payload: InputActionPayload }
   | { type: 'VIDEO_LOADED_DATA'; payload: { aspectRatio: number } }
-  | { type: 'VIDEO_SEEKED'; payload: { currentTime: number } };
+  | { type: 'VIDEO_SEEKED'; payload: { currentTime: number } }
+  | { type: 'SET_START_TO_CURRENT_TIME'; payload: { currentTime: number } };
 
 function seekTo(videoElement: HTMLVideoElement, time: number) {
   if (typeof time !== 'number' || time < 0) {
@@ -95,6 +96,13 @@ function reducer(state: ConfigState, action: ConfigAction): ConfigState {
         ...state,
         aspectRatio: action.payload.aspectRatio,
         height: Math.round(state.width / action.payload.aspectRatio)
+      };
+    }
+
+    case 'SET_START_TO_CURRENT_TIME': {
+      return {
+        ...state,
+        start: action.payload.currentTime
       };
     }
 
@@ -251,6 +259,17 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     event.stopPropagation();
   }
 
+  function handleSetStartToCurrentTimeClick() {
+    if (video) {
+      dispatch({
+        type: 'SET_START_TO_CURRENT_TIME',
+        payload: {
+          currentTime: video.currentTime
+        }
+      });
+    }
+  }
+
   return (
     <div className={css.gifitConfiguration}>
       <form
@@ -265,6 +284,9 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           min={0}
           max={maxStart}
           onChange={handleStartChange}
+          append={
+            <Button onClick={handleSetStartToCurrentTimeClick}>Set</Button>
+          }
         />
         <InputNumber
           className={css.duration}
