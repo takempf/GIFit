@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 import { Input } from '../Input/Input';
 import { Button } from '../Button/Button';
@@ -24,22 +24,36 @@ export function InputNumber({
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
-  function handleUpClick() {
+  const dispatchChangeEvent = () => {
+    // Dispatch an event manually, stepUp/stepDown does not fire the event
+    const event = new Event('input', { bubbles: true, cancelable: true });
+    inputRef.current?.dispatchEvent(event);
+  };
+
+  const handleStepUp = () => {
     inputRef.current?.stepUp();
+    dispatchChangeEvent();
+  };
 
-    // Dispatch an event manually, stepUp does not fire the event
-    const event = new Event('input', { bubbles: true, cancelable: true });
-    inputRef.current?.dispatchEvent(event);
-  }
-
-  function handleDownClick() {
+  const handleStepDown = () => {
     inputRef.current?.stepDown();
+    dispatchChangeEvent();
+  };
 
-    // Dispatch an event manually, stepDown does not fire the event
-    const event = new Event('input', { bubbles: true, cancelable: true });
-    inputRef.current?.dispatchEvent(event);
-  }
+  const startStepping = (stepFunction: () => void) => {
+    stepFunction(); // Initial step
+    const id = setInterval(stepFunction, 250);
+    setIntervalId(id);
+  };
+
+  const stopStepping = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  };
 
   const controls = (
     <>
@@ -50,7 +64,12 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleUpClick}
+          onMouseDown={() => startStepping(handleStepUp)}
+          onMouseUp={stopStepping}
+          onMouseLeave={stopStepping}
+          onTouchStart={() => startStepping(handleStepUp)}
+          onTouchEnd={stopStepping}
+          onClick={handleStepUp} // For single click accessibility
           disabled={restProps.disabled}>
           ▲
         </Button>
@@ -58,7 +77,12 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleDownClick}
+          onMouseDown={() => startStepping(handleStepDown)}
+          onMouseUp={stopStepping}
+          onMouseLeave={stopStepping}
+          onTouchStart={() => startStepping(handleStepDown)}
+          onTouchEnd={stopStepping}
+          onClick={handleStepDown} // For single click accessibility
           disabled={restProps.disabled}>
           ▼
         </Button>

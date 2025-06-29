@@ -165,4 +165,153 @@ describe('InputNumber', () => {
     expect(screen.getByText('▲').closest('button')?.disabled).toBe(true);
     expect(screen.getByText('▼').closest('button')?.disabled).toBe(true);
   });
+
+  describe('long press functionality', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.runOnlyPendingTimers();
+      vi.useRealTimers();
+    });
+
+    it('increments value repeatedly when holding up button', async () => {
+      let value = '0';
+      const handleChange = vi.fn((e: React.ChangeEvent<HTMLInputElement>) => {
+        value = e.target.value;
+      });
+      const { rerender } = render(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      const upButton = screen.getByText('▲');
+      const inputElement = getInputElement();
+
+      // Simulate mouse down
+      await userEvent.pointer({ keys: '[MouseLeft>]', target: upButton });
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('1'); // Initial step
+
+      vi.advanceTimersByTime(250);
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('2');
+
+      vi.advanceTimersByTime(500);
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('4'); // Two more steps
+
+      // Simulate mouse up
+      await userEvent.pointer({ keys: '[/MouseLeft]', target: upButton });
+      vi.advanceTimersByTime(250); // Should not trigger further increments
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('4');
+    });
+
+    it('decrements value repeatedly when holding down button', async () => {
+      let value = '10';
+      const handleChange = vi.fn((e: React.ChangeEvent<HTMLInputElement>) => {
+        value = e.target.value;
+      });
+      const { rerender } = render(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      const downButton = screen.getByText('▼');
+      const inputElement = getInputElement();
+
+      // Simulate mouse down
+      await userEvent.pointer({ keys: '[MouseLeft>]', target: downButton });
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('9'); // Initial step
+
+      vi.advanceTimersByTime(250);
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('8');
+
+      vi.advanceTimersByTime(500);
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('6'); // Two more steps
+
+      // Simulate mouse up
+      await userEvent.pointer({ keys: '[/MouseLeft]', target: downButton });
+      vi.advanceTimersByTime(250); // Should not trigger further decrements
+      rerender(
+        <InputNumber
+          name="test-input"
+          label="Test Input"
+          value={value}
+          onChange={handleChange}
+          type="number"
+        />
+      );
+      expect(inputElement.value).toBe('6');
+    });
+  });
 });
