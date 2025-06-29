@@ -113,6 +113,10 @@ interface ConfigurationPanelProps {
 function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const video = useAppStore((state) => state.videoElement);
 
+  if (!video) {
+    return;
+  }
+
   const [state, dispatch] = useReducer(reducer, {
     start: video?.currentTime ?? 0,
     duration: 2,
@@ -123,6 +127,11 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     quality: 5,
     aspectRatio: DEFAULT_WIDTH / DEFAULT_HEIGHT
   });
+
+  const maxWidth = Math.min(video.videoWidth, 1920);
+  const maxHeight = Math.max(video.videoHeight, 1080);
+  const maxStart = video.duration - state.duration;
+  const maxDuration = Math.min(video.duration - state.start, 30);
 
   useEffect(() => {
     if (!(video instanceof HTMLVideoElement)) {
@@ -253,6 +262,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           name="start"
           label="Start"
           value={state.start}
+          min={0}
+          max={maxStart}
           onChange={handleStartChange}
         />
         <InputNumber
@@ -261,6 +272,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           label="Duration"
           type="number"
           value={String(state.duration)}
+          min={1 / state.framerate}
+          max={maxDuration}
           step={1 / state.framerate}
           onChange={handleInputChange}
         />
@@ -270,6 +283,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           label="Width"
           type="number"
           value={String(state.width)}
+          min={32}
+          max={maxWidth}
           onChange={handleInputChange}
         />
         <ButtonToggle
@@ -294,6 +309,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           label="Height"
           type="number"
           value={String(state.height)}
+          min={32}
+          max={maxHeight}
           onChange={handleInputChange}
         />
         <InputNumber
