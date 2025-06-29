@@ -529,4 +529,80 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     expect(getInput().value).toBe('1:00:00');
   });
+
+  describe('Append Button', () => {
+    it('renders append button when icon and handler are provided', () => {
+      const handleAppendClick = vi.fn();
+      const icon = <span>ICON</span>;
+      render(
+        <InputTime
+          {...defaultProps}
+          appendButtonIcon={icon}
+          onAppendButtonClick={handleAppendClick}
+          appendButtonLabel="Test Append"
+        />
+      );
+      const appendButton = screen.getByLabelText('Test Append');
+      expect(appendButton).toBeDefined();
+      expect(appendButton.textContent).toBe('ICON');
+    });
+
+    it('does not render append button if icon is missing', () => {
+      const handleAppendClick = vi.fn();
+      render(
+        <InputTime
+          {...defaultProps}
+          onAppendButtonClick={handleAppendClick}
+          appendButtonLabel="Test Append No Icon"
+        />
+      );
+      expect(screen.queryByLabelText('Test Append No Icon')).toBeNull();
+    });
+
+    it('does not render append button if handler is missing', () => {
+      const icon = <span>ICON</span>;
+      render(
+        <InputTime
+          {...defaultProps}
+          appendButtonIcon={icon}
+          appendButtonLabel="Test Append No Handler"
+        />
+      );
+      expect(screen.queryByLabelText('Test Append No Handler')).toBeNull();
+    });
+
+    it('calls onAppendButtonClick when append button is clicked', async () => {
+      const handleAppendClick = vi.fn();
+      const icon = <span>ICON</span>;
+      render(
+        <InputTime
+          {...defaultProps}
+          appendButtonIcon={icon}
+          onAppendButtonClick={handleAppendClick}
+          appendButtonLabel="Clickable Append"
+        />
+      );
+      const appendButton = screen.getByLabelText('Clickable Append');
+      await user.click(appendButton);
+      expect(handleAppendClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('append button is disabled when InputTime is disabled', () => {
+      const handleAppendClick = vi.fn();
+      const icon = <span>ICON</span>;
+      render(
+        <InputTime
+          {...defaultProps}
+          appendButtonIcon={icon}
+          onAppendButtonClick={handleAppendClick}
+          appendButtonLabel="Disabled Append"
+          disabled={true}
+        />
+      );
+      const appendButton = screen.getByLabelText(
+        'Disabled Append'
+      ) as HTMLButtonElement;
+      expect(appendButton.disabled).toBe(true);
+    });
+  });
 });

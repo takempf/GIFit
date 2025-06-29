@@ -1,5 +1,15 @@
+.appendContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Adjust as needed */
+}
+
+.appendButton {
+  /* Add any specific styles for the new button if needed */
+  /* For example, if it needs different padding or margin than steppers */
+}
+
 .stepper {
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }

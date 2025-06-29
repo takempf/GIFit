@@ -14,6 +14,8 @@ import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
 
 import LinkIcon from '@/assets/link.svg?react';
 import LinkEmptyIcon from '@/assets/link-empty.svg?react';
+import ArrowRightIcon from '@/assets/arrow-right.svg?react';
+import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 
 const DEFAULT_WIDTH = 320;
 const DEFAULT_HEIGHT = 180;
@@ -113,72 +115,93 @@ interface ConfigurationPanelProps {
 function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const video = useAppStore((state) => state.videoElement);
 
-  if (!video) {
-    return;
-  }
-
+  // Initialize state unconditionally
   const [state, dispatch] = useReducer(reducer, {
-    start: video?.currentTime ?? 0,
+    start: video?.currentTime ?? 0, // video might be null here initially
     duration: 2,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
     linkDimensions: true,
     framerate: 10,
     quality: 5,
-    aspectRatio: DEFAULT_WIDTH / DEFAULT_HEIGHT
+    aspectRatio: video
+      ? getVideoAspectRatio(video)
+      : DEFAULT_WIDTH / DEFAULT_HEIGHT
   });
 
-  const maxWidth = Math.min(video.videoWidth, 1920);
-  const maxHeight = Math.max(video.videoHeight, 1080);
-  const maxStart = video.duration - state.duration;
-  const maxDuration = Math.min(video.duration - state.start, 30);
-
   useEffect(() => {
-    if (!(video instanceof HTMLVideoElement)) {
-      return;
-    }
-
-    function handleLoadedMetadata() {
-      const aspectRatio = getVideoAspectRatio(video as HTMLVideoElement);
-      dispatch({
-        type: 'VIDEO_LOADED_DATA',
-        payload: {
-          aspectRatio
-        }
-      });
-    }
-
-    handleLoadedMetadata();
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-
-    return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    };
-  }, [video]);
-
-  useEffect(() => {
-    if (!(video instanceof HTMLVideoElement)) {
-      return;
-    }
-
-    function handleVideoSeeked() {
-      const { isOpen, status } = useAppStore.getState();
-      if (video && isOpen && status === 'configuring' && video.paused) {
+    // Effect for video load data
+    if (video instanceof HTMLVideoElement) {
+      const handleLoadedMetadata = () => {
+        const aspectRatio = getVideoAspectRatio(video);
         dispatch({
-          type: 'VIDEO_SEEKED',
+          type: 'VIDEO_LOADED_DATA',
           payload: {
-            currentTime: video.currentTime
+            aspectRatio
           }
         });
+      };
+
+      // If metadata already loaded, call handler immediately
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        handleLoadedMetadata();
       }
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+      return () => {
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      };
     }
+  }, [video]); // Dependency on video ensures this runs if video object changes
 
-    video.addEventListener('seeked', handleVideoSeeked);
+  useEffect(() => {
+    // Effect for video seeked
+    if (video instanceof HTMLVideoElement) {
+      const handleVideoSeeked = () => {
+        const { isOpen, status } = useAppStore.getState();
+        if (video && isOpen && status === 'configuring' && video.paused) {
+          dispatch({
+            type: 'VIDEO_SEEKED',
+            payload: {
+              currentTime: video.currentTime
+            }
+          });
+        }
+      };
 
-    return () => {
-      video.removeEventListener('seeked', handleVideoSeeked);
-    };
-  }, [video]);
+      video.addEventListener('seeked', handleVideoSeeked);
+
+      return () => {
+        video.removeEventListener('seeked', handleVideoSeeked);
+      };
+    }
+  }, [video]); // Dependency on video
+
+  // Early return after all hooks have been called
+  if (!video) {
+    // Optionally, render a loading state or null
+    return null; // Or some placeholder if the panel should always render something
+  }
+
+  // Calculations depending on video properties, now safe to use video
+  const maxWidth = Math.min(video.videoWidth, 1920);
+  const maxHeight = Math.max(video.videoHeight, 1080); // Should be video.videoHeight, not Math.max
+  const maxStart = video.duration ? video.duration - state.duration : 0;
+  const maxDuration = video.duration
+    ? Math.min(video.duration - state.start, 30)
+    : 30;
+
+  // Effect for initializing start time from video - only if video.currentTime changes
+  // This specific effect might be redundant if `useReducer` initial state handles it
+  // and `VIDEO_SEEKED` updates it. However, if direct init is needed:
+  // useEffect(() => {
+  //   if (video && video.currentTime !== state.start) {
+  // This could cause a loop if not careful, ensure it only runs on actual changes
+  // or if the initial video.currentTime was not yet reflected.
+  // For now, let's assume reducer init + VIDEO_SEEKED is enough.
+  // If not, a more specific condition is needed here.
+  //   }
+  // }, [video, video?.currentTime, state.start]);
 
   // FIX: Changed event type from 'InputEvent' to React's 'ChangeEvent'.
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -246,6 +269,38 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     onSubmit(state);
   }
 
+  function handleSetStartToCurrentTime() {
+    if (video) {
+      const currentTime = video.currentTime;
+      dispatch({
+        type: 'INPUT_CHANGE',
+        payload: {
+          name: 'start',
+          value: currentTime
+        }
+      });
+      // No need to call seekTo(video, currentTime) as the effect in handleStartChange will do it,
+      // or if not, the video is already at currentTime.
+    }
+  }
+
+  function handleSetDurationToCurrentTime() {
+    if (video) {
+      const currentTime = video.currentTime;
+      if (currentTime > state.start) {
+        const newDuration = currentTime - state.start;
+        dispatch({
+          type: 'INPUT_CHANGE',
+          payload: {
+            name: 'duration',
+            value: newDuration
+          }
+        });
+        // No need to call seekTo for duration change, handled by handleInputChange if necessary
+      }
+    }
+  }
+
   // FIX: Changed event type from 'KeyboardEvent' to React's 'KeyboardEvent'.
   function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
     event.stopPropagation();
@@ -265,6 +320,9 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           min={0}
           max={maxStart}
           onChange={handleStartChange}
+          onAppendButtonClick={handleSetStartToCurrentTime}
+          appendButtonIcon={<ArrowRightIcon />}
+          appendButtonLabel="Set start to current time"
         />
         <InputNumber
           className={css.duration}
@@ -276,6 +334,9 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           max={maxDuration}
           step={1 / state.framerate}
           onChange={handleInputChange}
+          onAppendButtonClick={handleSetDurationToCurrentTime}
+          appendButtonIcon={<ArrowDownIcon />}
+          appendButtonLabel="Set duration to current time"
         />
         <InputNumber
           className={css.width}

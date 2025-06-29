@@ -150,6 +150,9 @@ interface InputTimeProps {
   className?: string;
   inputClassName?: string;
   buttonClassName?: string;
+  onAppendButtonClick?: () => void;
+  appendButtonIcon?: React.ReactNode;
+  appendButtonLabel?: string;
 }
 
 // --- The Component (logic mostly same, relies on new secondsToHMSs) ---
@@ -166,6 +169,9 @@ export const InputTime: React.FC<InputTimeProps> = ({
   className = '',
   inputClassName = '',
   buttonClassName: _buttonClassName = '',
+  onAppendButtonClick,
+  appendButtonIcon,
+  appendButtonLabel = 'Append button',
   ...restProps
 }) => {
   const decimalPlaces = getStepDecimalPlaces(step);
@@ -293,8 +299,26 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
-  const append = (
-    <div className={css.stepper}>
+  const appendElements: React.ReactNode[] = [];
+
+  if (onAppendButtonClick && appendButtonIcon) {
+    appendElements.push(
+      <Button
+        key="append-button"
+        size="x-small"
+        variant="ghost"
+        padding="none"
+        onClick={onAppendButtonClick}
+        disabled={disabled}
+        aria-label={appendButtonLabel}
+        className={css.appendButton}>
+        {appendButtonIcon}
+      </Button>
+    );
+  }
+
+  appendElements.push(
+    <div className={css.stepper} key="stepper">
       <Button
         size="x-small"
         variant="ghost"
@@ -315,6 +339,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
       </Button>
     </div>
   );
+
+  const append = <div className={css.appendContainer}>{appendElements}</div>;
 
   return (
     <div className={`time-input-container ${className}`}>

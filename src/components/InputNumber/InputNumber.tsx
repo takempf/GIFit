@@ -12,7 +12,10 @@ interface InputNumberProps extends InputProps {
   label: React.ReactNode;
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  append?: React.ReactNode;
+  append?: React.ReactNode; // Existing append for things like steppers
+  onAppendButtonClick?: () => void;
+  appendButtonIcon?: React.ReactNode;
+  appendButtonLabel?: string;
 }
 
 export function InputNumber({
@@ -20,7 +23,10 @@ export function InputNumber({
   label,
   value,
   onChange,
-  append,
+  append, // This will be the stepper controls passed from outside if needed, or similar
+  onAppendButtonClick,
+  appendButtonIcon,
+  appendButtonLabel = 'Append button',
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
@@ -41,37 +47,65 @@ export function InputNumber({
     inputRef.current?.dispatchEvent(event);
   }
 
-  const controls = (
-    <>
-      <div
-        className={css.buttonGrid} // Use CSS Module class
+  const stepperControls = (
+    <div
+      className={css.buttonGrid} // Use CSS Module class
+    >
+      <Button
+        size="x-small"
+        variant="ghost"
+        padding="none"
+        onClick={handleUpClick}
+        disabled={restProps.disabled}>
+        ▲
+      </Button>
+      <Button
+        size="x-small"
+        variant="ghost"
+        padding="none"
+        onClick={handleDownClick}
+        disabled={restProps.disabled}>
+        ▼
+      </Button>
+    </div>
+  );
+
+  const appendElements: React.ReactNode[] = [];
+
+  if (onAppendButtonClick && appendButtonIcon) {
+    appendElements.push(
+      <Button
+        key="custom-append-button"
+        size="x-small"
+        variant="ghost"
+        padding="none"
+        onClick={onAppendButtonClick}
+        disabled={restProps.disabled}
+        aria-label={appendButtonLabel}
+        className={css.appendButton} // Assuming similar styling to InputTime
       >
-        <Button
-          size="x-small"
-          variant="ghost"
-          padding="none"
-          onClick={handleUpClick}
-          disabled={restProps.disabled}>
-          ▲
-        </Button>
-        <Button
-          size="x-small"
-          variant="ghost"
-          padding="none"
-          onClick={handleDownClick}
-          disabled={restProps.disabled}>
-          ▼
-        </Button>
-      </div>
-      {append}
-    </>
+        {appendButtonIcon}
+      </Button>
+    );
+  }
+
+  // Add the standard stepper controls
+  appendElements.push(stepperControls);
+
+  // Add any other append content passed via props
+  if (append) {
+    appendElements.push(append);
+  }
+
+  const combinedAppend = (
+    <div className={css.appendContainer}>{appendElements}</div>
   );
 
   return (
     <Input
       name={name}
       label={label}
-      append={controls}
+      append={combinedAppend}
       value={value}
       onChange={onChange}
       type="number"

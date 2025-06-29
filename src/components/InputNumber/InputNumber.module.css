@@ -1,5 +1,16 @@
+.appendContainer {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* Adjust as needed */
+}
+
+.appendButton {
+  /* Specific styles for InputNumber's append button, if different from InputTime */
+}
+
 .buttonGrid {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  /* Ensure it doesn't conflict with appendContainer flex properties */
 }
