@@ -7,7 +7,7 @@ interface AppLogoProps {
   className?: string;
 }
 
-export function AppLogo({ className, ...restProps }: AppLogoProps) {
+export function AppLogo({ className: _className, ...restProps }: AppLogoProps) {
   return (
     <motion.span
       className={css.appLogo}

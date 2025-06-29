@@ -1,6 +1,6 @@
 import css from './Progress.module.css';
 
-import { useEffect, useState, CSSProperties, use } from 'react';
+import { useEffect, useState, CSSProperties } from 'react'; // Removed 'use'
 import { AnimatePresence, motion } from 'motion/react';
 
 import { useAppStore } from '@/stores/appStore';
@@ -17,13 +17,13 @@ import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 const PROGRESS_FIXED_VERTICAL_CENTER = 120;
 const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
 
-interface ImageInfo {
-  blob: Blob;
-  height: number;
-  width: number;
-}
+// interface ImageInfo {
+//   blob: Blob;
+//   height: number;
+//   width: number;
+// }
 
-interface ProgressProps {}
+interface ProgressProps extends Record<string, unknown> {}
 
 const chunkTransition = {
   type: 'spring',

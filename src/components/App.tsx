@@ -9,7 +9,7 @@ import { AppFrame } from './AppFrame/AppFrame';
 import { log } from '@/utils/logger';
 import { AnimatePresence } from 'motion/react';
 
-interface AppProps {}
+interface AppProps extends Record<string, unknown> {}
 
 export function App({}: AppProps) {
   const videoElement = useAppStore((state) => state.videoElement);

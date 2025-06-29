@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
 import { InputTime } from './InputTime';
@@ -96,9 +96,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         {...defaultProps}
         value={value}
         step={1}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -110,9 +110,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         {...defaultProps}
         value={value}
         step={1}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -131,9 +131,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         step={0.1}
         min={0.5}
         max={0.7}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -149,9 +149,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         step={0.1}
         min={0.5}
         max={0.7}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -165,9 +165,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         step={0.1}
         min={0.5}
         max={0.7}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -184,9 +184,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         step={1}
         min={0}
         max={10}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -203,9 +203,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         step={1}
         min={0}
         max={10}
-        onChange={(newVal) => {
-          handleChange(newVal);
-          value = newVal;
+        onChange={(_newVal) => {
+          handleChange(_newVal);
+          value = _newVal;
         }}
       />
     );
@@ -379,7 +379,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       <InputTime
         {...defaultProps}
         value={value} // Use updated "parent state" value
-        onChange={(newVal) => {
+        onChange={(_newVal) => {
           /* ... */
         }}
         debounceMs={debounceMs}
@@ -418,7 +418,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       <InputTime
         {...defaultProps}
         value={value}
-        onChange={(newVal) => {
+        onChange={(_newVal) => {
           /* ... */
         }}
         debounceMs={debounceMs}
@@ -457,7 +457,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       <InputTime
         {...defaultProps}
         value={value}
-        onChange={(newVal) => {
+        onChange={(_newVal) => {
           /* ... */
         }}
         debounceMs={debounceMs}

@@ -15,7 +15,7 @@ import { AppFrame } from '../AppFrame/AppFrame';
 
 import TKLogo from '@/assets/tk.svg';
 
-interface PopupProps {}
+interface PopupProps extends Record<string, unknown> {}
 
 interface FormValues {
   start: number;
@@ -73,7 +73,7 @@ export function Popup({}: PopupProps) {
       setName(name);
       setStatus('generating');
     },
-    [videoElement]
+    [videoElement, createGif, setName, setStatus]
   );
 
   function handleCloseAppClick() {
@@ -127,7 +127,8 @@ export function Popup({}: PopupProps) {
           <a
             className={css.credit}
             href="https://kempf.dev/#gifit"
-            target="_blank">
+            target="_blank"
+            rel="noreferrer">
             Crafted by <img className={css.tkLogo} src={TKLogo} />
           </a>
           <span className={css.version}>v3.0.0</span>
