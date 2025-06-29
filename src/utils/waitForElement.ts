@@ -31,7 +31,7 @@ export function waitForElement(
     }, timeout);
 
     // Set up the MutationObserver
-    observer = new MutationObserver((mutations) => {
+    observer = new MutationObserver((_mutations) => {
       const targetElement = parentElement.querySelector(selector);
       if (targetElement) {
         clearTimeout(timeoutId); // Clear the timeout

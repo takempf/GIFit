@@ -117,7 +117,8 @@ const hmsStringToSeconds = (hmsString: string): number | null => {
     }
 
     return hours * 3600 + minutes * 60 + seconds;
-  } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e) {
     return null;
   }
 };
@@ -164,7 +165,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
   disabled = false,
   className = '',
   inputClassName = '',
-  buttonClassName = '',
+  buttonClassName: _buttonClassName = '',
   ...restProps
 }) => {
   const decimalPlaces = getStepDecimalPlaces(step);
