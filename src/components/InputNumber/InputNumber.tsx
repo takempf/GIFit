@@ -5,6 +5,8 @@ import { Button } from '../Button/Button';
 
 import css from './InputNumber.module.css';
 
+const SPIN_INTERVAL = 150;
+
 import type { InputProps } from '../Input/Input';
 
 interface InputNumberProps extends InputProps {
@@ -24,21 +26,47 @@ export function InputNumber({
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
+  const downTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
+  const upTimeoutRef: React.RefObject<NodeJS.Timeout | null> = useRef(null);
 
-  function handleUpClick() {
+  function stepUp() {
     inputRef.current?.stepUp();
 
     // Dispatch an event manually, stepUp does not fire the event
     const event = new Event('input', { bubbles: true, cancelable: true });
     inputRef.current?.dispatchEvent(event);
+
+    upTimeoutRef.current = setTimeout(stepUp, SPIN_INTERVAL);
   }
 
-  function handleDownClick() {
+  function stepDown() {
     inputRef.current?.stepDown();
 
     // Dispatch an event manually, stepDown does not fire the event
     const event = new Event('input', { bubbles: true, cancelable: true });
     inputRef.current?.dispatchEvent(event);
+
+    downTimeoutRef.current = setTimeout(stepDown, SPIN_INTERVAL);
+  }
+
+  function handleDownPressStart() {
+    stepDown();
+  }
+
+  function handleDownPressEnd() {
+    if (downTimeoutRef.current) {
+      clearTimeout(downTimeoutRef.current);
+    }
+  }
+
+  function handleUpPressStart() {
+    stepUp();
+  }
+
+  function handleUpPressEnd() {
+    if (upTimeoutRef.current) {
+      clearTimeout(upTimeoutRef.current);
+    }
   }
 
   const controls = (
@@ -50,7 +78,8 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleUpClick}
+          onPointerDown={handleUpPressStart}
+          onPointerUp={handleUpPressEnd}
           disabled={restProps.disabled}>
           ▲
         </Button>
@@ -58,7 +87,8 @@ export function InputNumber({
           size="x-small"
           variant="ghost"
           padding="none"
-          onClick={handleDownClick}
+          onPointerDown={handleDownPressStart}
+          onPointerUp={handleDownPressEnd}
           disabled={restProps.disabled}>
           ▼
         </Button>
