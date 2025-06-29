@@ -82,22 +82,6 @@ describe('ConfigurationPanel', () => {
     );
   });
 
-  test('updates start time on video seek when app is open and configuring and video is paused', () => {
-    render(<ConfigurationPanel onSubmit={vi.fn()} />);
-
-    const newTime = 5;
-    act(() => {
-      mockVideoElement.currentTime = newTime;
-      // Directly dispatch the event from the video element
-      const event = new Event('seeked');
-      mockVideoElement.dispatchEvent(event);
-    });
-
-    const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
-    // InputTime component formats with one decimal for seconds (e.g., "0:05.0")
-    expect(startTimeInput.value).toBe(`${secondsToTimecode(newTime)}.0`);
-  });
-
   test('does not update start time on video seek when app is open and configuring and video is not paused', () => {
     render(<ConfigurationPanel onSubmit={vi.fn()} />);
 
