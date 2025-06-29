@@ -173,6 +173,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
     secondsToHMSs(value, decimalPlaces)
   );
   const [isEditing, setIsEditing] = useState(false);
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!isEditing) {
@@ -293,13 +294,31 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
+  const startStepping = (direction: 'up' | 'down') => {
+    handleStep(direction); // Initial step
+    const id = setInterval(() => handleStep(direction), 250);
+    setIntervalId(id);
+  };
+
+  const stopStepping = () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      setIntervalId(null);
+    }
+  };
+
   const append = (
     <div className={css.stepper}>
       <Button
         size="x-small"
         variant="ghost"
         padding="none"
-        onClick={() => handleStep('up')}
+        onClick={() => handleStep('up')} // For single click accessibility
+        onMouseDown={() => startStepping('up')}
+        onMouseUp={stopStepping}
+        onMouseLeave={stopStepping}
+        onTouchStart={() => startStepping('up')}
+        onTouchEnd={stopStepping}
         disabled={disabled || value >= max}
         aria-label="Increment time">
         ▲
@@ -308,7 +327,12 @@ export const InputTime: React.FC<InputTimeProps> = ({
         size="x-small"
         variant="ghost"
         padding="none"
-        onClick={() => handleStep('down')}
+        onClick={() => handleStep('down')} // For single click accessibility
+        onMouseDown={() => startStepping('down')}
+        onMouseUp={stopStepping}
+        onMouseLeave={stopStepping}
+        onTouchStart={() => startStepping('down')}
+        onTouchEnd={stopStepping}
         disabled={disabled || value <= min}
         aria-label="Decrement time">
         ▼
