@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { vi, describe, beforeEach, test, expect } from 'vitest';
 import ConfigurationPanel from './ConfigurationPanel'; // Adjust path if necessary
 import { secondsToTimecode } from '@/utils/secondsToTimecode'; // Helper for assertions
@@ -184,5 +184,24 @@ describe('ConfigurationPanel', () => {
     const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
     // InputTime component formats with one decimal for seconds (e.g., "0:03.0")
     expect(startTimeInput.value).toBe(`${secondsToTimecode(3)}.0`);
+  });
+
+  test('updates start time to video current time when "Now" button is clicked', () => {
+    render(<ConfigurationPanel onSubmit={vi.fn()} />);
+
+    const newTime = 15;
+    act(() => {
+      // Simulate the user seeking the video to a new time
+      mockVideoElement.currentTime = newTime;
+    });
+
+    const nowButton = screen.getByRole('button', {
+      name: /Now/i
+    });
+    fireEvent.click(nowButton);
+
+    const startTimeInput = screen.getByLabelText('Start') as HTMLInputElement;
+    // The input value should be updated to the video's current time, formatted correctly
+    expect(startTimeInput.value).toBe(`${secondsToTimecode(newTime)}.0`);
   });
 });
