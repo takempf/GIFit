@@ -121,10 +121,6 @@ interface ConfigurationPanelProps {
 function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const video = useAppStore((state) => state.videoElement);
 
-  if (!video) {
-    return;
-  }
-
   const [state, dispatch] = useReducer(reducer, {
     start: video?.currentTime ?? 0,
     duration: 2,
@@ -135,11 +131,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     quality: 5,
     aspectRatio: DEFAULT_WIDTH / DEFAULT_HEIGHT
   });
-
-  const maxWidth = Math.min(video.videoWidth, 1920);
-  const maxHeight = Math.max(video.videoHeight, 1080);
-  const maxStart = video.duration - state.duration;
-  const maxDuration = Math.min(video.duration - state.start, 30);
 
   useEffect(() => {
     if (!(video instanceof HTMLVideoElement)) {
@@ -187,6 +178,15 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       video.removeEventListener('seeked', handleVideoSeeked);
     };
   }, [video]);
+
+  if (!video) {
+    return;
+  }
+
+  const maxWidth = Math.min(video.videoWidth, 1920);
+  const maxHeight = Math.max(video.videoHeight, 1080);
+  const maxStart = video.duration - state.duration;
+  const maxDuration = Math.min(video.duration - state.start, 30);
 
   // FIX: Changed event type from 'InputEvent' to React's 'ChangeEvent'.
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -285,7 +285,14 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           max={maxStart}
           onChange={handleStartChange}
           append={
-            <Button onClick={handleSetStartToCurrentTimeClick}>Set</Button>
+            <Button
+              title="Set to current time"
+              variant="outline"
+              size="x-small"
+              padding="x-small"
+              onClick={handleSetStartToCurrentTimeClick}>
+              Now
+            </Button>
           }
         />
         <InputNumber

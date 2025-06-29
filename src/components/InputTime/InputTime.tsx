@@ -146,6 +146,7 @@ interface InputTimeProps {
   min?: number;
   max?: number;
   debounceMs?: number;
+  append?: React.ReactNode;
   disabled?: boolean;
   className?: string;
   inputClassName?: string;

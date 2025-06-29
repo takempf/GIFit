@@ -10,7 +10,7 @@ export interface ButtonProps
   prepend?: React.ReactNode;
   append?: React.ReactNode;
   className?: string; // Allow passing custom classes
-  variant?: 'primary' | 'secondary' | 'ghost' | 'input'; // Style variant
+  variant?: 'primary' | 'secondary' | 'ghost' | 'input' | 'outline'; // Style variant
   size?: 'x-small' | 'small' | 'medium' | 'large'; // Size variant
   padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large'; // Padding variant
   evenPadding?: boolean;
