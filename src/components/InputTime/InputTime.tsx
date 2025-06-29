@@ -173,7 +173,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
     secondsToHMSs(value, decimalPlaces)
   );
   const [isEditing, setIsEditing] = useState(false);
-  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const timeoutIdRef = useRef<number | null>(null); // Changed from intervalIdRef
+  const isSteppingRef = useRef(false); // To track if mouse/touch is still down
 
   useEffect(() => {
     if (!isEditing) {
@@ -294,17 +295,56 @@ export const InputTime: React.FC<InputTimeProps> = ({
     }
   };
 
+  const performStep = (direction: 'up' | 'down') => {
+    handleStep(direction);
+  };
+
   const startStepping = (direction: 'up' | 'down') => {
-    handleStep(direction); // Initial step
-    const id = setInterval(() => handleStep(direction), 250);
-    setIntervalId(id);
+    stopStepping(); // Clear any existing timeout
+    isSteppingRef.current = true;
+
+    performStep(direction); // Initial step
+
+    const scheduleNextStep = () => {
+      if (isSteppingRef.current) {
+        timeoutIdRef.current = window.setTimeout(() => {
+          performStep(direction);
+          scheduleNextStep();
+        }, 250);
+      }
+    };
+    scheduleNextStep();
   };
 
   const stopStepping = () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      setIntervalId(null);
+    isSteppingRef.current = false;
+    if (timeoutIdRef.current !== null) {
+      window.clearTimeout(timeoutIdRef.current);
+      timeoutIdRef.current = null;
     }
+  };
+
+  // Clear timeout on component unmount
+  useEffect(() => {
+    return () => {
+      stopStepping();
+    };
+  }, []);
+
+  const handleMouseDown = (direction: 'up' | 'down') => {
+    startStepping(direction);
+  };
+
+  const handleMouseUpOrLeave = () => {
+    stopStepping();
+  };
+
+  const handleTouchStart = (direction: 'up' | 'down') => {
+    startStepping(direction);
+  };
+
+  const handleTouchEnd = () => {
+    stopStepping();
   };
 
   const append = (
@@ -314,11 +354,11 @@ export const InputTime: React.FC<InputTimeProps> = ({
         variant="ghost"
         padding="none"
         onClick={() => handleStep('up')} // For single click accessibility
-        onMouseDown={() => startStepping('up')}
-        onMouseUp={stopStepping}
-        onMouseLeave={stopStepping}
-        onTouchStart={() => startStepping('up')}
-        onTouchEnd={stopStepping}
+        onMouseDown={() => handleMouseDown('up')}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        onTouchStart={() => handleTouchStart('up')}
+        onTouchEnd={handleTouchEnd}
         disabled={disabled || value >= max}
         aria-label="Increment time">
         ▲
@@ -328,11 +368,11 @@ export const InputTime: React.FC<InputTimeProps> = ({
         variant="ghost"
         padding="none"
         onClick={() => handleStep('down')} // For single click accessibility
-        onMouseDown={() => startStepping('down')}
-        onMouseUp={stopStepping}
-        onMouseLeave={stopStepping}
-        onTouchStart={() => startStepping('down')}
-        onTouchEnd={stopStepping}
+        onMouseDown={() => handleMouseDown('down')}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
+        onTouchStart={() => handleTouchStart('down')}
+        onTouchEnd={handleTouchEnd}
         disabled={disabled || value <= min}
         aria-label="Decrement time">
         ▼
