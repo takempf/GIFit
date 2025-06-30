@@ -35,7 +35,9 @@ export default defineContentScript({
     const ui = await createShadowRootUi(ctx, {
       name: 'gif-it',
       position: 'inline',
-      anchor: 'ytd-player video',
+      // only show GIFit with the large players
+      anchor:
+        '#primary ytd-player video, #full-bleed-container ytd-player video',
 
       append(anchor, ui) {
         const ytdPlayerElement = anchor.closest('ytd-player');
