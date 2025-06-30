@@ -11,7 +11,7 @@ import { App } from '../../components/App';
 import { useGifStore } from '@/stores/gifGeneratorStore';
 
 export default defineContentScript({
-  matches: ['*://*.youtube.com/watch*'],
+  matches: ['*://*.youtube.com/*'],
   cssInjectionMode: 'ui',
   runAt: 'document_idle',
   registration: 'manifest',
