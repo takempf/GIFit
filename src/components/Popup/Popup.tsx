@@ -15,7 +15,16 @@ import { AppFrame } from '../AppFrame/AppFrame';
 
 import TKLogo from '@/assets/tk.svg';
 
-interface PopupProps extends Record<string, unknown> {}
+function getVideoTitle() {
+  const titleElement: HTMLElement | null = document.querySelector('#title');
+  const videoJsonLdElement: HTMLElement | null = document.querySelector(
+    '.playerMicroformatRendererHost > script:nth-child(1)'
+  );
+  const videoJsonLd = JSON.parse(videoJsonLdElement?.innerText ?? '{}');
+  const name = titleElement?.innerText ?? videoJsonLd.name ?? 'untitled';
+
+  return name;
+}
 
 interface FormValues {
   start: number;
@@ -27,7 +36,7 @@ interface FormValues {
   quality: number;
 }
 
-export function Popup({}: PopupProps) {
+export function Popup() {
   const popupElementRef: React.RefObject<HTMLDivElement | null> = useRef(null);
   const videoElement = useAppStore((state) => state.videoElement);
   const status = useAppStore((state) => state.status);
@@ -54,8 +63,7 @@ export function Popup({}: PopupProps) {
 
       const start = formValues.start * 1000; // seconds to ms
       const end = start + formValues.duration * 1000; // seconds to ms
-      const titleElement: HTMLElement | null = document.querySelector('#title');
-      const name = titleElement?.innerText ?? 'untitled';
+      const name = getVideoTitle();
 
       createGif(
         {
