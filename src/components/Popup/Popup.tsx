@@ -16,12 +16,20 @@ import { AppFrame } from '../AppFrame/AppFrame';
 import TKLogo from '@/assets/tk.svg';
 
 function getVideoTitle() {
-  const titleElement: HTMLElement | null = document.querySelector('#title');
+  const titleElement: HTMLElement | null =
+    document.querySelector('.ytp-title-link');
+  // These are backups that are potentially stale
+  const titleMetaElement: HTMLMetaElement | null =
+    document.querySelector('meta[name="title"]');
   const videoJsonLdElement: HTMLElement | null = document.querySelector(
     '.playerMicroformatRendererHost > script:nth-child(1)'
   );
   const videoJsonLd = JSON.parse(videoJsonLdElement?.innerText ?? '{}');
-  const name = titleElement?.innerText ?? videoJsonLd.name ?? 'untitled';
+  const name =
+    titleElement?.innerText ??
+    titleMetaElement?.content ??
+    videoJsonLd.name ??
+    'untitled';
 
   return name;
 }
