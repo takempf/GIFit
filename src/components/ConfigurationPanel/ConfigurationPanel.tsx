@@ -80,26 +80,6 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     };
   }, [video, handleVideoLoadedData]);
 
-  // The 'seeked' event listener in the original component was dispatching an action
-  // but that action didn't modify state. If such observation is needed,
-  // it can be added here or within the store. For now, it's omitted as it had no state effect.
-  // useEffect(() => {
-  //   if (!(video instanceof HTMLVideoElement)) {
-  //     return;
-  //   }
-  //   function handleVideoSeekedCallback() {
-  //     const { isOpen, status } = useAppStore.getState();
-  //     if (video && isOpen && status === 'configuring' && video.paused) {
-  //       // Assuming handleVideoSeeked exists in the store and you want to call it
-  //       // useConfigurationPanelStore.getState().handleVideoSeeked({ currentTime: video.currentTime });
-  //     }
-  //   }
-  //   video.addEventListener('seeked', handleVideoSeekedCallback);
-  //   return () => {
-  //     video.removeEventListener('seeked', handleVideoSeekedCallback);
-  //   };
-  // }, [video]);
-
   if (!video) {
     return null; // Or some placeholder/loading UI
   }
