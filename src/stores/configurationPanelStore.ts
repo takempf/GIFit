@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { clamp } from '@/utils/clamp';
 import { log } from '@/utils/logger';
 import { useAppStore } from './appStore';
+import { storedConfig } from '@/utils/storage';
 
 const DEFAULT_WIDTH = 420; // Updated default width
 const DEFAULT_HEIGHT = 180; // Will be adjusted or its usage re-evaluated in getInitialState
@@ -68,12 +69,18 @@ export interface ConfigActions {
   resetState: (videoElement?: HTMLVideoElement) => void;
   // New action to handle seeking, as this involves an external element
   seekVideo: (time: number) => void;
+  loadInitialConfig: () => Promise<void>; // Action to load config from storage
 }
 
 type ConfigurationPanelStore = ConfigState & ConfigActions;
 
-const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
-  let displayWidth: number;
+const getInitialState = (
+  videoElement?: HTMLVideoElement,
+  loadedConfig?: { width?: number | null; framerate?: number | null; quality?: number | null }
+): ConfigState => {
+  let displayWidth: number = loadedConfig?.width ?? DEFAULT_WIDTH;
+  const initialFramerate = loadedConfig?.framerate ?? 10;
+  const initialQuality = loadedConfig?.quality ?? 5;
   let displayHeight: number;
   let storedAspectRatio: number;
 
@@ -86,23 +93,29 @@ const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
       videoElement.videoWidth / videoElement.videoHeight;
     storedAspectRatio = videoActualAspectRatio; // Store the true aspect ratio of the video
 
-    // Cap the display width at DEFAULT_WIDTH, but use video's width if smaller
-    displayWidth = Math.min(videoElement.videoWidth, DEFAULT_WIDTH);
+    // Cap the display width at the resolved displayWidth (either from storage or default),
+    // but use video's actual width if it's smaller than this resolved width.
+    // This ensures the initial display isn't wider than the video itself if the video is very small.
+    displayWidth = Math.min(videoElement.videoWidth, displayWidth);
+    storedAspectRatio = videoActualAspectRatio; // Store the true aspect ratio of the video
     displayHeight = Math.round(displayWidth / videoActualAspectRatio);
   } else {
-    // No video or video dimensions are invalid
-    displayWidth = DEFAULT_WIDTH; // Use the default width (420)
+    // No video or video dimensions are invalid, or loadedConfig.width was used
     storedAspectRatio = 16 / 9; // Default aspect ratio for calculation and storage
     displayHeight = Math.round(displayWidth / storedAspectRatio);
   }
 
   // Final safety checks for dimensions
+  // Ensure displayWidth has a sensible minimum if it ended up being zero or less from videoElement.videoWidth
   if (displayWidth <= 0) {
-    // Should not happen if DEFAULT_WIDTH is > 0
-    displayWidth = DEFAULT_WIDTH;
+    displayWidth = DEFAULT_WIDTH; // Fallback to default width
+    // Recalculate height if width changed, using the current storedAspectRatio
+    displayHeight = Math.round(displayWidth / storedAspectRatio);
   }
+
   if (displayHeight <= 0 || isNaN(displayHeight)) {
     // Recalculate height with default aspect ratio if something went wrong
+    // This might happen if storedAspectRatio was somehow invalid (e.g. 0 or NaN)
     storedAspectRatio = 16 / 9;
     displayHeight = Math.round(displayWidth / storedAspectRatio);
   }
@@ -116,8 +129,8 @@ const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
     width: displayWidth,
     height: displayHeight,
     linkDimensions: true,
-    framerate: 10,
-    quality: 5,
+    framerate: initialFramerate,
+    quality: initialQuality,
     aspectRatio: storedAspectRatio, // This is used for linking dimensions later
     videoDuration: videoElement?.duration ?? 0,
     videoWidth: videoElement?.videoWidth ?? 0,
@@ -126,26 +139,63 @@ const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
 };
 
 export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
-  (set, _get) => ({
-    // Changed get to _get
+  (set, get) => ({
     ...getInitialState(useAppStore.getState().videoElement ?? undefined),
+
+    loadInitialConfig: async () => {
+      try {
+        const [storedWidth, storedFps, storedQuality] = await Promise.all([
+          storedConfig.width.getValue(),
+          storedConfig.fps.getValue(),
+          storedConfig.quality.getValue()
+        ]);
+
+        const videoElement = useAppStore.getState().videoElement ?? undefined;
+        // Pass the loaded config to getInitialState to re-calculate dependent values like height
+        const initialStateFromStorage = getInitialState(videoElement, {
+          width: storedWidth,
+          framerate: storedFps,
+          quality: storedQuality
+        });
+
+        set(initialStateFromStorage);
+      } catch (error) {
+        log('Failed to load initial config from storage:', error);
+        // State will remain as per synchronous getInitialState defaults
+      }
+    },
 
     handleInputChange: (payload) =>
       set((state) => {
         const { name, value } = payload;
         const newState = { ...state, [name]: value };
 
-        if (state.linkDimensions) {
-          if (name === 'width') {
-            newState.height = Math.round((value as number) / state.aspectRatio);
-          } else if (name === 'height') {
-            newState.width = Math.round((value as number) * state.aspectRatio);
+        // Persist relevant changes to storage
+        if (name === 'width' && typeof value === 'number') {
+          storedConfig.width.setValue(value).catch((err) => log('Error saving width:', err));
+          if (state.linkDimensions) {
+            newState.height = Math.round(value / state.aspectRatio);
           }
+        } else if (name === 'height' && typeof value === 'number') {
+          if (state.linkDimensions) {
+            newState.width = Math.round(value * state.aspectRatio);
+            // Persist the auto-calculated width if height change caused it
+            storedConfig.width.setValue(newState.width).catch((err) => log('Error saving width:', err));
+          }
+        } else if (name === 'framerate' && typeof value === 'number') {
+          storedConfig.fps.setValue(value).catch((err) => log('Error saving framerate:', err));
+        } else if (name === 'quality' && typeof value === 'number') {
+          storedConfig.quality.setValue(value).catch((err) => log('Error saving quality:', err));
         }
 
-        if (name === 'linkDimensions' && value) {
-          newState.height = Math.round(state.width / state.aspectRatio);
+        // Handle linked dimensions specifically for width/height and linkDimensions toggle
+        if (state.linkDimensions && name !== 'width' && name !== 'height') { // if linkDimensions is true, and we are not already handling width/height
+          // this case is already handled above for width/height changes
+        } else if (name === 'linkDimensions' && value) { // if linkDimensions was just toggled to true
+          newState.height = Math.round(newState.width / newState.aspectRatio);
         }
+        // No specific action needed if linkDimensions is toggled false, dimensions remain as they are.
+
         return newState;
       }),
 
@@ -185,15 +235,20 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
     },
 
     resetState: (videoElement?: HTMLVideoElement) => {
-      const newInitialState = getInitialState(
-        videoElement ?? useAppStore.getState().videoElement ?? undefined
-      );
-      set(newInitialState);
+      // When resetting, we should re-load from storage or use defaults,
+      // similar to initial load.
+      const currentVideoElement =
+        videoElement ?? useAppStore.getState().videoElement ?? undefined;
+      // Set to defaults first
+      set(getInitialState(currentVideoElement));
+      // Then try to load from storage
+      get().loadInitialConfig();
     }
   })
 );
 
 // Subscribe to videoElement changes in appStore to reset/update config panel state
+// and load initial config when the store is first initialized.
 useAppStore.subscribe((state, prevState) => {
   if (state.videoElement !== prevState.videoElement) {
     useConfigurationPanelStore
@@ -201,3 +256,7 @@ useAppStore.subscribe((state, prevState) => {
       .resetState(state.videoElement ?? undefined);
   }
 });
+
+// Initialize stored values when the store is created
+// This ensures that stored values are loaded as soon as the app starts
+useConfigurationPanelStore.getState().loadInitialConfig();
