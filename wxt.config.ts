@@ -6,6 +6,7 @@ import path from 'path';
 export default defineConfig({
   manifest: {
     name: 'GIFit!',
+    description: 'Generate GIFs from any YouTube video with ease.',
     permissions: ['storage'],
     host_permissions: ['*://*.youtube.com/*']
   },
