@@ -1,3 +1,4 @@
+import { vi, describe, beforeEach, afterEach, expect, it } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useConfigurationPanelStore } from './configurationPanelStore';
 import { useAppStore } from './appStore';
@@ -114,7 +115,9 @@ describe('useConfigurationPanelStore', () => {
     const storedQualityVal = 7;
     vi.mocked(storedConfig.width.getValue).mockResolvedValue(storedWidthVal);
     vi.mocked(storedConfig.fps.getValue).mockResolvedValue(storedFpsVal);
-    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(storedQualityVal);
+    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(
+      storedQualityVal
+    );
 
     // Re-initialize store by calling loadInitialConfig manually for this test case
     // This simulates the store initializing after mocks are set.
@@ -305,13 +308,19 @@ describe('useConfigurationPanelStore', () => {
 
   it('should react to videoElement changes in appStore, reset and load config', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
-    await waitFor(() => expect(result.current.videoWidth).toBe(mockVideoElement.videoWidth));
+    await waitFor(() =>
+      expect(result.current.videoWidth).toBe(mockVideoElement.videoWidth)
+    );
 
     // Initial state assertions (width is default 420, height derived)
     expect(result.current.width).toBe(420); // Default or from non-conflicting storage
-    const expectedHeight1 = Math.round(420 / (mockVideoElement.videoWidth / mockVideoElement.videoHeight));
+    const expectedHeight1 = Math.round(
+      420 / (mockVideoElement.videoWidth / mockVideoElement.videoHeight)
+    );
     expect(result.current.height).toBe(expectedHeight1);
-    expect(result.current.aspectRatio).toBe(mockVideoElement.videoWidth / mockVideoElement.videoHeight);
+    expect(result.current.aspectRatio).toBe(
+      mockVideoElement.videoWidth / mockVideoElement.videoHeight
+    );
     expect(result.current.videoWidth).toBe(mockVideoElement.videoWidth);
     expect(result.current.videoHeight).toBe(mockVideoElement.videoHeight);
     expect(result.current.videoDuration).toBe(mockVideoElement.duration);
@@ -337,7 +346,8 @@ describe('useConfigurationPanelStore', () => {
     expect(newState.width).toBe(newStoredWidth);
     expect(newState.height).toBe(
       Math.round(
-        newStoredWidth / (mockVideoElement2.videoWidth / mockVideoElement2.videoHeight)
+        newStoredWidth /
+          (mockVideoElement2.videoWidth / mockVideoElement2.videoHeight)
       )
     );
     expect(newState.aspectRatio).toBe(
@@ -351,13 +361,14 @@ describe('useConfigurationPanelStore', () => {
     expect(newState.quality).toBe(5); // Default, as per mock
   });
 
-
   it('should handle video element being null initially then set, loading config correctly', async () => {
     // Reset mocks and stores, but don't set a video element initially
     await resetMocksAndStores(); // This sets videoElement to undefined in appStore via its internal reset.
 
     const initialStoredWidth = 250;
-    vi.mocked(storedConfig.width.getValue).mockResolvedValue(initialStoredWidth);
+    vi.mocked(storedConfig.width.getValue).mockResolvedValue(
+      initialStoredWidth
+    );
     vi.mocked(storedConfig.fps.getValue).mockResolvedValue(8);
     vi.mocked(storedConfig.quality.getValue).mockResolvedValue(3);
 
@@ -366,7 +377,9 @@ describe('useConfigurationPanelStore', () => {
       useConfigurationPanelStore.getState().loadInitialConfig();
     });
 
-    const { result: configStoreHook } = renderHook(() => useConfigurationPanelStore());
+    const { result: configStoreHook } = renderHook(() =>
+      useConfigurationPanelStore()
+    );
 
     // Check state with no video, but with stored values
     await waitFor(() => {
@@ -374,7 +387,9 @@ describe('useConfigurationPanelStore', () => {
       expect(configStoreHook.current.framerate).toBe(8);
       expect(configStoreHook.current.quality).toBe(3);
       // Height with no video uses default 16/9 aspect ratio
-      expect(configStoreHook.current.height).toBe(Math.round(initialStoredWidth / (16 / 9)));
+      expect(configStoreHook.current.height).toBe(
+        Math.round(initialStoredWidth / (16 / 9))
+      );
       expect(configStoreHook.current.videoDuration).toBe(0);
       expect(configStoreHook.current.aspectRatio).toBe(16 / 9); // Default aspect ratio
     });
@@ -387,7 +402,9 @@ describe('useConfigurationPanelStore', () => {
     // The subscription in configurationPanelStore should trigger resetState, which calls loadInitialConfig.
     // Stored values should still be respected, but aspect ratio and video details will update.
     await waitFor(() => {
-      expect(useConfigurationPanelStore.getState().videoWidth).toBe(mockVideoElement.videoWidth);
+      expect(useConfigurationPanelStore.getState().videoWidth).toBe(
+        mockVideoElement.videoWidth
+      );
     });
 
     const updatedState = useConfigurationPanelStore.getState();
@@ -397,7 +414,8 @@ describe('useConfigurationPanelStore', () => {
     // Height should now be based on stored width and *video's* aspect ratio
     expect(updatedState.height).toBe(
       Math.round(
-        initialStoredWidth / (mockVideoElement.videoWidth / mockVideoElement.videoHeight)
+        initialStoredWidth /
+          (mockVideoElement.videoWidth / mockVideoElement.videoHeight)
       )
     );
     expect(updatedState.aspectRatio).toBe(

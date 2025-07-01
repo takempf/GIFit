@@ -76,7 +76,11 @@ type ConfigurationPanelStore = ConfigState & ConfigActions;
 
 const getInitialState = (
   videoElement?: HTMLVideoElement,
-  loadedConfig?: { width?: number | null; framerate?: number | null; quality?: number | null }
+  loadedConfig?: {
+    width?: number | null;
+    framerate?: number | null;
+    quality?: number | null;
+  }
 ): ConfigState => {
   let displayWidth: number = loadedConfig?.width ?? DEFAULT_WIDTH;
   const initialFramerate = loadedConfig?.framerate ?? 10;
@@ -172,7 +176,9 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
 
         // Persist relevant changes to storage
         if (name === 'width' && typeof value === 'number') {
-          storedConfig.width.setValue(value).catch((err) => log('Error saving width:', err));
+          storedConfig.width
+            .setValue(value)
+            .catch((err) => log('Error saving width:', err));
           if (state.linkDimensions) {
             newState.height = Math.round(value / state.aspectRatio);
           }
@@ -180,18 +186,26 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           if (state.linkDimensions) {
             newState.width = Math.round(value * state.aspectRatio);
             // Persist the auto-calculated width if height change caused it
-            storedConfig.width.setValue(newState.width).catch((err) => log('Error saving width:', err));
+            storedConfig.width
+              .setValue(newState.width)
+              .catch((err) => log('Error saving width:', err));
           }
         } else if (name === 'framerate' && typeof value === 'number') {
-          storedConfig.fps.setValue(value).catch((err) => log('Error saving framerate:', err));
+          storedConfig.fps
+            .setValue(value)
+            .catch((err) => log('Error saving framerate:', err));
         } else if (name === 'quality' && typeof value === 'number') {
-          storedConfig.quality.setValue(value).catch((err) => log('Error saving quality:', err));
+          storedConfig.quality
+            .setValue(value)
+            .catch((err) => log('Error saving quality:', err));
         }
 
         // Handle linked dimensions specifically for width/height and linkDimensions toggle
-        if (state.linkDimensions && name !== 'width' && name !== 'height') { // if linkDimensions is true, and we are not already handling width/height
+        if (state.linkDimensions && name !== 'width' && name !== 'height') {
+          // if linkDimensions is true, and we are not already handling width/height
           // this case is already handled above for width/height changes
-        } else if (name === 'linkDimensions' && value) { // if linkDimensions was just toggled to true
+        } else if (name === 'linkDimensions' && value) {
+          // if linkDimensions was just toggled to true
           newState.height = Math.round(newState.width / newState.aspectRatio);
         }
         // No specific action needed if linkDimensions is toggled false, dimensions remain as they are.
