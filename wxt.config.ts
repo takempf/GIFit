@@ -10,7 +10,7 @@ export default defineConfig({
     host_permissions: ['*://*.youtube.com/*']
   },
   srcDir: 'src',
-  modules: ['@wxt-dev/module-react'],
+  modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
   imports: false,
   vite: () => ({
     plugins: [svgrPlugin()],
@@ -19,5 +19,8 @@ export default defineConfig({
         '@': path.resolve(__dirname, './src')
       }
     }
-  })
+  }),
+  autoIcons: {
+    baseIconPath: path.resolve('src/assets/gifit-icon.svg')
+  }
 });
