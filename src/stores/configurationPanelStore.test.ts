@@ -242,9 +242,10 @@ describe('useConfigurationPanelStore', () => {
     );
 
     // Check for default initial state when no video
-    expect(configStoreHook.current.width).toBe(320); // DEFAULT_WIDTH
-    expect(configStoreHook.current.height).toBe(180); // DEFAULT_HEIGHT
+    expect(configStoreHook.current.width).toBe(420); // Updated DEFAULT_WIDTH
+    expect(configStoreHook.current.height).toBe(Math.round(420 / (16 / 9))); // Calculated with 16:9 default
     expect(configStoreHook.current.videoDuration).toBe(0);
+    expect(configStoreHook.current.aspectRatio).toBe(16 / 9);
 
     // Now set a video element in appStore
     act(() => {

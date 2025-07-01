@@ -3,8 +3,8 @@ import { clamp } from '@/utils/clamp';
 import { log } from '@/utils/logger';
 import { useAppStore } from './appStore';
 
-const DEFAULT_WIDTH = 320;
-const DEFAULT_HEIGHT = 180;
+const DEFAULT_WIDTH = 420; // Updated default width
+const DEFAULT_HEIGHT = 180; // Will be adjusted or its usage re-evaluated in getInitialState
 
 export interface ConfigState {
   start: number;
@@ -73,13 +73,34 @@ export interface ConfigActions {
 type ConfigurationPanelStore = ConfigState & ConfigActions;
 
 const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
-  const aspectRatio = videoElement
-    ? videoElement.videoWidth / videoElement.videoHeight
-    : DEFAULT_WIDTH / DEFAULT_HEIGHT;
-  const initialWidth = videoElement?.videoWidth ?? DEFAULT_WIDTH;
-  const initialHeight = videoElement
-    ? Math.round(initialWidth / aspectRatio)
-    : DEFAULT_HEIGHT;
+  let aspectRatio;
+  let initialWidth = DEFAULT_WIDTH; // Start with the new default width
+  let initialHeight;
+
+  if (
+    videoElement &&
+    videoElement.videoWidth > 0 &&
+    videoElement.videoHeight > 0
+  ) {
+    aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
+    // Use video's width if available and sensible, otherwise stick to default.
+    // This logic can be refined, e.g. if video is very small, maybe still use DEFAULT_WIDTH.
+    // For now, let's assume we prefer video's width if it's loaded.
+    initialWidth = videoElement.videoWidth;
+    initialHeight = Math.round(initialWidth / aspectRatio);
+  } else {
+    // No video or video dimensions are invalid, use default 16:9 aspect ratio for calculation
+    aspectRatio = 16 / 9;
+    initialHeight = Math.round(initialWidth / aspectRatio);
+  }
+
+  // Ensure initialWidth isn't zero if somehow videoElement had zero width
+  if (initialWidth === 0) initialWidth = DEFAULT_WIDTH;
+  if (initialHeight === 0 || isNaN(initialHeight)) {
+    // Fallback if aspect ratio calculation led to issues (e.g. aspectRatio was 0 or NaN)
+    aspectRatio = 16 / 9; // re-default
+    initialHeight = Math.round(initialWidth / aspectRatio);
+  }
 
   return {
     start: videoElement?.currentTime ?? 0,
@@ -89,11 +110,9 @@ const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
     linkDimensions: true,
     framerate: 10,
     quality: 5,
-    aspectRatio: isNaN(aspectRatio)
-      ? DEFAULT_WIDTH / DEFAULT_HEIGHT
-      : aspectRatio,
+    aspectRatio: isNaN(aspectRatio) ? 16 / 9 : aspectRatio, // Fallback aspect ratio
     videoDuration: videoElement?.duration ?? 0,
-    videoWidth: videoElement?.videoWidth ?? 0,
+    videoWidth: videoElement?.videoWidth ?? 0, // Store actual video dimensions if available
     videoHeight: videoElement?.videoHeight ?? 0
   };
 };
