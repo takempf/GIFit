@@ -73,46 +73,54 @@ export interface ConfigActions {
 type ConfigurationPanelStore = ConfigState & ConfigActions;
 
 const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
-  let aspectRatio;
-  let initialWidth = DEFAULT_WIDTH; // Start with the new default width
-  let initialHeight;
+  let displayWidth: number;
+  let displayHeight: number;
+  let storedAspectRatio: number;
 
   if (
     videoElement &&
     videoElement.videoWidth > 0 &&
     videoElement.videoHeight > 0
   ) {
-    aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
-    // Use video's width if available and sensible, otherwise stick to default.
-    // This logic can be refined, e.g. if video is very small, maybe still use DEFAULT_WIDTH.
-    // For now, let's assume we prefer video's width if it's loaded.
-    initialWidth = videoElement.videoWidth;
-    initialHeight = Math.round(initialWidth / aspectRatio);
+    const videoActualAspectRatio =
+      videoElement.videoWidth / videoElement.videoHeight;
+    storedAspectRatio = videoActualAspectRatio; // Store the true aspect ratio of the video
+
+    // Cap the display width at DEFAULT_WIDTH, but use video's width if smaller
+    displayWidth = Math.min(videoElement.videoWidth, DEFAULT_WIDTH);
+    displayHeight = Math.round(displayWidth / videoActualAspectRatio);
   } else {
-    // No video or video dimensions are invalid, use default 16:9 aspect ratio for calculation
-    aspectRatio = 16 / 9;
-    initialHeight = Math.round(initialWidth / aspectRatio);
+    // No video or video dimensions are invalid
+    displayWidth = DEFAULT_WIDTH; // Use the default width (420)
+    storedAspectRatio = 16 / 9; // Default aspect ratio for calculation and storage
+    displayHeight = Math.round(displayWidth / storedAspectRatio);
   }
 
-  // Ensure initialWidth isn't zero if somehow videoElement had zero width
-  if (initialWidth === 0) initialWidth = DEFAULT_WIDTH;
-  if (initialHeight === 0 || isNaN(initialHeight)) {
-    // Fallback if aspect ratio calculation led to issues (e.g. aspectRatio was 0 or NaN)
-    aspectRatio = 16 / 9; // re-default
-    initialHeight = Math.round(initialWidth / aspectRatio);
+  // Final safety checks for dimensions
+  if (displayWidth <= 0) {
+    // Should not happen if DEFAULT_WIDTH is > 0
+    displayWidth = DEFAULT_WIDTH;
+  }
+  if (displayHeight <= 0 || isNaN(displayHeight)) {
+    // Recalculate height with default aspect ratio if something went wrong
+    storedAspectRatio = 16 / 9;
+    displayHeight = Math.round(displayWidth / storedAspectRatio);
+  }
+  if (isNaN(storedAspectRatio) || storedAspectRatio <= 0) {
+    storedAspectRatio = 16 / 9; // Final fallback for stored aspect ratio
   }
 
   return {
     start: videoElement?.currentTime ?? 0,
     duration: 2,
-    width: initialWidth,
-    height: initialHeight,
+    width: displayWidth,
+    height: displayHeight,
     linkDimensions: true,
     framerate: 10,
     quality: 5,
-    aspectRatio: isNaN(aspectRatio) ? 16 / 9 : aspectRatio, // Fallback aspect ratio
+    aspectRatio: storedAspectRatio, // This is used for linking dimensions later
     videoDuration: videoElement?.duration ?? 0,
-    videoWidth: videoElement?.videoWidth ?? 0, // Store actual video dimensions if available
+    videoWidth: videoElement?.videoWidth ?? 0,
     videoHeight: videoElement?.videoHeight ?? 0
   };
 };
