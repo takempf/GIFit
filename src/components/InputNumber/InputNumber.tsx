@@ -80,7 +80,8 @@ export function InputNumber({
           padding="none"
           onPointerDown={handleUpPressStart}
           onPointerUp={handleUpPressEnd}
-          disabled={restProps.disabled}>
+          disabled={restProps.disabled}
+          aria-label="Increment">
           ▲
         </Button>
         <Button
@@ -89,7 +90,8 @@ export function InputNumber({
           padding="none"
           onPointerDown={handleDownPressStart}
           onPointerUp={handleDownPressEnd}
-          disabled={restProps.disabled}>
+          disabled={restProps.disabled}
+          aria-label="Decrement">
           ▼
         </Button>
       </div>
