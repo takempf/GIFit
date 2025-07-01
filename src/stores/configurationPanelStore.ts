@@ -99,7 +99,8 @@ const getInitialState = (videoElement?: HTMLVideoElement): ConfigState => {
 };
 
 export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
-  (set, _get) => ({ // Changed get to _get
+  (set, _get) => ({
+    // Changed get to _get
     ...getInitialState(useAppStore.getState().videoElement ?? undefined),
 
     handleInputChange: (payload) =>

@@ -32,6 +32,7 @@ export function ButtonToggle({
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
+        aria-label={name} // Use the name prop as the aria-label
       />
     </Button>
   );
