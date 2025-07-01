@@ -80,6 +80,7 @@ export function InputNumber({
           padding="none"
           onPointerDown={handleUpPressStart}
           onPointerUp={handleUpPressEnd}
+          onPointerLeave={handleUpPressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={restProps.disabled}
           aria-label="Increment">
           ▲
@@ -90,6 +91,7 @@ export function InputNumber({
           padding="none"
           onPointerDown={handleDownPressStart}
           onPointerUp={handleDownPressEnd}
+          onPointerLeave={handleDownPressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={restProps.disabled}
           aria-label="Decrement">
           ▼
