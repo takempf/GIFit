@@ -1,6 +1,14 @@
 /* Base Button Styles */
 .button {
   --padding: 0.5em;
+  --color: oklch(50 0.2 300);
+  --background-color: var(--color);
+  --text-color: oklch(100 0 0);
+  --outline-color: oklch(70 0.2 300);
+
+  background-color: var(--background-color);
+  color: var(--text-color);
+  box-shadow: oklch(from var(--color) calc(l * 0.5) c h) 0 0em 0px 0px;
 
   display: inline-flex; /* Align items nicely if children include icons */
   align-items: center;
@@ -18,28 +26,31 @@
     background-color 200ms ease-in-out,
     border-color 200ms ease-in-out,
     color 200ms ease-in-out,
-    box-shadow 200ms ease-in-out,
-    translate 100ms;
+    box-shadow 100ms ease-in-out,
+    translate 100ms ease-in-out;
 
   -webkit-font-smoothing: antialiased; /* Improve font rendering */
   -moz-osx-font-smoothing: grayscale;
 
   &:hover {
     translate: 0 -0.1em;
+    box-shadow: oklch(from var(--color) calc(l * 0.5) c h) 0 0.1em 0px 0px;
+    --background-color: oklch(from var(--color) calc(l + 0.1) c h);
   }
 
   &:active {
     translate: 0;
+    --background-color: oklch(from var(--color) calc(l - 0.1) c h);
   }
 
   &:disabled {
-    filter: saturate(0.5);
+    --background-color: oklch(from var(--color) l calc(c * 0.5) h);
   }
 }
 
 /* Focus state for accessibility */
 .button:focus-visible {
-  outline: 2px solid red; /* Example focus ring, adjust color as needed */
+  outline: 2px solid var(--outline-color);
   outline-offset: 2px;
 }
 
@@ -74,47 +85,22 @@
 
 /* Primary Variant */
 .primary {
-  background-color: #e20000; /* Example primary color */
-  color: #ffffff;
-}
-
-.primary:hover:not(:disabled) {
-  background-color: #ff0000;
-}
-
-.primary:active:not(:disabled) {
-  background-color: #dd0000;
+  --color: oklch(0.5882 0.2615 29.23);
 }
 
 /* Secondary Variant */
 .secondary {
-  background-color: rgb(50, 50, 50); /* Example secondary color */
-  color: #ffffff;
-}
-
-.secondary:hover:not(:disabled) {
-  background-color: rgb(75, 75, 75);
-}
-
-.secondary:active:not(:disabled) {
-  background-color: rgb(85, 85, 85);
+  --color: rgb(50, 50, 50); /* Example secondary color */
 }
 
 .ghost {
-  background-color: transparent;
-  color: currentColor;
-
-  &:disabled {
-    color: color-mix(in srgb, currentColor 50%, transparent 50%);
-  }
+  --color: oklch(0 0 0 / 0);
+  --text-color: currentColor;
 }
 
 .input {
-  background-color: rgba(255, 255, 255, 0.45);
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.6);
-  }
+  --color: rgba(255, 255, 255, 0.45);
+  --text-color: currentColor;
 }
 
 .outline {

@@ -35,6 +35,9 @@ const chunkTransition = {
 export function Progress({}: ProgressProps) {
   const [videoElementWidth, setVideoElementWidth] = useState(0);
   const [videoElementHeight, setVideoElementHeight] = useState(0);
+  const [videoElementTop, setVideoElementTop] = useState(0);
+  const [videoElementLeft, setVideoElementLeft] = useState(0);
+
   const setStatus = useAppStore((state) => state.setStatus);
   const videoElement = useAppStore((state) => state.videoElement);
   const colors = useGifStore((state) => state.colors);
@@ -65,9 +68,11 @@ export function Progress({}: ProgressProps) {
     }
 
     function handleVideoBoundingChange(rect: DOMRect) {
-      const { width, height } = rect;
+      const { width, height, top, left } = rect;
       setVideoElementWidth(width);
       setVideoElementHeight(height);
+      setVideoElementTop(top);
+      setVideoElementLeft(left);
     }
 
     const cancelObserveBoundingClientRect = observeBoundingClientRect(
