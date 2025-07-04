@@ -36,8 +36,7 @@ export default defineContentScript({
       name: 'gif-it',
       position: 'inline',
       // only show GIFit with the large players
-      anchor:
-        '#primary ytd-player video, #full-bleed-container ytd-player video',
+      anchor: '[role="main"] ytd-player video',
 
       append(anchor, ui) {
         const ytdPlayerElement = anchor.closest('ytd-player');
@@ -49,6 +48,8 @@ export default defineContentScript({
       },
 
       onMount(container) {
+        log('Mounting panel.');
+
         // Container is a body, and React warns when creating a root on the body, so create a wrapper div
         const wrapperElement = document.createElement('div');
         container.appendChild(wrapperElement);
@@ -60,6 +61,8 @@ export default defineContentScript({
       },
 
       onRemove: (root) => {
+        log('Unmounting panel.');
+
         // Unmount the root when the UI is removed
         root?.unmount();
       }
