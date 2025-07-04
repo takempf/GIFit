@@ -115,7 +115,7 @@ export function Progress({}: ProgressProps) {
   };
 
   return (
-    <div className={css.gifitProgress}>
+    <div className={css.gifitProgress} data-testid="progress">
       <motion.div
         className={css.elements}
         style={progressElementsStyle}
@@ -157,6 +157,8 @@ export function Progress({}: ProgressProps) {
               className={css.result}
               src={imageUrl}
               alt="Generated GIF preview"
+              data-testid="result-image"
+              // motion
               initial={{
                 opacity: 0,
                 boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
