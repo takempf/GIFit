@@ -17,14 +17,6 @@ import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 const PROGRESS_FIXED_VERTICAL_CENTER = 120;
 const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
 
-// interface ImageInfo {
-//   blob: Blob;
-//   height: number;
-//   width: number;
-// }
-
-interface ProgressProps extends Record<string, unknown> {}
-
 const chunkTransition = {
   type: 'spring',
   stiffness: 600,
@@ -32,11 +24,9 @@ const chunkTransition = {
   mass: 1
 };
 
-export function Progress({}: ProgressProps) {
+export function Progress() {
   const [videoElementWidth, setVideoElementWidth] = useState(0);
   const [videoElementHeight, setVideoElementHeight] = useState(0);
-  const [videoElementTop, setVideoElementTop] = useState(0);
-  const [videoElementLeft, setVideoElementLeft] = useState(0);
 
   const setStatus = useAppStore((state) => state.setStatus);
   const videoElement = useAppStore((state) => state.videoElement);
@@ -68,11 +58,9 @@ export function Progress({}: ProgressProps) {
     }
 
     function handleVideoBoundingChange(rect: DOMRect) {
-      const { width, height, top, left } = rect;
+      const { width, height } = rect;
       setVideoElementWidth(width);
       setVideoElementHeight(height);
-      setVideoElementTop(top);
-      setVideoElementLeft(left);
     }
 
     const cancelObserveBoundingClientRect = observeBoundingClientRect(
