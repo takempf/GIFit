@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-console.log('PLAYWRIGHT TESTS');
+
 export default defineConfig({
   testDir: 'test/e2e',
 
