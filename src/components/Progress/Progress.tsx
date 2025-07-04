@@ -178,6 +178,7 @@ export function Progress() {
           variant="secondary"
           rounded={true}
           onClick={handleCloseClick}
+          data-testid="back-to-config-button"
           prepend={
             <ArrowRightIcon className={css.icon} style={{ rotate: '180deg' }} />
           }>
@@ -193,6 +194,7 @@ export function Progress() {
             size="small"
             rounded={true}
             disabled={!imageUrl}
+            data-testid="download-gif-button"
             append={<ArrowDownIcon className={css.icon} />}>
             Download GIF
           </Button>
