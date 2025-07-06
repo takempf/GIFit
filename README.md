@@ -1,10 +1,8 @@
-![GIFit build status](https://travis-ci.org/Fauntleroy/GIFit.svg?branch=master)
-
-![GIFit Rudd Dancing](https://raw.githubusercontent.com/Fauntleroy/GIFit/master/gifit_rudd_dance.gif)
+![GIFit Rudd Dancing](/src/assets/gifit-chrome-store-icon.png)
 
 Making a GIF can be intimidating. With GIFit, it isn't so intimidating anymore. Just install GIFit and you can make GIFs out of pieces of any YouTube video. Inherit the power of the GIF gods!
 
-![GIFit in action](https://raw.githubusercontent.com/Fauntleroy/GIFit/master/screenshot.jpg)
+![GIFit in action](/screenshots/gifit-screenshot-1.png)
 
 ## Installing
 
@@ -21,13 +19,13 @@ Here are some quick and easy steps for compilation success:
 3. Open your terminal, navigate to the cloned repository directory, and run `npm install` to install the project dependencies.
 4. Run `npm run dev` for Chrome development or `npm run dev:firefox` for Firefox development. This will build the extension and start a development server with hot reloading. The unpacked extension files will be located in the `.output/chrome-mv3/` or `.output/firefox-mv2/` directory respectively.
 5. **For Chrome:**
-    * Navigate to `chrome://extensions/`.
-    * Enable "Developer mode" (usually a toggle in the top right).
-    * Click "Load unpacked" and select the `GIFit/.output/chrome-mv3` directory.
+   - Navigate to `chrome://extensions/`.
+   - Enable "Developer mode" (usually a toggle in the top right).
+   - Click "Load unpacked" and select the `GIFit/.output/chrome-mv3` directory.
 6. **For Firefox:**
-    * Navigate to `about:debugging#/runtime/this-firefox`.
-    * Click "Load Temporary Add-on...".
-    * Select any file within the `GIFit/.output/firefox-mv2/` directory (e.g., `manifest.json`).
+   - Navigate to `about:debugging#/runtime/this-firefox`.
+   - Click "Load Temporary Add-on...".
+   - Select any file within the `GIFit/.output/firefox-mv2/` directory (e.g., `manifest.json`).
 7. Navigate to [YouTube](http://youtube.com). You should now see a "GIFit!" button in video toolbars.
 
 If you have any problems with the extension, be sure to speak up and [file issues](https://github.com/Fauntleroy/GIFit/issues)!
