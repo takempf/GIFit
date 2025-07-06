@@ -29,10 +29,10 @@ export function Progress() {
   const setStatus = useAppStore((state) => state.setStatus);
   const videoElement = useAppStore((state) => state.videoElement);
   const {
-    colors,
     result,
     processedFrameCount,
     frameCount,
+    frameData,
     width,
     height,
     name,
@@ -96,7 +96,9 @@ export function Progress() {
                 initial="initial"
                 animate={imageUrl ? 'processed' : 'collated'}
                 transition={chunkTransition}
-                style={{ backgroundColor: colors[2] }}
+                style={{
+                  backgroundImage: `url(${frameData[i]})`
+                }}
               />
             ))}
           </ul>

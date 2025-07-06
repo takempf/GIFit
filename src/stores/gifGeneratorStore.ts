@@ -2,7 +2,6 @@ import { create } from 'zustand';
 
 import GifService from '@/services/GifService';
 import type { GifConfig, GifCompleteData } from '@/services/GifService'; // Import types
-import { getVideoFrameColors } from '@/utils/getVideoFrameColors';
 
 // Define the possible statuses for the GIF creation process
 type GifStatus =
@@ -22,8 +21,8 @@ interface GifState {
   processedFrameCount: number;
   error: string | null;
   result: GifCompleteData | null;
-  colors: [string, string, string, string];
   generationId: string | null;
+  frameData: string[]; // Array of data URLs for frame thumbnails
   _serviceInstance: GifService | null;
 }
 
@@ -49,8 +48,8 @@ const initialState: GifState = {
   processedFrameCount: 0,
   error: null,
   result: null,
-  colors: ['#000', '#000', '#000', '#000'],
   generationId: null,
+  frameData: [], // Initialize frameData
   _serviceInstance: null
 };
 
@@ -75,19 +74,23 @@ export const useGifStore = create<GifStore>((set, get) => ({
       name: config.name,
       width: config.width,
       height: config.height,
-      colors: getVideoFrameColors(videoElement),
       generationId: Date.now().toString(),
       status: 'processing',
       _serviceInstance: service
     });
 
     // --- Setup Event Listeners ---
-    const onFramesProgress = (ratio: number, frameCount: number) => {
-      set({
+    const onFramesProgress = (
+      ratio: number,
+      frameCount: number,
+      thumbnailDataUrl: string
+    ) => {
+      set((state) => ({
         status: 'processing',
         progress: ratio,
-        processedFrameCount: frameCount
-      });
+        processedFrameCount: frameCount,
+        frameData: [...state.frameData, thumbnailDataUrl]
+      }));
     };
 
     const onComplete = (data: GifCompleteData) => {

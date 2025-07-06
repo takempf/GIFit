@@ -100,6 +100,6 @@ export const resultImageTransition = {
   delay: RESULT_SHOW_DELAY,
   type: 'spring',
   stiffness: 500,
-  damping: 15,
+  damping: 25,
   mass: 1
 };
