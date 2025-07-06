@@ -98,12 +98,7 @@ export function Popup() {
   }
 
   return (
-    <motion.div
-      ref={popupElementRef}
-      className={css.popup}
-      initial={{ scale: 0.9, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0.9, opacity: 0 }}>
+    <div ref={popupElementRef} className={css.popup}>
       <AppFrame>
         <header>
           <AppLogo />
@@ -150,6 +145,6 @@ export function Popup() {
           <span className={css.version}>v3.0.0</span>
         </footer>
       </AppFrame>
-    </motion.div>
+    </div>
   );
 }

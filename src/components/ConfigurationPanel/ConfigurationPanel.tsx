@@ -179,6 +179,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           min={0}
           max={maxStart}
           onChange={handleStartTimeChange}
+          data-testid="start-input"
           append={
             <Button
               title="Set to current time"
@@ -200,6 +201,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           max={maxDuration}
           step={1 / framerate}
           onChange={handleGenericInputChange}
+          data-testid="duration-input"
         />
         <InputNumber
           className={css.width}
@@ -210,6 +212,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           min={32}
           max={maxWidth}
           onChange={handleGenericInputChange}
+          data-testid="width-input"
         />
         <ButtonToggle
           className={css.linkDimensions}
@@ -220,7 +223,8 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           padding="small"
           evenPadding={true}
           checked={linkDimensions}
-          onChange={handleLinkToggleChange}>
+          onChange={handleLinkToggleChange}
+          data-testid="dimensions-link-toggle">
           {linkDimensions ? (
             <LinkIcon className={css.linkIcon} />
           ) : (
@@ -236,6 +240,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           min={32}
           max={maxHeight}
           onChange={handleGenericInputChange}
+          data-testid="height-input"
         />
         <InputNumber
           className={css.fps}
@@ -246,6 +251,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           max={60}
           value={String(framerate)}
           onChange={handleGenericInputChange}
+          data-testid="fps-input"
         />
         <Input
           className={css.quality}
@@ -256,6 +262,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           max={10}
           value={String(quality)}
           onChange={handleGenericInputChange}
+          data-testid="quality-input"
         />
         <Button id="gifit-submit" className={css.submit} type="submit">
           GIFit!

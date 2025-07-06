@@ -28,6 +28,7 @@ export function App({}: AppProps) {
         <div className={css.app}>
           {!isOpen && (
             <button
+              id="gifit-button"
               className={css.gifitButton}
               onClick={handleClick}
               type="button">
