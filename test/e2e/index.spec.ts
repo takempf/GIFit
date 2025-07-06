@@ -106,6 +106,9 @@ test('Creates a GIF after navigating from the front page', async ({ page }) => {
   );
   ytSearchFirstResult.click();
 
+  // Wait for detail page to load
+  await page.waitForTimeout(1500);
+
   const gifit = await getGifit(page);
 
   await gifit.clickEntryButton();

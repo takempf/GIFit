@@ -156,7 +156,7 @@ describe('ConfigurationPanel', () => {
     };
     (useConfigurationPanelStore as any).getState = vi.fn(() => submittedState);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    fireEvent.click(screen.getByRole('button', { name: /GIFit!/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Create GIF/i }));
     expect(mockOnSubmit).toHaveBeenCalledWith(submittedState);
   });
 
