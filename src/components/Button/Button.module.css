@@ -1,0 +1,146 @@
+/* Base Button Styles */
+.button {
+  --padding: 0.5em;
+  --color: oklch(50 0.2 300);
+  --background-color: var(--color);
+  --text-color: oklch(100 0 0);
+  --outline-color: oklch(70 0.2 300);
+
+  background-color: var(--background-color);
+  color: var(--text-color);
+  box-shadow: oklch(from var(--color) calc(l * 0.5) c h) 0 0em 0px 0px;
+
+  display: inline-flex; /* Align items nicely if children include icons */
+  align-items: center;
+  justify-content: center;
+  gap: 0.25em;
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  padding: var(--padding) calc(var(--padding) * 2);
+
+  transition:
+    background-color 200ms ease-in-out,
+    border-color 200ms ease-in-out,
+    color 200ms ease-in-out,
+    box-shadow 100ms ease-in-out,
+    translate 100ms ease-in-out;
+
+  -webkit-font-smoothing: antialiased; /* Improve font rendering */
+  -moz-osx-font-smoothing: grayscale;
+
+  &:hover {
+    translate: 0 -0.1em;
+    box-shadow: oklch(from var(--color) calc(l * 0.5) c h) 0 0.1em 0px 0px;
+    --background-color: oklch(from var(--color) calc(l + 0.1) c h);
+  }
+
+  &:active {
+    translate: 0;
+    --background-color: oklch(from var(--color) calc(l - 0.1) c h);
+  }
+
+  &:disabled {
+    --background-color: oklch(from var(--color) l calc(c * 0.5) h);
+  }
+}
+
+/* Focus state for accessibility */
+.button:focus-visible {
+  outline: 2px solid var(--outline-color);
+  outline-offset: 2px;
+}
+
+/* --- Padding Variants --- */
+.padding_none {
+  --padding: 0;
+}
+
+.padding_x-small {
+  --padding: 0.125em;
+}
+
+.padding_small {
+  --padding: 0.25em;
+}
+
+.padding_medium {
+  --padding: 0.5em;
+}
+
+.padding_large {
+  --padding: 0.75em;
+}
+
+/* --- Padding Type --- */
+
+.evenPadding {
+  padding: var(--padding);
+}
+
+/* --- Variants --- */
+
+/* Primary Variant */
+.primary {
+  --color: oklch(0.5882 0.2615 29.23);
+}
+
+/* Secondary Variant */
+.secondary {
+  --color: rgb(50, 50, 50); /* Example secondary color */
+}
+
+.ghost {
+  --color: oklch(0 0 0 / 0);
+  --text-color: currentColor;
+}
+
+.input {
+  --color: rgba(255, 255, 255, 0.45);
+  --text-color: currentColor;
+}
+
+.outline {
+  background-color: transparent;
+  color: currentColor;
+  border: rgba(0, 0, 0, 0.25) 1px solid;
+
+  &:disabled {
+    color: color-mix(in srgb, currentColor 50%, transparent 50%);
+  }
+}
+
+/* --- Sizes --- */
+
+/* Small Size */
+.x-small {
+  font-size: 0.75em; /* 12px */
+}
+
+.small {
+  font-size: 0.875em; /* 14px */
+}
+
+/* Medium Size (Default) */
+.medium {
+  font-size: 1em; /* 16px */
+}
+
+/* Large Size */
+.large {
+  font-size: 1.125em; /* 18px */
+}
+
+.rounded {
+  border-radius: 2em;
+}
+
+/* --- Disabled State --- */
+.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none; /* Prevent clicks on disabled state */
+}

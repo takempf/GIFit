@@ -1,0 +1,49 @@
+@import 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap';
+
+:root {
+  --MAXIMUM_Z_INDEX: 2147483647;
+
+  --color_primary: rgb(219, 7, 7);
+
+  --color_panel_text: rgb(125, 125, 125);
+  --color_panel_background: rgba(255, 255, 255, 0.95);
+  --color_input_text: rgb(25, 25, 25);
+
+  --color_slider_thumb: rgb(235, 235, 235);
+  --color_slider_thumb_focus: rgb(255, 255, 255);
+  --color_slider_background: rgba(0, 0, 0, 0.06);
+
+  --color_button: rgb(235, 235, 235);
+  --color_button_background: rgb(25, 25, 25);
+  --color_button_primary_background: rgb(235, 15, 15);
+  --color_subtle_shadow: rgba(0, 0, 0, 0.25);
+
+  --ease_in_expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
+  --ease_out_expo: cubic-bezier(0.19, 1, 0.22, 1);
+
+  --border-radius: 0.5em;
+}
+
+html,
+body {
+  font-size: 16px;
+  font-family: 'Geist', sans-serif;
+  letter-spacing: 0.01em;
+}
+
+input {
+  font-family: inherit;
+  letter-spacing: 0.05em;
+}
+
+/* Style for browser's default spinners (optional) */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Hide default spinners in WebKit */
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield; /* Hide default spinners in Firefox */
+  appearance: textfield;
+}

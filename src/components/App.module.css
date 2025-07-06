@@ -1,0 +1,34 @@
+.app {
+  position: absolute;
+  bottom: 0;
+  right: 0.6em;
+  translate: 0 100%;
+  z-index: 1;
+}
+
+.gifitButton {
+  font-size: 0.8em;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  border: none;
+  translate: 0 0;
+  transform-origin: top center;
+  transition:
+    scale 125ms,
+    background-color 125ms,
+    filter 125ms;
+  transition-timing-function: var(--ease_out_expo);
+
+  strong {
+    font-weight: 900;
+  }
+
+  &:hover {
+    scale: 1.05;
+  }
+
+  &:active {
+    scale: 0.95;
+  }
+}

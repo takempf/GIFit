@@ -1,0 +1,72 @@
+.gifitConfiguration {
+  opacity: 1;
+  transition:
+    -webkit-filter 300ms,
+    opacity 300ms,
+    transform 300ms;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    'start duration'
+    'width height'
+    'fps quality'
+    'submit submit';
+  gap: 1px;
+  background: rgba(225, 225, 225, 0.69);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.start {
+  grid-area: start;
+}
+
+.duration {
+  grid-area: duration;
+}
+
+.width {
+  grid-area: width;
+}
+
+.height {
+  grid-area: height;
+}
+
+.linkDimensions {
+  grid-column-end: height;
+  grid-column-start: width;
+  grid-row-end: height;
+  grid-row-start: width;
+  align-self: center;
+  justify-self: center;
+  z-index: 5;
+  backdrop-filter: blur(2px);
+}
+
+.linkIcon {
+  height: 1em;
+}
+
+.fps {
+  grid-area: fps;
+}
+
+.quality {
+  grid-area: quality;
+}
+
+.submit {
+  grid-area: submit;
+}
+
+.actions {
+  display: flex;
+
+  > * {
+    flex-grow: 1;
+  }
+}

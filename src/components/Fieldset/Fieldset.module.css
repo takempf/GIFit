@@ -1,0 +1,8 @@
+.fieldset {
+  position: relative;
+  border: none;
+  margin: 0;
+  padding: 0;
+  line-height: 35px;
+  display: flex;
+}

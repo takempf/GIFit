@@ -1,0 +1,65 @@
+.popup {
+  position: absolute;
+  bottom: 0.5em;
+  right: 0.6em;
+  translate: 0 100%;
+  z-index: 1000;
+  width: 100%;
+  max-width: 420px;
+  scroll-margin-bottom: 2em;
+
+  header {
+    color: white;
+  }
+
+  footer {
+    padding: 0 0.25em;
+    align-self: stretch;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+
+    a {
+      color: currentColor;
+
+      &:hover {
+        opacity: 1;
+        color: rgba(255, 255, 255, 0.75);
+      }
+    }
+  }
+}
+
+.tkLogo {
+  height: 0.8em;
+  translate: 0 0.05em;
+  opacity: 0.5;
+}
+
+.container {
+  position: relative;
+  color: var(--color_panel_text);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.generation {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(4px);
+  border-radius: var(--border-radius);
+}
+
+.close {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  z-index: 100;
+}

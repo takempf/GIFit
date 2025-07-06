@@ -1,0 +1,21 @@
+.appFrame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  background-image: linear-gradient(oklch(0 0 0 / 0.85), oklch(0 0 0 / 0.7));
+  backdrop-filter: blur(5px);
+  border-radius: 1em;
+  padding: 0.5em;
+  border: rgba(255, 255, 255, 0.3) 1px solid;
+  border-left-color: rgba(255, 255, 255, 0.25);
+  border-right-color: rgba(255, 255, 255, 0.2);
+  border-bottom-color: rgba(255, 255, 255, 0.15);
+}
+
+.attached {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-top-color: rgba(255, 255, 255, 0);
+  padding: 0.5em 1em;
+}
