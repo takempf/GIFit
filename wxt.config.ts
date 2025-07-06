@@ -7,6 +7,10 @@ export default defineConfig({
   manifest: {
     name: 'GIFit!',
     description: 'Generate GIFs from any YouTube video with ease.',
+    developer: {
+      name: 'Timothy Kempf',
+      url: 'https://kempf.dev'
+    },
     permissions: ['storage'],
     host_permissions: ['*://*.youtube.com/*']
   },

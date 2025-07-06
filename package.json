@@ -1,6 +1,11 @@
 {
   "name": "gifit",
   "description": "manifest.json description",
+  "author": {
+    "name": "Timothy Kempf",
+    "email": "tim@kempf.dev",
+    "url": "https://kempf.dev"
+  },
   "private": true,
   "version": "3.0.0",
   "type": "module",
