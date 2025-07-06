@@ -1,7 +1,7 @@
 import css from './Progress.module.css';
 
-import { useEffect, useState, CSSProperties } from 'react'; // Removed 'use'
-import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState, CSSProperties } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/stores/gifGeneratorStore';
@@ -10,20 +10,17 @@ import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
 import { observeBoundingClientRect } from '@/utils/observeBoundingClientRect';
 
 import { Button } from '../Button/Button';
+import {
+  getChunkVariants,
+  chunkTransition,
+  progressContainerVariants,
+  progressContainerTransition,
+  resultImageVariants,
+  resultImageTransition
+} from './Progress.motion.ts'; // ✨ Import the variants
 
 import ArrowRightIcon from '@/assets/arrow-right.svg?react';
 import ArrowDownIcon from '@/assets/arrow-down.svg?react';
-
-const PROGRESS_FIXED_VERTICAL_CENTER = 120;
-const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
-const RESULT_SHOW_DELAY = 0.5; // seconds
-
-const chunkTransition = {
-  type: 'spring',
-  stiffness: 600,
-  damping: 40,
-  mass: 1
-};
 
 export function Progress() {
   const [videoElementWidth, setVideoElementWidth] = useState(0);
@@ -31,14 +28,16 @@ export function Progress() {
 
   const setStatus = useAppStore((state) => state.setStatus);
   const videoElement = useAppStore((state) => state.videoElement);
-  const colors = useGifStore((state) => state.colors);
-  const result = useGifStore((state) => state.result);
-  const processedFrameCount = useGifStore((state) => state.processedFrameCount);
-  const frameCount = useGifStore((state) => state.frameCount);
-  const width = useGifStore((state) => state.width);
-  const height = useGifStore((state) => state.height);
-  const name = useGifStore((state) => state.name);
-  const reset = useGifStore((state) => state.reset);
+  const {
+    colors,
+    result,
+    processedFrameCount,
+    frameCount,
+    width,
+    height,
+    name,
+    reset
+  } = useGifStore();
   const [gridColumnsLength, getGridRowsLength] = getClosestGridDimensions(
     width,
     height,
@@ -50,28 +49,17 @@ export function Progress() {
   const progressElementsStyle: CSSProperties | undefined = {
     aspectRatio: `auto ${width} / ${height}`
   };
-
   const downloadFilename = `${name}.gif`;
 
   useEffect(() => {
-    if (!videoElement) {
-      return;
-    }
+    if (!videoElement) return;
 
-    function handleVideoBoundingChange(rect: DOMRect) {
-      const { width, height } = rect;
-      setVideoElementWidth(width);
-      setVideoElementHeight(height);
-    }
+    const unobserve = observeBoundingClientRect(videoElement, (rect) => {
+      setVideoElementWidth(rect.width);
+      setVideoElementHeight(rect.height);
+    });
 
-    const cancelObserveBoundingClientRect = observeBoundingClientRect(
-      videoElement,
-      handleVideoBoundingChange
-    );
-
-    return () => {
-      cancelObserveBoundingClientRect();
-    };
+    return () => unobserve();
   }, [videoElement]);
 
   function handleCloseClick() {
@@ -79,48 +67,19 @@ export function Progress() {
     reset();
   }
 
-  const chunkVariants = {
-    initial: {
-      x: PROGRESS_FIXED_HORIZONTAL_CENTER + (-1 * videoElementWidth) / 2,
-      y: -PROGRESS_FIXED_VERTICAL_CENTER + -1 * videoElementHeight * 0.25,
-      opacity: 0.1,
-      scale: 3,
-      borderRadius: '0.5em'
-    },
-    collated: {
-      x: 0,
-      y: 0,
-      opacity: 1,
-      scale: 0.9,
-      borderRadius: '0.2em'
-    },
-    processed: {
-      x: 0,
-      y: 0,
-      opacity: 0,
-      scale: 1,
-      borderRadius: '0em',
-      transition: {
-        delay: RESULT_SHOW_DELAY
-      }
-    }
-  };
+  // ✨ Get variants by calling the function with the component's state
+  const chunkVariants = getChunkVariants(videoElementWidth, videoElementHeight);
 
   return (
     <div className={css.gifitProgress} data-testid="progress">
       <motion.div
         className={css.elements}
         style={progressElementsStyle}
-        initial={{ scale: 0.9 }}
-        animate={{ scale: imageUrl ? 1 : 0.9 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        transition={{
-          type: 'spring',
-          stiffness: 450,
-          damping: 20,
-          mass: 1,
-          delay: RESULT_SHOW_DELAY
-        }}>
+        variants={progressContainerVariants}
+        initial="initial"
+        animate={imageUrl ? 'animate' : 'initial'}
+        exit="exit"
+        transition={progressContainerTransition}>
         <AnimatePresence>
           <ul
             key="chunks"
@@ -137,9 +96,7 @@ export function Progress() {
                 initial="initial"
                 animate={imageUrl ? 'processed' : 'collated'}
                 transition={chunkTransition}
-                style={{
-                  backgroundColor: colors[2]
-                }}
+                style={{ backgroundColor: colors[2] }}
               />
             ))}
           </ul>
@@ -150,32 +107,11 @@ export function Progress() {
               src={imageUrl}
               alt="Generated GIF preview"
               data-testid="result-image"
-              // motion
-              initial={{
-                opacity: 0,
-                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
-                y: '0px',
-                scale: 1
-              }}
-              animate={{
-                opacity: 1,
-                boxShadow: 'rgba(0, 0, 0, 0.25) 0px 20px 8px -10px',
-                y: '-25px',
-                scale: 1.2
-              }}
-              exit={{
-                opacity: 0,
-                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
-                y: '0px',
-                scale: 1
-              }}
-              transition={{
-                delay: 0.5,
-                type: 'spring',
-                stiffness: 500,
-                damping: 15,
-                mass: 1
-              }}
+              variants={resultImageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={resultImageTransition}
             />
           )}
         </AnimatePresence>
