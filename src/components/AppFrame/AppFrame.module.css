@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.5em;
-  background: rgba(0, 0, 0, 0.6);
+  background-image: linear-gradient(oklch(0 0 0 / 0.85), oklch(0 0 0 / 0.7));
   backdrop-filter: blur(5px);
   border-radius: 1em;
   padding: 0.5em;
