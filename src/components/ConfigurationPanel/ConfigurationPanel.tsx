@@ -265,7 +265,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           data-testid="quality-input"
         />
         <Button id="gifit-submit" className={css.submit} type="submit">
-          GIFit!
+          Create GIF
         </Button>
       </form>
     </div>

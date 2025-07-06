@@ -16,6 +16,7 @@ import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 
 const PROGRESS_FIXED_VERTICAL_CENTER = 120;
 const PROGRESS_FIXED_HORIZONTAL_CENTER = 210;
+const RESULT_SHOW_DELAY = 0.5; // seconds
 
 const chunkTransition = {
   type: 'spring',
@@ -90,15 +91,18 @@ export function Progress() {
       x: 0,
       y: 0,
       opacity: 1,
-      scale: 0.75,
+      scale: 0.9,
       borderRadius: '0.2em'
     },
     processed: {
       x: 0,
       y: 0,
-      opacity: 1,
+      opacity: 0,
       scale: 1,
-      borderRadius: '0em'
+      borderRadius: '0em',
+      transition: {
+        delay: RESULT_SHOW_DELAY
+      }
     }
   };
 
@@ -115,7 +119,7 @@ export function Progress() {
           stiffness: 450,
           damping: 20,
           mass: 1,
-          delay: 0.5
+          delay: RESULT_SHOW_DELAY
         }}>
         <AnimatePresence>
           <ul
@@ -149,15 +153,21 @@ export function Progress() {
               // motion
               initial={{
                 opacity: 0,
-                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
+                y: '0px',
+                scale: 1
               }}
               animate={{
                 opacity: 1,
-                boxShadow: 'rgba(0, 0, 0, 0.25) 0px 8px 6px -3px'
+                boxShadow: 'rgba(0, 0, 0, 0.25) 0px 20px 8px -10px',
+                y: '-25px',
+                scale: 1.2
               }}
               exit={{
                 opacity: 0,
-                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+                boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
+                y: '0px',
+                scale: 1
               }}
               transition={{
                 delay: 0.5,
