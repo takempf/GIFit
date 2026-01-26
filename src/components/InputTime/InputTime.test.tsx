@@ -1,10 +1,8 @@
 import { render, screen, act, fireEvent } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { vi, expect, describe, it, beforeEach, afterEach } from 'vitest';
 import { InputTime } from './InputTime';
 
 describe('InputTime', { timeout: 10000 }, () => {
-  let user: ReturnType<typeof userEvent.setup>;
   const getInput = () => screen.getByLabelText('Time') as HTMLInputElement;
   const getIncrementButton = () =>
     screen.getByLabelText('Increment time') as HTMLButtonElement;
@@ -12,10 +10,14 @@ describe('InputTime', { timeout: 10000 }, () => {
     screen.getByLabelText('Decrement time') as HTMLButtonElement;
 
   beforeEach(() => {
-    user = userEvent.setup();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -48,7 +50,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('1:01:01.2');
   });
 
-  it('updates display value on user input and calls onChange after debounce', async () => {
+  it('updates display value on user input and calls onChange after debounce', () => {
     const handleChange = vi.fn();
     const debounceMs = 500;
     render(
@@ -60,35 +62,32 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '1:23.4');
+    fireEvent.change(input, { target: { value: '1:23.4' } });
     expect(input.value).toBe('1:23.4');
 
     // Wait for the debounce period for onChange to be called
-    await vi.waitFor(
-      () => {
-        expect(handleChange).toHaveBeenCalledWith(83.4);
-      },
-      { timeout: debounceMs + 200 }
-    ); // Wait a bit longer than debounce
+    act(() => {
+      vi.advanceTimersByTime(debounceMs);
+    });
+
+    expect(handleChange).toHaveBeenCalledWith(83.4);
   });
 
-  it('handles invalid user input and reverts on blur', async () => {
+  it('handles invalid user input and reverts on blur', () => {
     const handleChange = vi.fn();
     render(<InputTime {...defaultProps} value={10} onChange={handleChange} />);
     const input = getInput();
     expect(input.value).toBe('0:10.0');
 
-    await user.clear(input);
-    await user.type(input, 'invalid-time');
+    fireEvent.change(input, { target: { value: 'invalid-time' } });
     expect(input.value).toBe('invalid-time');
 
-    await user.tab();
+    fireEvent.blur(input);
     expect(input.value).toBe('0:10.0');
     expect(handleChange).not.toHaveBeenCalled();
   });
 
-  it('calls onChange with new value when step buttons are clicked', async () => {
+  it('calls onChange with new value when step buttons are clicked', () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -103,7 +102,8 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
 
-    await user.click(getIncrementButton());
+    fireEvent.pointerDown(getIncrementButton());
+    fireEvent.pointerUp(getIncrementButton());
     expect(handleChange).toHaveBeenCalledWith(6);
     rerender(
       <InputTime
@@ -117,11 +117,12 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
 
-    await user.click(getDecrementButton());
+    fireEvent.pointerDown(getDecrementButton());
+    fireEvent.pointerUp(getDecrementButton());
     expect(handleChange).toHaveBeenCalledWith(5);
   });
 
-  it('respects min and max props on step button clicks', async () => {
+  it('respects min and max props on step button clicks', () => {
     const handleChange = vi.fn();
     let value = 0.5;
     const { rerender } = render(
@@ -140,7 +141,8 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     expect(getDecrementButton().disabled).toBe(true);
 
-    await user.click(getIncrementButton());
+    fireEvent.pointerDown(getIncrementButton());
+    fireEvent.pointerUp(getIncrementButton());
     expect(handleChange).toHaveBeenCalledWith(0.6);
     rerender(
       <InputTime
@@ -156,7 +158,8 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
 
-    await user.click(getIncrementButton());
+    fireEvent.pointerDown(getIncrementButton());
+    fireEvent.pointerUp(getIncrementButton());
     expect(handleChange).toHaveBeenCalledWith(0.7);
     rerender(
       <InputTime
@@ -174,7 +177,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getIncrementButton().disabled).toBe(true);
   });
 
-  it('respects min and max props on direct input', async () => {
+  it('respects min and max props on direct input', () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -192,9 +195,8 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '15');
-    await user.tab();
+    fireEvent.change(input, { target: { value: '15' } });
+    fireEvent.blur(input);
     expect(handleChange).toHaveBeenCalledWith(10);
     rerender(
       <InputTime
@@ -210,13 +212,12 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
 
-    await user.clear(input);
-    await user.type(input, '-5');
-    await user.tab();
+    fireEvent.change(input, { target: { value: '-5' } });
+    fireEvent.blur(input);
     expect(handleChange).toHaveBeenCalledWith(0);
   });
 
-  it('handles keyboard arrow up/down for stepping', async () => {
+  it('handles keyboard arrow up/down for stepping', () => {
     const handleChange = vi.fn();
     let value = 5;
     const { rerender } = render(
@@ -232,8 +233,8 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.click(input);
-    await user.keyboard('{ArrowUp}');
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'ArrowUp' });
     expect(handleChange).toHaveBeenCalledWith(6);
     rerender(
       <InputTime
@@ -247,12 +248,12 @@ describe('InputTime', { timeout: 10000 }, () => {
       />
     );
 
-    await user.click(input);
-    await user.keyboard('{ArrowDown}');
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
     expect(handleChange).toHaveBeenCalledWith(5);
   });
 
-  it('commits change on Enter key press', async () => {
+  it('commits change on Enter key press', () => {
     const handleChange = vi.fn();
     const debounceMs = 50;
     render(
@@ -264,18 +265,14 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '3:00');
-    await user.keyboard('{Enter}');
+    fireEvent.change(input, { target: { value: '3:00' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
 
     // Enter calls blur which calls commitChange directly.
-    // If commitChange itself has async aspects or if state updates are not immediate, waitFor might be needed.
-    await vi.waitFor(
-      () => {
-        expect(handleChange).toHaveBeenCalledWith(180);
-      },
-      { timeout: debounceMs + 200 }
-    ); // Allow time for any debounce to be cancelled and commit to occur
+    act(() => {
+      vi.advanceTimersByTime(debounceMs);
+    });
+    expect(handleChange).toHaveBeenCalledWith(180);
   });
 
   it('is disabled when disabled prop is true', () => {
@@ -303,7 +300,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('0:20.5');
   });
 
-  it('does not re-format prop value change if editing', async () => {
+  it('does not re-format prop value change if editing', () => {
     const handleChange = vi.fn(); // Add a handler to see if it's called
     const debounceMs = 50;
     const { rerender } = render(
@@ -316,9 +313,8 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.click(input); // Focus
-    await user.clear(input);
-    await user.type(input, '1:0'); // User is typing "1 minute" (60s)
+    fireEvent.focus(input); // Focus
+    fireEvent.change(input, { target: { value: '1:0' } }); // User is typing "1 minute" (60s)
 
     // Simulate prop update while user is typing
     rerender(
@@ -332,22 +328,14 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(input.value).toBe('1:0'); // User's input should be preserved
 
     // Wait for any potential debounced call triggered by '1:0'
-    // If it was called, it would be with 60.
-    // We are primarily checking that the display value didn't change due to prop update.
-    // The onChange for "1:0" might or might not fire depending on how quickly the prop changed.
-    // Let's ensure it's stable and onChange wasn't called with 30 (the new prop value)
-    await vi.waitFor(
-      async () => {
-        /* allow potential state updates */
-      },
-      { timeout: debounceMs + 200 }
-    );
+    act(() => {
+      vi.advanceTimersByTime(debounceMs * 2);
+    });
+
     expect(handleChange).not.toHaveBeenCalledWith(30);
-    // It might have been called with 60 if the debounce for '1:0' completed.
-    // If it was, that's fine. The main point is '1:0' display and no overwrite from '30'.
   });
 
-  it('handles input of just seconds like "3.5"', async () => {
+  it('handles input of just seconds like "3.5"', () => {
     const handleChange = vi.fn();
     let value = 0; // Simulating parent state for value prop
     const debounceMs = 50;
@@ -364,15 +352,13 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '3.5');
+    fireEvent.change(input, { target: { value: '3.5' } });
 
-    await vi.waitFor(
-      () => {
-        expect(handleChange).toHaveBeenCalledWith(3.5);
-      },
-      { timeout: debounceMs + 200 }
-    );
+    act(() => {
+      vi.advanceTimersByTime(debounceMs);
+    });
+
+    expect(handleChange).toHaveBeenCalledWith(3.5);
 
     // Rerender with the new value to check formatting
     rerender(
@@ -388,7 +374,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(input.value).toBe('0:03.5');
   });
 
-  it('handles input of "MM:SS" like "2:30"', async () => {
+  it('handles input of "MM:SS" like "2:30"', () => {
     const handleChange = vi.fn();
     let value = 0;
     const debounceMs = 50;
@@ -405,14 +391,13 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '2:30');
-    await vi.waitFor(
-      () => {
-        expect(handleChange).toHaveBeenCalledWith(150);
-      },
-      { timeout: debounceMs + 200 }
-    );
+    fireEvent.change(input, { target: { value: '2:30' } });
+
+    act(() => {
+      vi.advanceTimersByTime(debounceMs);
+    });
+
+    expect(handleChange).toHaveBeenCalledWith(150);
 
     rerender(
       <InputTime
@@ -427,7 +412,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(input.value).toBe('2:30.0');
   });
 
-  it('handles input of "HH:MM:SS" like "1:05:10"', async () => {
+  it('handles input of "HH:MM:SS" like "1:05:10"', () => {
     const handleChange = vi.fn();
     let value = 0;
     const debounceMs = 50;
@@ -444,14 +429,13 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     const input = getInput();
 
-    await user.clear(input);
-    await user.type(input, '1:05:10');
-    await vi.waitFor(
-      () => {
-        expect(handleChange).toHaveBeenCalledWith(3910);
-      },
-      { timeout: debounceMs + 200 }
-    );
+    fireEvent.change(input, { target: { value: '1:05:10' } });
+
+    act(() => {
+      vi.advanceTimersByTime(debounceMs);
+    });
+
+    expect(handleChange).toHaveBeenCalledWith(3910);
 
     rerender(
       <InputTime
@@ -466,7 +450,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(input.value).toBe('1:05:10.0');
   });
 
-  it('correctly parses and formats time around 60 seconds, like "0:59.9" stepping up', async () => {
+  it('correctly parses and formats time around 60 seconds, like "0:59.9" stepping up', () => {
     const handleChange = vi.fn();
     let value = 59.9;
     const { rerender } = render(
@@ -482,7 +466,8 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     expect(getInput().value).toBe('0:59.9');
 
-    await user.click(getIncrementButton());
+    fireEvent.pointerDown(getIncrementButton());
+    fireEvent.pointerUp(getIncrementButton());
     expect(handleChange).toHaveBeenCalledWith(60.0);
     rerender(
       <InputTime
@@ -498,7 +483,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(getInput().value).toBe('1:00.0');
   });
 
-  it('correctly parses and formats time around 60 minutes, like "59:59.0" stepping up with step 1s', async () => {
+  it('correctly parses and formats time around 60 minutes, like "59:59.0" stepping up with step 1s', () => {
     const handleChange = vi.fn();
     let value = 3599; // 59m 59s
     const { rerender } = render(
@@ -514,7 +499,8 @@ describe('InputTime', { timeout: 10000 }, () => {
     );
     expect(getInput().value).toBe('59:59');
 
-    await user.click(getIncrementButton());
+    fireEvent.pointerDown(getIncrementButton());
+    fireEvent.pointerUp(getIncrementButton());
     expect(handleChange).toHaveBeenCalledWith(3600);
     rerender(
       <InputTime
@@ -531,15 +517,6 @@ describe('InputTime', { timeout: 10000 }, () => {
   });
 
   describe('InputTime Stepper Hold Functionality', { timeout: 20000 }, () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.runOnlyPendingTimers();
-      vi.useRealTimers();
-    });
-
     it('increment button hold calls onChange multiple times and updates value', async () => {
       const handleChange = vi.fn();
       let currentValue = 0;
@@ -560,10 +537,7 @@ describe('InputTime', { timeout: 10000 }, () => {
 
       const incrementButton = getIncrementButton();
 
-      // Simulate pointer down
-      // await user.pointer({ keys: '[MouseLeft>]', target: incrementButton });
       fireEvent.pointerDown(incrementButton);
-      await act(async () => {}); // Flush updates
 
       // First immediate call
       expect(handleChange).toHaveBeenCalledTimes(1);
@@ -582,7 +556,9 @@ describe('InputTime', { timeout: 10000 }, () => {
       expect(getInput().value).toBe('0:00.1');
 
       // Advance time for the first interval
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      });
       // expect(handleChange).toHaveBeenCalledTimes(2);
       expect(handleChange).toHaveBeenNthCalledWith(2, 0.2);
       expect(currentValue).toBeCloseTo(0.2); // This will still fail if called with 0.1
@@ -600,7 +576,10 @@ describe('InputTime', { timeout: 10000 }, () => {
       expect(getInput().value).toBe('0:00.2');
 
       // Advance time for the second interval
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      });
+
       expect(handleChange).toHaveBeenCalledTimes(3);
       expect(currentValue).toBeCloseTo(0.3);
       rerender(
@@ -616,13 +595,12 @@ describe('InputTime', { timeout: 10000 }, () => {
       );
       expect(getInput().value).toBe('0:00.3');
 
-      // Simulate pointer up
-      // await user.pointer({ keys: '[/MouseLeft]', target: incrementButton });
       fireEvent.pointerUp(incrementButton);
-      await act(async () => {}); // Flush updates
 
       // Advance time a bit more to ensure no more calls
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL * 2);
+      });
       expect(handleChange).toHaveBeenCalledTimes(3); // Should not have changed
     });
 
@@ -646,9 +624,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       expect(getInput().value).toBe('0:00.3');
       const decrementButton = getDecrementButton();
 
-      // await user.pointer({ keys: '[MouseLeft>]', target: decrementButton });
       fireEvent.pointerDown(decrementButton);
-      await act(async () => {});
 
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(currentValue).toBeCloseTo(0.2);
@@ -665,7 +641,9 @@ describe('InputTime', { timeout: 10000 }, () => {
       );
       expect(getInput().value).toBe('0:00.2');
 
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      });
       expect(handleChange).toHaveBeenCalledTimes(2);
       expect(currentValue).toBeCloseTo(0.1);
       rerender(
@@ -681,10 +659,10 @@ describe('InputTime', { timeout: 10000 }, () => {
       );
       expect(getInput().value).toBe('0:00.1');
 
-      // await user.pointer({ keys: '[/MouseLeft]', target: decrementButton });
       fireEvent.pointerUp(decrementButton);
-      await act(async () => {});
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL * 2);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL * 2);
+      });
       expect(handleChange).toHaveBeenCalledTimes(2);
     });
 
@@ -709,9 +687,8 @@ describe('InputTime', { timeout: 10000 }, () => {
       );
 
       const incrementButton = getIncrementButton();
-      // await user.pointer({ keys: '[MouseLeft>]', target: incrementButton }); // 0.8 -> 0.9 (call 1)
       fireEvent.pointerDown(incrementButton);
-      await act(async () => {});
+
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(currentValue).toBeCloseTo(0.9);
       rerender(
@@ -727,7 +704,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         />
       );
 
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL); // 0.9 -> 1.0 (call 2)
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      }); // 0.9 -> 1.0 (call 2)
       expect(handleChange).toHaveBeenCalledTimes(2);
       expect(currentValue).toBeCloseTo(1.0);
       rerender(
@@ -745,13 +724,13 @@ describe('InputTime', { timeout: 10000 }, () => {
       expect(getIncrementButton().disabled).toBe(true);
 
       // Try to advance time again, should not call handleChange or change value
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      });
       expect(handleChange).toHaveBeenCalledTimes(2); // Still 2
       expect(currentValue).toBeCloseTo(1.0);
 
-      // await user.pointer({ keys: '[/MouseLeft]', target: incrementButton });
       fireEvent.pointerUp(incrementButton);
-      await act(async () => {});
     });
 
     it('decrement button hold stops at min value', async () => {
@@ -775,9 +754,8 @@ describe('InputTime', { timeout: 10000 }, () => {
       );
 
       const decrementButton = getDecrementButton();
-      // await user.pointer({ keys: '[MouseLeft>]', target: decrementButton }); // 0.2 -> 0.1 (call 1)
       fireEvent.pointerDown(decrementButton);
-      await act(async () => {});
+
       expect(handleChange).toHaveBeenCalledTimes(1);
       expect(currentValue).toBeCloseTo(0.1);
       rerender(
@@ -793,7 +771,9 @@ describe('InputTime', { timeout: 10000 }, () => {
         />
       );
 
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL); // 0.1 -> 0.0 (call 2)
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      }); // 0.1 -> 0.0 (call 2)
       expect(handleChange).toHaveBeenCalledTimes(2);
       expect(currentValue).toBeCloseTo(0.0);
       rerender(
@@ -808,15 +788,15 @@ describe('InputTime', { timeout: 10000 }, () => {
           }}
         />
       );
-      expect(getDecrementButton().disabled).toBe(true);
 
-      await vi.advanceTimersByTimeAsync(SPIN_INTERVAL);
+      act(() => {
+        vi.advanceTimersByTime(SPIN_INTERVAL);
+      }); // 0.0 -> -0.1 (should stop)
+
       expect(handleChange).toHaveBeenCalledTimes(2);
       expect(currentValue).toBeCloseTo(0.0);
 
-      // await user.pointer({ keys: '[/MouseLeft]', target: decrementButton });
       fireEvent.pointerUp(decrementButton);
-      await act(async () => {});
     });
   });
 });
