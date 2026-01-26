@@ -3,7 +3,7 @@
   bottom: 0;
   right: 0.6em;
   translate: 0 100%;
-  z-index: 1;
+  z-index: var(--MAXIMUM_Z_INDEX);
 }
 
 .gifitButton {
