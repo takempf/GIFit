@@ -1,8 +1,13 @@
 import { create } from 'zustand';
 import { browser } from 'wxt/browser';
-import { GifConfig, GifCompleteData, GifStatus } from '@/types';
+import {
+  GifConfig,
+  GifCompleteData,
+  GifStatus,
+  ExtensionMessage
+} from '@/types';
 
-async function sendMessageToActiveTab(message: any) {
+async function sendMessageToActiveTab(message: ExtensionMessage) {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   const activeTabId = tabs[0]?.id;
   if (activeTabId) {
@@ -113,7 +118,7 @@ export const useGifStore = create<GifStore>((set) => ({
       if (activeTabId) {
         await browser.tabs.sendMessage(activeTabId, { type: 'STOP_GIF' });
       }
-    } catch (e) {}
+    } catch {}
     set(initialState);
   },
 

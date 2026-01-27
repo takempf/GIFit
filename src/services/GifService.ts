@@ -14,7 +14,7 @@ import { GifConfig, GifCompleteData } from '@/types';
 
 export interface IndexingOptions {
   noDither?: boolean;
-  palette: any;
+  palette: number[][];
   width: number;
   height: number;
 }
@@ -120,9 +120,9 @@ class GifService extends EventEmitter {
 
     try {
       this.encoder = GIFEncoder();
-    } catch (error: any) {
+    } catch (error: unknown) {
       const initError = new Error(
-        `Failed to initialize GIFEncoder: ${error?.message || error}`
+        `Failed to initialize GIFEncoder: ${(error as Error)?.message || error}`
       );
       this.emit('ERROR', initError);
       throw initError;
@@ -163,12 +163,14 @@ class GifService extends EventEmitter {
       this.emit('COMPLETE', gifData);
 
       return gifData;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('GIF creation failed:', error);
       if (!this.aborted) {
         this.emit(
           'ERROR',
-          new Error(`GIF creation failed: ${error?.message || error}`)
+          new Error(
+            `GIF creation failed: ${(error as Error)?.message || error}`
+          )
         );
       }
       this.abort(); // Ensure cleanup on failure
@@ -375,9 +377,9 @@ class GifService extends EventEmitter {
         new Uint8ClampedArray(imageData.data),
         width,
         height,
-        palette
+        palette as any
       );
-      indexedData = applyPalette(ditheredRgbaData, palette, {
+      indexedData = applyPalette(ditheredRgbaData, palette as any, {
         format: 'rgb565'
       });
     }
@@ -417,7 +419,7 @@ class GifService extends EventEmitter {
       // Use a color palette
       const palette = quantize(imageData.data, actualMaxColors);
       const indexedData = this.indexImageData(imageData, {
-        palette,
+        palette: palette as any,
         noDither: config.noDither,
         width: config.width,
         height: config.height
@@ -425,7 +427,7 @@ class GifService extends EventEmitter {
 
       // Actually write frame data
       this.encoder.writeFrame(indexedData, config.width, config.height, {
-        palette,
+        palette: palette as any,
         delay: frameIntervalMs
       });
 
@@ -468,7 +470,9 @@ class GifService extends EventEmitter {
 
     this.encoder.finish();
     const buffer = this.encoder.bytesView();
-    const imageBlob = new Blob([buffer as any], { type: 'image/gif' });
+    const imageBlob = new Blob([buffer as unknown as BlobPart], {
+      type: 'image/gif'
+    });
 
     return imageBlob;
   }

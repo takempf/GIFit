@@ -16,8 +16,6 @@ import TKLogo from '@/assets/tk.svg';
 
 import { ExtensionMessage } from '@/types';
 
-interface AppProps extends Record<string, unknown> {}
-
 interface FormValues {
   start: number;
   duration: number;
@@ -34,7 +32,7 @@ async function getVideoTitle() {
   return title.replace(' - YouTube', '');
 }
 
-export function App({}: AppProps) {
+export function App() {
   const status = useAppStore((state) => state.status);
   const generationId = useGifStore((state) => state.generationId);
   // const close = useAppStore((state) => state.close); // AppStore close is irrelevant now
@@ -97,7 +95,6 @@ export function App({}: AppProps) {
         </header>
         <div className={css.container}>
           <section className={css.config}>
-            <h1>test</h1>
             <ConfigurationPanel onSubmit={handleSubmit} />
           </section>
           <AnimatePresence>

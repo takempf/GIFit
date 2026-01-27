@@ -8,7 +8,7 @@ import css from './InputTime.module.css';
 const SPIN_INTERVAL = 150;
 
 // --- Helper: Debounce Hook (same as before) ---
-function useDebouncedCallback<A extends any[]>(
+function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number
 ): (...args: A) => void {

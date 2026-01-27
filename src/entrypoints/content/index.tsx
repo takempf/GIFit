@@ -45,7 +45,7 @@ export default defineContentScript({
 
     // --- Message Listener ---
     browser.runtime.onMessage.addListener(
-      (message: ExtensionMessage, sender, sendResponse) => {
+      (message: ExtensionMessage, _sender, _sendResponse) => {
         if (message.type === 'START_GIF') {
           if (!activeVideoElement) {
             log('No active video element found to start GIF');

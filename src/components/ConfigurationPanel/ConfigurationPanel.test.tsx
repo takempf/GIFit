@@ -1,21 +1,40 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
-import { vi, describe, beforeEach, test, expect, afterEach } from 'vitest';
+import {
+  vi,
+  describe,
+  beforeEach,
+  test,
+  expect,
+  afterEach,
+  Mock
+} from 'vitest';
 import { ConfigurationPanel } from './ConfigurationPanel';
-import { useConfigurationPanelStore } from '@/stores/configurationPanelStore';
+import {
+  useConfigurationPanelStore,
+  ConfigState,
+  ConfigActions
+} from '@/stores/configurationPanelStore';
 
 vi.mock('@/stores/configurationPanelStore');
 vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
 // Mock Input components to avoid complexity
 vi.mock('../Input/Input', () => ({
-  Input: (props: any) => <input aria-label={props.label} {...props} />
+  Input: (props: React.ComponentProps<'input'> & { label: string }) => (
+    <input aria-label={props.label} {...props} />
+  )
 }));
 vi.mock('../InputNumber/InputNumber', () => ({
-  InputNumber: (props: any) => (
+  InputNumber: (props: React.ComponentProps<'input'> & { label: string }) => (
     <input aria-label={props.label} type="number" {...props} />
   )
 }));
 vi.mock('../InputTime/InputTime', () => ({
-  InputTime: (props: any) => (
+  InputTime: (
+    props: React.ComponentProps<'input'> & {
+      label: string;
+      append?: React.ReactNode;
+    }
+  ) => (
     <div>
       <input aria-label={props.label} {...props} />
       {props.append}
@@ -23,10 +42,17 @@ vi.mock('../InputTime/InputTime', () => ({
   )
 }));
 vi.mock('../Button/Button', () => ({
-  Button: (props: any) => <button {...props}>{props.children}</button>
+  Button: (props: React.ComponentProps<'button'>) => (
+    <button {...props}>{props.children}</button>
+  )
 }));
 vi.mock('../ButtonToggle/ButtonToggle', () => ({
-  ButtonToggle: (props: any) => (
+  ButtonToggle: (props: {
+    label: string;
+    name: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+  }) => (
     <label>
       {props.label}
       <input
@@ -41,8 +67,8 @@ vi.mock('../ButtonToggle/ButtonToggle', () => ({
 
 describe('ConfigurationPanel', () => {
   const mockOnSubmit = vi.fn();
-  let mockConfigStoreState: any;
-  let mockConfigStoreActions: any;
+  let mockConfigStoreState: Partial<ConfigState>;
+  let mockConfigStoreActions: Partial<ConfigActions>;
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -69,13 +95,15 @@ describe('ConfigurationPanel', () => {
       fetchVideoMetadata: vi.fn(),
       syncStartToVideoTime: vi.fn()
     };
-    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions
     });
-    (useConfigurationPanelStore as any).getState = vi.fn(
-      () => mockConfigStoreState
-    );
+    (
+      useConfigurationPanelStore as unknown as {
+        getState: () => Partial<ConfigState>;
+      }
+    ).getState = vi.fn(() => mockConfigStoreState);
   });
 
   afterEach(() => {
@@ -84,20 +112,22 @@ describe('ConfigurationPanel', () => {
 
   test('renders correctly with initial values from store', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    expect(screen.getByLabelText('Start').value).toBe('0'); // InputTime mock renders value as is
-    expect(screen.getByLabelText('Duration').value).toBe(
+    expect((screen.getByLabelText('Start') as HTMLInputElement).value).toBe(
+      '0'
+    ); // InputTime mock renders value as is
+    expect((screen.getByLabelText('Duration') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.duration)
     );
-    expect(screen.getByLabelText('Width').value).toBe(
+    expect((screen.getByLabelText('Width') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.width)
     );
-    expect(screen.getByLabelText('Height').value).toBe(
+    expect((screen.getByLabelText('Height') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.height)
     );
-    expect(screen.getByLabelText('FPS').value).toBe(
+    expect((screen.getByLabelText('FPS') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.framerate)
     );
-    expect(screen.getByLabelText('Quality').value).toBe(
+    expect((screen.getByLabelText('Quality') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.quality)
     );
   });
@@ -145,7 +175,11 @@ describe('ConfigurationPanel', () => {
       videoWidth: 1280,
       videoHeight: 720
     };
-    (useConfigurationPanelStore as any).getState = vi.fn(() => submittedState);
+    (
+      useConfigurationPanelStore as unknown as {
+        getState: () => Partial<ConfigState>;
+      }
+    ).getState = vi.fn(() => submittedState);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
     fireEvent.click(screen.getByRole('button', { name: /Create GIF/i }));
     expect(mockOnSubmit).toHaveBeenCalledWith(submittedState);
@@ -157,7 +191,7 @@ describe('ConfigurationPanel', () => {
   });
 
   test('renders null if videoDuration is 0', () => {
-    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       videoDuration: 0
@@ -169,7 +203,7 @@ describe('ConfigurationPanel', () => {
   });
 
   test('duration input change seeks video', () => {
-    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 5
@@ -188,7 +222,7 @@ describe('ConfigurationPanel', () => {
   });
 
   test('max values for inputs are calculated correctly', () => {
-    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 10,

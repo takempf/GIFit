@@ -27,7 +27,14 @@ export function Progress() {
   const [videoElementHeight, setVideoElementHeight] = useState(0);
 
   const setStatus = useAppStore((state) => state.setStatus);
-  const videoElement = useAppStore((state) => state.videoElement);
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
+    null
+  );
+
+  useEffect(() => {
+    const el = document.querySelector('video');
+    setVideoElement(el);
+  }, []);
   const {
     result,
     processedFrameCount,

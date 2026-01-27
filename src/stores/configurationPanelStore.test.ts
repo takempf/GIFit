@@ -1,4 +1,4 @@
-import { vi, describe, beforeEach, afterEach, expect, it } from 'vitest';
+import { vi, describe, beforeEach, afterEach, expect, it, Mock } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useConfigurationPanelStore } from './configurationPanelStore';
 import { storedConfig } from '@/utils/storage';
@@ -43,15 +43,15 @@ const mockMetadata = {
 describe('useConfigurationPanelStore', () => {
   // Helper function to reset mocks and stores
   const resetMocksAndStores = async () => {
-    vi.mocked(storedConfig.width.getValue).mockResolvedValue(null);
-    vi.mocked(storedConfig.fps.getValue).mockResolvedValue(null);
-    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(null);
+    vi.mocked(storedConfig.width.getValue).mockResolvedValue(0);
+    vi.mocked(storedConfig.fps.getValue).mockResolvedValue(0);
+    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(0);
     vi.mocked(storedConfig.width.setValue).mockResolvedValue(undefined);
     vi.mocked(storedConfig.fps.setValue).mockResolvedValue(undefined);
     vi.mocked(storedConfig.quality.setValue).mockResolvedValue(undefined);
 
-    vi.mocked(browser.tabs.query).mockResolvedValue([{ id: 1 } as any]);
-    vi.mocked(browser.tabs.sendMessage).mockResolvedValue(null);
+    vi.mocked(browser.tabs.query).mockResolvedValue([{ id: 1 }] as never);
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue(undefined);
 
     act(() => {
       // Directly calling resetState which now internally calls loadInitialConfig
@@ -66,7 +66,9 @@ describe('useConfigurationPanelStore', () => {
   beforeEach(async () => {
     await resetMocksAndStores();
     // Simulate fetching metadata
-    vi.mocked(browser.tabs.sendMessage).mockResolvedValue(mockMetadata);
+    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
+      mockMetadata
+    );
     await act(async () => {
       await useConfigurationPanelStore.getState().fetchVideoMetadata();
     });
@@ -216,7 +218,7 @@ describe('useConfigurationPanelStore', () => {
   it('syncStartToVideoTime should update start time based on fetched metadata', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
 
-    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({
+    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue({
       ...mockMetadata,
       currentTime: 3.5
     });
@@ -249,7 +251,9 @@ describe('useConfigurationPanelStore', () => {
       currentTime: 10,
       aspectRatio: 1280 / 720
     };
-    vi.mocked(browser.tabs.sendMessage).mockResolvedValue(newMetadata);
+    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
+      newMetadata
+    );
 
     await act(async () => {
       await result.current.fetchVideoMetadata();

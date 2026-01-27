@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { clamp } from '@/utils/clamp';
 import { log } from '@/utils/logger';
 import { storedConfig } from '@/utils/storage';
 import { VideoMetadata } from '@/types';
