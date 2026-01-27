@@ -1,45 +1,135 @@
 import css from './App.module.css';
 
-import { useAppStore } from '@/stores/appStore';
+import { useCallback, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
+import { browser } from 'wxt/browser';
 
-import { Popup } from './Popup/Popup';
-import { AppLogo } from './AppLogo/AppLogo';
 import { AppFrame } from './AppFrame/AppFrame';
+import { AppLogo } from './AppLogo/AppLogo';
+import { ConfigurationPanel } from './ConfigurationPanel/ConfigurationPanel';
+import { Progress } from './Progress/Progress';
 
-import { log } from '@/utils/logger';
-import { AnimatePresence } from 'motion/react';
+import { useAppStore } from '@/stores/appStore';
+import { useGifStore } from '@/stores/gifGeneratorStore';
+
+import TKLogo from '@/assets/tk.svg';
+
+import { ExtensionMessage } from '@/types';
 
 interface AppProps extends Record<string, unknown> {}
 
-export function App({}: AppProps) {
-  const videoElement = useAppStore((state) => state.videoElement);
-  const isOpen = useAppStore((state) => state.isOpen);
-  const toggle = useAppStore((state) => state.toggle);
+interface FormValues {
+  start: number;
+  duration: number;
+  width: number;
+  height: number;
+  linkDimensions: boolean;
+  framerate: number;
+  quality: number;
+}
 
-  function handleClick() {
-    toggle();
-    videoElement?.pause();
-    log('Pausing video');
-  }
+async function getVideoTitle() {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+  const title = tabs[0]?.title ?? 'untitled';
+  return title.replace(' - YouTube', '');
+}
+
+export function App({}: AppProps) {
+  const status = useAppStore((state) => state.status);
+  const generationId = useGifStore((state) => state.generationId);
+  // const close = useAppStore((state) => state.close); // AppStore close is irrelevant now
+  const setStatus = useAppStore((state) => state.setStatus);
+  const setName = useGifStore((state) => state.setName);
+  const createGif = useGifStore((state) => state.createGif);
+  const updateProgress = useGifStore((state) => state.updateProgress);
+  const complete = useGifStore((state) => state.complete);
+  const setError = useGifStore((state) => state.setError);
+
+  // Listen for messages from content script
+  useEffect(() => {
+    const handleMessage = (message: ExtensionMessage) => {
+      if (message.type === 'GIF_PROGRESS') {
+        updateProgress(
+          message.progress,
+          message.frameCount,
+          message.thumbnailDataUrl
+        );
+      } else if (message.type === 'GIF_COMPLETE') {
+        complete(message.data);
+      } else if (message.type === 'GIF_ERROR') {
+        setError(message.error);
+      }
+    };
+
+    browser.runtime.onMessage.addListener(handleMessage);
+    return () => {
+      browser.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, [updateProgress, complete, setError]);
+
+  const handleSubmit = useCallback(
+    async function handleSubmit(formValues: FormValues) {
+      const start = formValues.start * 1000; // seconds to ms
+      const end = start + formValues.duration * 1000; // seconds to ms
+      const name = await getVideoTitle();
+
+      createGif({
+        name,
+        quality: formValues.quality,
+        width: formValues.width,
+        height: formValues.height,
+        start,
+        end,
+        fps: formValues.framerate
+      });
+
+      setName(name);
+      setStatus('generating');
+    },
+    [createGif, setName, setStatus]
+  );
 
   return (
-    <>
-      <AnimatePresence>
-        <div className={css.app}>
-          {!isOpen && (
-            <button
-              id="gifit-button"
-              className={css.gifitButton}
-              onClick={handleClick}
-              type="button">
-              <AppFrame variant="attached">
-                <AppLogo />
-              </AppFrame>
-            </button>
-          )}
+    <div className={css.app}>
+      <AppFrame>
+        <header>
+          <AppLogo />
+        </header>
+        <div className={css.container}>
+          <section className={css.config}>
+            <h1>test</h1>
+            <ConfigurationPanel onSubmit={handleSubmit} />
+          </section>
+          <AnimatePresence>
+            {status === 'generating' && (
+              <motion.section
+                key={`generation_${generationId}`}
+                className={css.generation}
+                initial={{ opacity: 0, pointerEvents: 'none' }}
+                animate={{ opacity: 1, pointerEvents: 'unset' }}
+                exit={{ opacity: 0, pointerEvents: 'none' }}
+                transition={{
+                  type: 'spring',
+                  stiffness: 300,
+                  damping: 20,
+                  mass: 1
+                }}>
+                <Progress />
+              </motion.section>
+            )}
+          </AnimatePresence>
         </div>
-        {isOpen && <Popup />}
-      </AnimatePresence>
-    </>
+        <footer>
+          <a
+            className={css.credit}
+            href="https://kempf.dev/#gifit"
+            target="_blank"
+            rel="noreferrer">
+            Crafted by <img className={css.tkLogo} src={TKLogo} />
+          </a>
+          <span className={css.version}>v3.0.0</span>
+        </footer>
+      </AppFrame>
+    </div>
   );
 }

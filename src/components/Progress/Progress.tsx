@@ -44,8 +44,7 @@ export function Progress() {
     frameCount
   );
 
-  const imageUrl: string | undefined =
-    result?.blob && URL.createObjectURL(result.blob);
+  const imageUrl: string | undefined = result?.dataUrl;
   const progressElementsStyle: CSSProperties | undefined = {
     aspectRatio: `auto ${width} / ${height}`
   };

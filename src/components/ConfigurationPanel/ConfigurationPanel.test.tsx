@@ -1,64 +1,52 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi, describe, beforeEach, test, expect, afterEach } from 'vitest';
-import ConfigurationPanel from './ConfigurationPanel';
-// import { secondsToTimecode } from '@/utils/secondsToTimecode'; // Not directly used
-import { useAppStore } from '@/stores/appStore';
+import { ConfigurationPanel } from './ConfigurationPanel';
 import { useConfigurationPanelStore } from '@/stores/configurationPanelStore';
-import { createMockVideoElement } from '@/test-utils/testHelpers';
-
-vi.mock('@/stores/appStore', async () => {
-  const actualAppStoreModule = await vi.importActual('@/stores/appStore');
-  const { createMockVideoElement: createMockVideoElementInFactory } =
-    await import('@/test-utils/testHelpers');
-  const mockVideoEl = createMockVideoElementInFactory();
-  const mockGetState = vi.fn(() => ({
-    videoElement: mockVideoEl,
-    isOpen: true,
-    status: 'configuring'
-  }));
-  const mockSubscribe = vi.fn(() => () => {});
-  const mockSetState = vi.fn();
-  const mockHook = vi.fn((selector) => selector(mockGetState()));
-  Object.assign(mockHook, {
-    getState: mockGetState,
-    setState: mockSetState,
-    subscribe: mockSubscribe,
-    ...Object.fromEntries(
-      Object.entries(actualAppStoreModule.useAppStore).filter(
-        ([, value]) => typeof value !== 'function'
-      )
-    )
-  });
-  return { useAppStore: mockHook, __mockGetState: mockGetState };
-});
 
 vi.mock('@/stores/configurationPanelStore');
 vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
+// Mock Input components to avoid complexity
+vi.mock('../Input/Input', () => ({
+  Input: (props: any) => <input aria-label={props.label} {...props} />
+}));
+vi.mock('../InputNumber/InputNumber', () => ({
+  InputNumber: (props: any) => (
+    <input aria-label={props.label} type="number" {...props} />
+  )
+}));
+vi.mock('../InputTime/InputTime', () => ({
+  InputTime: (props: any) => (
+    <div>
+      <input aria-label={props.label} {...props} />
+      {props.append}
+    </div>
+  )
+}));
+vi.mock('../Button/Button', () => ({
+  Button: (props: any) => <button {...props}>{props.children}</button>
+}));
+vi.mock('../ButtonToggle/ButtonToggle', () => ({
+  ButtonToggle: (props: any) => (
+    <label>
+      {props.label}
+      <input
+        type="checkbox"
+        name={props.name}
+        checked={props.checked}
+        onChange={() => props.onChange(!props.checked)}
+      />
+    </label>
+  )
+}));
 
 describe('ConfigurationPanel', () => {
-  let mockVideoElement: HTMLVideoElement;
   const mockOnSubmit = vi.fn();
   let mockConfigStoreState: any;
   let mockConfigStoreActions: any;
-  let appStoreMockGetState: vi.Mock;
 
   beforeEach(async () => {
-    const appStoreMock = await import('@/stores/appStore');
-    // @ts-ignore
-    appStoreMockGetState = appStoreMock.__mockGetState;
     vi.clearAllMocks();
-    mockVideoElement = createMockVideoElement(); // Default readyState is 1
-    appStoreMockGetState.mockReturnValue({
-      videoElement: mockVideoElement,
-      isOpen: true,
-      status: 'configuring'
-    });
-    (useAppStore as unknown as vi.Mock).mockImplementation(
-      (selector?: (state: any) => any) => {
-        const currentState = appStoreMockGetState();
-        return selector ? selector(currentState) : currentState;
-      }
-    );
+
     mockConfigStoreState = {
       start: 0,
       duration: 2,
@@ -75,11 +63,13 @@ describe('ConfigurationPanel', () => {
     mockConfigStoreActions = {
       handleInputChange: vi.fn(),
       handleVideoLoadedData: vi.fn(),
-      handleSetStartToCurrentTime: vi.fn(),
+      handleSetStartToCurrentTime: vi.fn(), // Removed from component usage, but kept in store interface
       seekVideo: vi.fn(),
-      resetState: vi.fn()
+      resetState: vi.fn(),
+      fetchVideoMetadata: vi.fn(),
+      syncStartToVideoTime: vi.fn()
     };
-    (useConfigurationPanelStore as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions
     });
@@ -94,7 +84,7 @@ describe('ConfigurationPanel', () => {
 
   test('renders correctly with initial values from store', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    expect(screen.getByLabelText('Start').value).toBe('0:00.0');
+    expect(screen.getByLabelText('Start').value).toBe('0'); // InputTime mock renders value as is
     expect(screen.getByLabelText('Duration').value).toBe(
       String(mockConfigStoreState.duration)
     );
@@ -123,24 +113,25 @@ describe('ConfigurationPanel', () => {
     });
   });
 
-  test('calls store action on start time change and seeks video', () => {
+  test('calls syncStartToVideoTime on "Now" button click', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    act(() => {
-      mockVideoElement.currentTime = 25;
-    });
     fireEvent.click(screen.getByRole('button', { name: /Now/i }));
-    expect(
-      mockConfigStoreActions.handleSetStartToCurrentTime
-    ).toHaveBeenCalledWith({ currentTime: 25 });
+    expect(mockConfigStoreActions.syncStartToVideoTime).toHaveBeenCalled();
   });
 
   test('calls store action on link dimensions toggle', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    // The ButtonToggle contains an input checkbox with name="linkDimensions"
-    const linkCheckbox = screen.getByRole('checkbox', {
-      name: 'linkDimensions'
-    });
-    fireEvent.click(linkCheckbox);
+    // The mocked ButtonToggle uses a checkbox
+    // Searching for checkbox with name="linkDimensions" might not find it by role easily with my mock.
+    // The mock is: <label>{props.label}<input type="checkbox" ... /></label>
+    // But props.label is undefined in the component usage?
+    // In component: <ButtonToggle ... name="linkDimensions" ... >
+    // Let's find by type checkbox
+    const linkCheckbox = screen
+      .getAllByRole('checkbox')
+      .find((el) => el.getAttribute('name') === 'linkDimensions');
+    expect(linkCheckbox).toBeDefined();
+    fireEvent.click(linkCheckbox!);
     expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
       name: 'linkDimensions',
       value: !mockConfigStoreState.linkDimensions
@@ -150,9 +141,9 @@ describe('ConfigurationPanel', () => {
   test('submits form with current config from store', () => {
     const submittedState = {
       ...mockConfigStoreState,
-      videoDuration: mockVideoElement.duration,
-      videoWidth: mockVideoElement.videoWidth,
-      videoHeight: mockVideoElement.videoHeight
+      videoDuration: 100,
+      videoWidth: 1280,
+      videoHeight: 720
     };
     (useConfigurationPanelStore as any).getState = vi.fn(() => submittedState);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
@@ -160,52 +151,17 @@ describe('ConfigurationPanel', () => {
     expect(mockOnSubmit).toHaveBeenCalledWith(submittedState);
   });
 
-  test('handles video loaded metadata callback', () => {
-    // Ensure videoElement for this test has readyState >= 1 from the start
-    // to test the direct call path in useEffect.
-    mockVideoElement = createMockVideoElement(0, 120, 1920, 1080, 1); // readyState is 1
-    appStoreMockGetState.mockReturnValue({
-      videoElement: mockVideoElement,
-      isOpen: true,
-      status: 'configuring'
-    });
-    (useAppStore as unknown as vi.Mock).mockImplementation(
-      (selector?: (state: any) => any) => selector(appStoreMockGetState())
-    );
-
+  test('fetches video metadata on mount', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-
-    // The useEffect should call handleVideoLoadedData directly because readyState is 1
-    expect(mockConfigStoreActions.handleVideoLoadedData).toHaveBeenCalledWith({
-      aspectRatio: 1920 / 1080,
-      duration: 120,
-      videoWidth: 1920,
-      videoHeight: 1080
-    });
+    expect(mockConfigStoreActions.fetchVideoMetadata).toHaveBeenCalled();
   });
 
-  test('cleans up "loadedmetadata" event listener on unmount', () => {
-    const { unmount } = render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    expect(mockVideoElement.addEventListener).toHaveBeenCalledWith(
-      'loadedmetadata',
-      expect.any(Function)
-    );
-    unmount();
-    expect(mockVideoElement.removeEventListener).toHaveBeenCalledWith(
-      'loadedmetadata',
-      expect.any(Function)
-    );
-  });
-
-  test('renders null if no video element', () => {
-    appStoreMockGetState.mockReturnValue({
-      videoElement: null,
-      isOpen: true,
-      status: 'configuring'
+  test('renders null if videoDuration is 0', () => {
+    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
+      ...mockConfigStoreState,
+      ...mockConfigStoreActions,
+      videoDuration: 0
     });
-    (useAppStore as unknown as vi.Mock).mockImplementation(
-      (selector?: (state: any) => any) => selector(appStoreMockGetState())
-    );
     const { container } = render(
       <ConfigurationPanel onSubmit={mockOnSubmit} />
     );
@@ -213,7 +169,7 @@ describe('ConfigurationPanel', () => {
   });
 
   test('duration input change seeks video', () => {
-    (useConfigurationPanelStore as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 5
@@ -232,27 +188,18 @@ describe('ConfigurationPanel', () => {
   });
 
   test('max values for inputs are calculated correctly', () => {
-    (useConfigurationPanelStore as vi.Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as vi.Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 10,
       duration: 5,
       videoDuration: 60,
-      videoWidth: 1920,
-      videoHeight: 1080
+      videoWidth: 1920, // configVideoWidth
+      videoHeight: 1080 // configVideoHeight
     });
-    mockVideoElement = createMockVideoElement(10, 60, 1920, 1080);
-    appStoreMockGetState.mockReturnValue({
-      videoElement: mockVideoElement,
-      isOpen: true,
-      status: 'configuring'
-    });
-    (useAppStore as unknown as vi.Mock).mockImplementation(
-      (selector?: (state: any) => any) => selector(appStoreMockGetState())
-    );
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
     expect(screen.getByLabelText('Duration')).toHaveAttribute('max', '30');
-    expect(screen.getByLabelText('Width')).toHaveAttribute('max', '1920');
-    expect(screen.getByLabelText('Height')).toHaveAttribute('max', '1080');
+    expect(screen.getByLabelText('Width')).toHaveAttribute('max', '1920'); // calculated from configVideoWidth
+    expect(screen.getByLabelText('Height')).toHaveAttribute('max', '1080'); // calculated from configVideoHeight
   });
 });

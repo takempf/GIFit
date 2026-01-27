@@ -8,23 +8,9 @@ const MAX_QUALITY = 10;
 
 // --- Configuration and Event Data Interfaces ---
 
-export interface GifConfig {
-  name: string;
-  quality: number; // 1 (lowest) - 10 (highest)
-  width: number;
-  height: number;
-  start: number; // ms
-  end: number; // ms
-  fps: number;
-  maxColors?: number; // 2 - 256 (user-provided, validated)
-  noDither?: boolean; // If true, use nearest color, no dithering
-}
+import { GifConfig, GifCompleteData } from '@/types';
 
-export interface GifCompleteData {
-  blob: Blob;
-  width: number;
-  height: number;
-}
+// --- Configuration and Event Data Interfaces ---
 
 export interface IndexingOptions {
   noDither?: boolean;
@@ -157,10 +143,17 @@ class GifService extends EventEmitter {
       }
 
       // Finalize GIF
+      // Finalize GIF
       const blob = this.finalizeGif();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
 
       const gifData = {
-        blob,
+        dataUrl,
         width: config.width,
         height: config.height
       };
@@ -475,7 +468,7 @@ class GifService extends EventEmitter {
 
     this.encoder.finish();
     const buffer = this.encoder.bytesView();
-    const imageBlob = new Blob([buffer], { type: 'image/gif' });
+    const imageBlob = new Blob([buffer as any], { type: 'image/gif' });
 
     return imageBlob;
   }

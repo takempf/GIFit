@@ -1,7 +1,6 @@
 import css from './ConfigurationPanel.module.css';
 import { useEffect } from 'react';
 
-import { useAppStore } from '@/stores/appStore';
 import {
   useConfigurationPanelStore,
   type ConfigState
@@ -20,8 +19,7 @@ interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
 }
 
-function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
-  const video = useAppStore((state) => state.videoElement);
+export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const {
     start,
     duration,
@@ -34,58 +32,21 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     videoWidth: configVideoWidth, // Renamed to avoid conflict with component's width
     videoHeight: configVideoHeight, // Renamed to avoid conflict with component's height
     handleInputChange: storeHandleInputChange,
-    handleVideoLoadedData,
-    // handleVideoSeeked, // Not directly used for state change in component
-    handleSetStartToCurrentTime,
     seekVideo,
-    resetState
+    fetchVideoMetadata,
+    syncStartToVideoTime
   } = useConfigurationPanelStore();
 
   useEffect(() => {
-    // Reset store state when component mounts or video element changes significantly
-    // This is now primarily handled by the store's subscription to appStore.
-    // However, an initial reset on mount might still be desired if the video element
-    // is already present when the component mounts.
-    if (video) {
-      resetState(video);
-    }
-  }, [video, resetState]);
+    fetchVideoMetadata();
+  }, [fetchVideoMetadata]);
 
-  useEffect(() => {
-    if (!(video instanceof HTMLVideoElement)) {
-      return;
-    }
-
-    function handleLoadedMetadataCallback() {
-      if (video) {
-        // Ensure video is still valid
-        handleVideoLoadedData({
-          aspectRatio: video.videoWidth / video.videoHeight,
-          duration: video.duration,
-          videoWidth: video.videoWidth,
-          videoHeight: video.videoHeight
-        });
-      }
-    }
-
-    // Initial call in case metadata is already loaded
-    if (video.readyState >= 1) {
-      // HAVE_METADATA or higher
-      handleLoadedMetadataCallback();
-    }
-    video.addEventListener('loadedmetadata', handleLoadedMetadataCallback);
-
-    return () => {
-      video.removeEventListener('loadedmetadata', handleLoadedMetadataCallback);
-    };
-  }, [video, handleVideoLoadedData]);
-
-  if (!video) {
+  if (videoDuration === 0) {
     return null; // Or some placeholder/loading UI
   }
 
-  const maxWidth = Math.min(configVideoWidth || video.videoWidth, 1920);
-  const maxHeight = Math.min(configVideoHeight || video.videoHeight, 1080); // Corrected to Math.min
+  const maxWidth = Math.min(configVideoWidth, 1920);
+  const maxHeight = Math.min(configVideoHeight, 1080);
   const maxStart = Math.max(0, videoDuration - duration); // Ensure maxStart is not negative
   const maxDuration = Math.min(videoDuration - start, 30);
 
@@ -160,9 +121,7 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   }
 
   function handleSetStartToCurrentTimeClick() {
-    if (video) {
-      handleSetStartToCurrentTime({ currentTime: video.currentTime });
-    }
+    syncStartToVideoTime();
   }
 
   return (
@@ -271,5 +230,3 @@ function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     </div>
   );
 }
-
-export default ConfigurationPanel;
