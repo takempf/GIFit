@@ -8,6 +8,15 @@
   height: 600px;
 }
 
+.generation {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.95);
+  z-index: 100;
+  padding: 2em;
+  backdrop-filter: blur(5px);
+}
+
 .gifitButton {
   font-size: 0.8em;
   padding: 0;

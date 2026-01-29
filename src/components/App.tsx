@@ -87,7 +87,7 @@ export function App() {
   );
 
   return (
-    <div className={css.app}>
+    <div className={css.app} data-status={status}>
       <header>
         <AppLogo />
       </header>
@@ -96,9 +96,11 @@ export function App() {
           <ConfigurationPanel onSubmit={handleSubmit} />
         </section>
 
-        <section className={css.generation}>
-          <Progress />
-        </section>
+        {status === 'generating' && (
+          <section className={css.generation}>
+            <Progress />
+          </section>
+        )}
       </div>
       <footer>
         <a
