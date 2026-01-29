@@ -11,6 +11,7 @@ import { InputNumber } from '../InputNumber/InputNumber';
 import { InputTime } from '../InputTime/InputTime';
 import { Button } from '../Button/Button';
 import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
+import { Timeline } from '../Timeline/Timeline';
 
 import LinkIcon from '@/assets/link.svg?react';
 import LinkEmptyIcon from '@/assets/link-empty.svg?react';
@@ -211,6 +212,22 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           value={String(framerate)}
           onChange={handleGenericInputChange}
           data-testid="fps-input"
+        />
+        <Timeline
+          className={css.timeline}
+          totalDuration={videoDuration}
+          startTime={start}
+          duration={duration}
+          fps={framerate}
+          onStartTimeChange={handleStartTimeChange}
+          onDurationChange={(newDuration) => {
+            storeHandleInputChange({
+              name: 'duration',
+              value: newDuration
+            });
+            const end = start + newDuration;
+            seekVideo(end);
+          }}
         />
         <Input
           className={css.quality}

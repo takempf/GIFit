@@ -75,21 +75,15 @@ export const progressContainerTransition = {
 export const resultImageVariants: Variants = {
   initial: {
     opacity: 0,
-    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
-    y: '0px',
-    scale: 1
+    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
   },
   animate: {
     opacity: 1,
-    boxShadow: 'rgba(0, 0, 0, 0.25) 0px 20px 8px -10px',
-    y: '-25px',
-    scale: 1.2
+    boxShadow: 'rgba(0, 0, 0, 0.25) 0px 20px 8px -10px'
   },
   exit: {
     opacity: 0,
-    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px',
-    y: '0px',
-    scale: 1
+    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
   }
 };
 

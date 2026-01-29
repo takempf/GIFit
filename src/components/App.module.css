@@ -1,4 +1,11 @@
 .app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em;
+  width: 800px;
+  height: 600px;
 }
 
 .gifitButton {

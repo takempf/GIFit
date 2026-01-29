@@ -4,7 +4,6 @@ import { useCallback, useEffect } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { browser } from 'wxt/browser';
 
-import { AppFrame } from './AppFrame/AppFrame';
 import { AppLogo } from './AppLogo/AppLogo';
 import { ConfigurationPanel } from './ConfigurationPanel/ConfigurationPanel';
 import { Progress } from './Progress/Progress';
@@ -89,44 +88,28 @@ export function App() {
 
   return (
     <div className={css.app}>
-      <AppFrame>
-        <header>
-          <AppLogo />
-        </header>
-        <div className={css.container}>
-          <section className={css.config}>
-            <ConfigurationPanel onSubmit={handleSubmit} />
-          </section>
-          <AnimatePresence>
-            {status === 'generating' && (
-              <motion.section
-                key={`generation_${generationId}`}
-                className={css.generation}
-                initial={{ opacity: 0, pointerEvents: 'none' }}
-                animate={{ opacity: 1, pointerEvents: 'unset' }}
-                exit={{ opacity: 0, pointerEvents: 'none' }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 300,
-                  damping: 20,
-                  mass: 1
-                }}>
-                <Progress />
-              </motion.section>
-            )}
-          </AnimatePresence>
-        </div>
-        <footer>
-          <a
-            className={css.credit}
-            href="https://kempf.dev/#gifit"
-            target="_blank"
-            rel="noreferrer">
-            Crafted by <img className={css.tkLogo} src={TKLogo} />
-          </a>
-          <span className={css.version}>v3.0.0</span>
-        </footer>
-      </AppFrame>
+      <header>
+        <AppLogo />
+      </header>
+      <div className={css.container}>
+        <section className={css.config}>
+          <ConfigurationPanel onSubmit={handleSubmit} />
+        </section>
+
+        <section className={css.generation}>
+          <Progress />
+        </section>
+      </div>
+      <footer>
+        <a
+          className={css.credit}
+          href="https://kempf.dev/#gifit"
+          target="_blank"
+          rel="noreferrer">
+          Crafted by <img className={css.tkLogo} src={TKLogo} />
+        </a>
+        <span className={css.version}>v3.0.0</span>
+      </footer>
     </div>
   );
 }

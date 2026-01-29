@@ -14,6 +14,7 @@
   align-items: center;
   gap: 0.25em;
   background-color: rgba(255, 255, 255, 0.45);
+  color: rgba(0, 0, 0, 0.5);
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.6);

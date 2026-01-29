@@ -1,0 +1,94 @@
+.timeline {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100px; /* Default height, can be overridden */
+  border: 1px solid var(--border-color, #ccc);
+  background-color: var(--background-color, #1a1a1a);
+  color: #eee;
+  user-select: none;
+}
+
+.scrollContainer {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.interior {
+  position: relative;
+  height: 100%;
+  /* width will be set via inline styles */
+}
+
+/* Ticks Layer */
+.secondMarker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid #555;
+  font-size: 10px;
+  padding-left: 4px;
+  pointer-events: none;
+}
+
+.frameMarker {
+  position: absolute;
+  bottom: 0;
+  height: 20%;
+  border-left: 1px solid #333;
+  pointer-events: none;
+}
+
+/* Selection Rectangle */
+.selection {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  background-color: rgba(50, 150, 255, 0.3);
+  border: 1px solid #3296ff;
+  border-radius: 4px;
+  /* z-index to stay above ticks? or below? usually above. */
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden; /* logic for children frames */
+}
+
+.selectionFrame {
+  flex: 1; /* evenly distribute */
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  height: 100%;
+}
+
+/* Handles */
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background-color: #3296ff;
+  cursor: ew-resize;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handleLeft {
+  left: -5px; /* Half width to center on edge */
+}
+
+.handleRight {
+  right: -5px;
+}
+
+.handle::after {
+  content: '';
+  width: 2px;
+  height: 12px;
+  background-color: white;
+  border-radius: 1px;
+}

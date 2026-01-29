@@ -8,12 +8,12 @@
 
 .form {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
-    'start duration'
-    'width height'
-    'fps quality'
-    'submit submit';
+    'width height quality'
+    'start duration fps'
+    'timeline timeline timeline'
+    'submit submit submit';
   gap: 1px;
   background: rgba(225, 225, 225, 0.69);
   border-radius: var(--border-radius);
@@ -57,6 +57,12 @@
 
 .quality {
   grid-area: quality;
+}
+
+.timeline {
+  grid-area: timeline;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5); /* Optional separation */
+  background: rgba(0, 0, 0, 0.1); /* Slight contrast to container */
 }
 
 .submit {
