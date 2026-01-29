@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { Timeline } from './Timeline';
 import { vi, describe, it, expect } from 'vitest';
 
@@ -42,5 +42,36 @@ describe('Timeline', () => {
     const { getByTestId } = render(<Timeline {...defaultProps} />);
     expect(getByTestId('handle-left')).toBeInTheDocument();
     expect(getByTestId('handle-right')).toBeInTheDocument();
+  });
+  it('updates startTime when clicking on background', () => {
+    const onStartTimeChange = vi.fn();
+    const props = { ...defaultProps, onStartTimeChange };
+    const { getByTestId } = render(<Timeline {...props} />);
+
+    const interior = getByTestId('timeline-interior');
+    const scrollContainer = getByTestId('scroll-container');
+
+    // Mock getBoundingClientRect
+    // Simulating a container starting at x=100
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      top: 0,
+      width: 500,
+      height: 100,
+      bottom: 100,
+      right: 600,
+      x: 100,
+      y: 0,
+      toJSON: () => {}
+    });
+
+    // Click at 220px on screen.
+    // relativeX = 220 - 100 + 0 (scroll) = 120px.
+    // pixelsPerFrame = 120 / 10(fps) = 12px/frame.
+    // frames = 120 / 12 = 10 frames.
+    // time = 10 / 10 = 1.0s.
+    fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
+
+    expect(onStartTimeChange).toHaveBeenCalledWith(1);
   });
 });

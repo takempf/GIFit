@@ -185,6 +185,7 @@ export function Timeline({
   // Handle Mouse Down on Selection Body
   const handleSelectionMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!scrollRef.current) return;
 
     // Check if we are interacting with a handle by checking target?
@@ -198,6 +199,25 @@ export function Timeline({
     dragOffsetRef.current = relativeX - currentLeftPixel;
 
     setIsDragging('move');
+  };
+
+  const handleBackgroundMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+
+    const rect = scrollRef.current.getBoundingClientRect();
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const relativeX = e.clientX - rect.left + scrollLeft;
+
+    const rawFrameCount = Math.round(relativeX / pixelsPerFrame);
+    let newStart = rawFrameCount / fps;
+
+    // Clamp to valid range
+    newStart = Math.max(0, newStart);
+    newStart = Math.min(newStart, totalDuration - duration);
+
+    if (newStart !== startTime) {
+      onStartTimeChange(newStart);
+    }
   };
 
   // Generate Ticks
@@ -260,7 +280,11 @@ export function Timeline({
         className={styles.scrollContainer}
         ref={scrollRef}
         data-testid="scroll-container">
-        <div className={styles.interior} style={{ width: `${totalWidth}px` }}>
+        <div
+          className={styles.interior}
+          style={{ width: `${totalWidth}px` }}
+          onMouseDown={handleBackgroundMouseDown}
+          data-testid="timeline-interior">
           {/* Ticks Layer */}
           {renderTicks}
 
