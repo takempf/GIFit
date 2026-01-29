@@ -26,79 +26,92 @@ export function Timeline({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Dragging State
-  const [isDragging, setIsDragging] = useState<'left' | 'right' | null>(null);
+  const [isDragging, setIsDragging] = useState<
+    'left' | 'right' | 'move' | null
+  >(null);
+  const dragOffsetRef = useRef<number>(0);
 
   // Calculate specific widths
   const pixelsPerFrame = PIXELS_PER_SECOND / fps;
   const totalWidth = totalDuration * PIXELS_PER_SECOND;
 
+  // Store latest props in ref to avoid re-running effect on every prop change
+  const propsRef = useRef({
+    startTime,
+    duration,
+    totalDuration,
+    fps,
+    onStartTimeChange,
+    onDurationChange,
+    pixelsPerFrame: PIXELS_PER_SECOND / fps
+  });
+
+  // Update ref on every render
+  propsRef.current = {
+    startTime,
+    duration,
+    totalDuration,
+    fps,
+    onStartTimeChange,
+    onDurationChange,
+    pixelsPerFrame: PIXELS_PER_SECOND / fps
+  };
+
+  const autoScrollSpeedRef = useRef<number>(0);
+  const lastMousePosRef = useRef<number | null>(null);
+
   // Handlers for Dragging
   useEffect(() => {
     if (!isDragging) return;
 
-    const handleMouseMove = (e: MouseEvent) => {
+    let animationFrameId: number;
+
+    const updateDragState = (clientX: number) => {
       if (!scrollRef.current) return;
+
+      const {
+        startTime,
+        duration,
+        totalDuration,
+        fps,
+        onStartTimeChange,
+        onDurationChange,
+        pixelsPerFrame
+      } = propsRef.current;
 
       // Calculate mouse position relative to the scroll content
       const rect = scrollRef.current.getBoundingClientRect();
       const scrollLeft = scrollRef.current.scrollLeft;
-      // We want X relative to the *content*, so we add scrollLeft
-      // But getBoundingClientRect includes the blocked-out part?
-      // Actually: clientX - rect.left gives x relative to viewport of element.
-      // plus scrollLeft gives x relative to content start.
+      const relativeX = clientX - rect.left + scrollLeft;
 
-      const relativeX = e.clientX - rect.left + scrollLeft;
-
-      // Snap to frame
+      // Snap to frame (used for handles)
       const rawFrameCount = Math.round(relativeX / pixelsPerFrame);
       const snappedTime = rawFrameCount / fps;
 
       // Current End Time (fixed if dragging left)
       const currentEndTime = startTime + duration;
+      const minDuration = 1 / fps;
 
-      if (isDragging === 'left') {
-        // Dragging left handle changes startTime.
-        // Constraint: 0 <= newStart < currentEndTime
-        // Minimal selection: 1 frame?
-        const minDuration = 1 / fps;
-        let newStart = Math.max(0, snappedTime);
-        newStart = Math.min(newStart, currentEndTime - minDuration);
-
+      if (isDragging === 'move') {
+        const proposedLeftBytes = relativeX - dragOffsetRef.current;
+        const snappedLeftFrame = Math.round(proposedLeftBytes / pixelsPerFrame);
+        let newStart = snappedLeftFrame / fps;
+        newStart = Math.max(0, newStart);
+        newStart = Math.min(newStart, totalDuration - duration);
         if (newStart !== startTime) {
           onStartTimeChange(newStart);
-          // Also need to update duration if we want end time to stay fixed
-          // Since prop is 'duration', and start time changed, we must update duration
-          // to keep the right edge in place?
-          // Actually, usually onStartTimeChange is just setting the start property.
-          // If the parent manages state, updating Start without updating Duration
-          // would shift the whole block (Start moves, Duration constant -> End moves).
-          // But typical timeline interaction: Left handle moves left edge only.
-          // So we likely need to notify parent to update Duration too?
-          // The prompt says: "modifies the startTime", "modifies the duration".
-          // If I drag left handle, I strictly modify start time.
-          // If I simply set StartTime, and Duration remains constant, the block slides.
-          // That is usually NOT what a "handle" does (that's what dragging the body does).
-          // A handle resizes.
-          // So I should probably calculate the new duration as well?
-          // But the prop only asks for `onStartTimeChange`.
-          // I will assume the parent handles the logic or I should call both?
-          // Prompt: "It should have a handle on the left that, when dragged, modifies the startTime"
-          // Let's assume for now that changing startTime implies the user wants to shift the start.
-          // If the user meant "resize", they might have implied updating duration too.
-          // Given "modifies duration" is explicitly on the RIGHT handle,
-          // I will assume Left Handle -> Resize Left.
-          // So: New Duration = Old End - New Start.
+        }
+      } else if (isDragging === 'left') {
+        let newStart = Math.max(0, snappedTime);
+        newStart = Math.min(newStart, currentEndTime - minDuration);
+        if (newStart !== startTime) {
+          onStartTimeChange(newStart);
           const newDuration = currentEndTime - newStart;
-          onDurationChange(newDuration); // Call this too?
+          onDurationChange(newDuration);
         }
       } else if (isDragging === 'right') {
-        // Dragging right handle changes duration.
-        // Constraint: newEnd <= totalDuration
-        // newEnd > startTime
-        const minDuration = 1 / fps;
         let newEnd = Math.max(startTime + minDuration, snappedTime);
         newEnd = Math.min(newEnd, totalDuration);
-
         const newDuration = newEnd - startTime;
         if (newDuration !== duration) {
           onDurationChange(newDuration);
@@ -106,8 +119,57 @@ export function Timeline({
       }
     };
 
+    const performAutoScroll = () => {
+      if (autoScrollSpeedRef.current !== 0 && scrollRef.current) {
+        scrollRef.current.scrollLeft += autoScrollSpeedRef.current;
+        // If we adhere to "continuous update" while scrolling, we should technically
+        // re-run the drag logic here so the selection moves *with* the scroll
+        // even if the mouse doesn't move. But simplistically, if the mouse moves
+        // (which it usually does slightly) it triggers handleMouseMove.
+        // However, if holding still at edge, we want selection to update.
+        if (lastMousePosRef.current !== null) {
+          updateDragState(lastMousePosRef.current);
+        }
+      }
+      animationFrameId = requestAnimationFrame(performAutoScroll);
+    };
+
+    // Start the loop
+    performAutoScroll();
+
+    const handleMouseMove = (e: MouseEvent) => {
+      lastMousePosRef.current = e.clientX;
+      updateDragState(e.clientX);
+
+      // Check for auto-scroll
+      if (!scrollRef.current) return;
+      const rect = scrollRef.current.getBoundingClientRect();
+      const edgeThreshold = 50; // pixels from edge to trigger scroll
+      const maxScrollSpeed = 10; // pixels per frame
+
+      if (e.clientX < rect.left + edgeThreshold) {
+        // Scroll Left
+        // intensity 0 to 1 based on how close to edge
+        const intensity = Math.max(
+          0,
+          (rect.left + edgeThreshold - e.clientX) / edgeThreshold
+        );
+        autoScrollSpeedRef.current = -intensity * maxScrollSpeed;
+      } else if (e.clientX > rect.right - edgeThreshold) {
+        // Scroll Right
+        const intensity = Math.max(
+          0,
+          (e.clientX - (rect.right - edgeThreshold)) / edgeThreshold
+        );
+        autoScrollSpeedRef.current = intensity * maxScrollSpeed;
+      } else {
+        autoScrollSpeedRef.current = 0;
+      }
+    };
+
     const handleMouseUp = () => {
       setIsDragging(null);
+      autoScrollSpeedRef.current = 0;
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -116,17 +178,27 @@ export function Timeline({
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      cancelAnimationFrame(animationFrameId);
     };
-  }, [
-    isDragging,
-    startTime,
-    duration,
-    totalDuration,
-    fps,
-    pixelsPerFrame,
-    onStartTimeChange,
-    onDurationChange
-  ]);
+  }, [isDragging]);
+
+  // Handle Mouse Down on Selection Body
+  const handleSelectionMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!scrollRef.current) return;
+
+    // Check if we are interacting with a handle by checking target?
+    // Actually, handles have stopPropagation, so we don't need to check here.
+
+    const rect = scrollRef.current.getBoundingClientRect();
+    const scrollLeft = scrollRef.current.scrollLeft;
+    const relativeX = e.clientX - rect.left + scrollLeft;
+
+    const currentLeftPixel = startTime * PIXELS_PER_SECOND;
+    dragOffsetRef.current = relativeX - currentLeftPixel;
+
+    setIsDragging('move');
+  };
 
   // Generate Ticks
   // Using useMemo to avoid re-calculating on every render if not needed
@@ -196,6 +268,7 @@ export function Timeline({
           <div
             className={styles.selection}
             style={selectionStyle}
+            onMouseDown={handleSelectionMouseDown}
             data-testid="selection-rect">
             {/* Frames Visual */}
             {selectionFrames}

@@ -1,6 +1,5 @@
 import css from './ConfigurationPanel.module.css';
-import { useEffect } from 'react';
-
+import { useEffect, useRef, useCallback } from 'react';
 import {
   useConfigurationPanelStore,
   type ConfigState
@@ -15,6 +14,31 @@ import { Timeline } from '../Timeline/Timeline';
 
 import LinkIcon from '@/assets/link.svg?react';
 import LinkEmptyIcon from '@/assets/link-empty.svg?react';
+
+// --- Helper: Debounce Hook ---
+function useDebouncedCallback<A extends unknown[]>(
+  callback: (...args: A) => void,
+  delay: number
+): (...args: A) => void {
+  const callbackRef = useRef(callback);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  return useCallback(
+    (...args: A) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        callbackRef.current(...args);
+      }, delay);
+    },
+    [delay]
+  );
+}
 
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
@@ -37,6 +61,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     fetchVideoMetadata,
     syncStartToVideoTime
   } = useConfigurationPanelStore();
+
+  const debouncedSeekVideo = useDebouncedCallback((time: number) => {
+    seekVideo(time);
+  }, 1000);
 
   useEffect(() => {
     fetchVideoMetadata();
@@ -79,7 +107,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
     if (fieldName === 'duration') {
       const end = start + numericValue;
-      seekVideo(end);
+      debouncedSeekVideo(end);
     }
   }
 
@@ -88,7 +116,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       name: 'start',
       value: newStart
     });
-    seekVideo(newStart);
+    debouncedSeekVideo(newStart);
   }
 
   function handleLinkToggleChange(isLinked: boolean) {
@@ -226,7 +254,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
               value: newDuration
             });
             const end = start + newDuration;
-            seekVideo(end);
+            debouncedSeekVideo(end);
           }}
         />
         <Input
