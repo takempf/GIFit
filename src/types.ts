@@ -80,6 +80,10 @@ export interface MsgPauseVideo {
   type: 'PAUSE_VIDEO';
 }
 
+export interface MsgCaptureVisibleFrame {
+  type: 'CAPTURE_VISIBLE_FRAME';
+}
+
 export type ExtensionMessage =
   | MsgStartGif
   | MsgStopGif
@@ -90,4 +94,5 @@ export type ExtensionMessage =
   | MsgGetVideoMetadata
   | MsgVideoMetadata
   | MsgSeekVideo
-  | MsgPauseVideo;
+  | MsgPauseVideo
+  | MsgCaptureVisibleFrame;

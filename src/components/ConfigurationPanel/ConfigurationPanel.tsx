@@ -11,6 +11,7 @@ import { InputTime } from '../InputTime/InputTime';
 import { Button } from '../Button/Button';
 import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
 import { Timeline } from '../Timeline/Timeline';
+import { GifPreview } from '../GifPreview/GifPreview';
 
 import LinkIcon from '@/assets/link.svg?react';
 import LinkEmptyIcon from '@/assets/link-empty.svg?react';
@@ -54,44 +55,49 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     framerate,
     quality,
     videoDuration,
-    videoWidth: configVideoWidth, // Renamed to avoid conflict with component's width
-    videoHeight: configVideoHeight, // Renamed to avoid conflict with component's height
+    videoWidth: configVideoWidth,
+    videoHeight: configVideoHeight,
+    previewImage,
+    aspectRatio,
     handleInputChange: storeHandleInputChange,
     seekVideo,
     fetchVideoMetadata,
-    syncStartToVideoTime
+    syncStartToVideoTime,
+    captureFrame
   } = useConfigurationPanelStore();
 
-  const debouncedSeekVideo = useDebouncedCallback((time: number) => {
-    seekVideo(time);
+  const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
+    await seekVideo(time);
+    captureFrame();
   }, 1000);
 
   useEffect(() => {
-    fetchVideoMetadata();
-  }, [fetchVideoMetadata]);
+    fetchVideoMetadata().then(() => {
+      captureFrame();
+    });
+  }, [fetchVideoMetadata, captureFrame]);
 
   if (videoDuration === 0) {
-    return null; // Or some placeholder/loading UI
+    return null;
   }
 
   const maxWidth = Math.min(configVideoWidth, 1920);
   const maxHeight = Math.min(configVideoHeight, 1080);
-  const maxStart = Math.max(0, videoDuration - duration); // Ensure maxStart is not negative
+  const maxStart = Math.max(0, videoDuration - duration);
   const maxDuration = Math.min(videoDuration - start, 30);
 
   function handleGenericInputChange(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
+    // ... same logic ...
     const inputElement = event.target;
     const fieldName = inputElement.name as keyof ConfigState; // Type assertion
 
     const numericValue = parseFloat(inputElement.value);
     if (isNaN(numericValue) && fieldName !== 'linkDimensions') {
-      // linkDimensions is boolean
       return;
     }
 
-    // Narrow down the type for storeHandleInputChange
     if (
       fieldName === 'duration' ||
       fieldName === 'width' ||
@@ -126,9 +132,12 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     });
   }
 
+  function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
+    event.stopPropagation();
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    // Construct config object from store state to pass to onSubmit
     const currentConfigState = useConfigurationPanelStore.getState();
     onSubmit({
       start,
@@ -138,19 +147,20 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       linkDimensions,
       framerate,
       quality,
-      aspectRatio: currentConfigState.aspectRatio, // Ensure this is the calculated one
+      aspectRatio: currentConfigState.aspectRatio,
       videoDuration: currentConfigState.videoDuration,
       videoWidth: currentConfigState.videoWidth,
-      videoHeight: currentConfigState.videoHeight
+      videoHeight: currentConfigState.videoHeight,
+      previewImage: currentConfigState.previewImage
     });
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
-    event.stopPropagation();
-  }
+  // ...
 
   function handleSetStartToCurrentTimeClick() {
-    syncStartToVideoTime();
+    syncStartToVideoTime().then(() => {
+      captureFrame();
+    });
   }
 
   return (
@@ -159,6 +169,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         className={css.form}
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}>
+        <div className={css.preview}>
+          <GifPreview previewImage={previewImage} aspectRatio={aspectRatio} />
+        </div>
+        {/* Rest of form ... */}
         <InputTime
           className={css.start}
           name="start"

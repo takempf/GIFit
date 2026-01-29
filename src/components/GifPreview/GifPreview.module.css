@@ -1,0 +1,19 @@
+.previewContainer {
+  grid-column: 1 / -1; /* Toggle spanning all columns */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius);
+  margin-top: 10px;
+  overflow: hidden;
+  max-height: 300px;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  display: block;
+}

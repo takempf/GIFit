@@ -10,6 +10,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
+    'preview preview preview'
     'width height quality'
     'start duration fps'
     'timeline timeline timeline'
@@ -18,6 +19,15 @@
   background: rgba(225, 225, 225, 0.69);
   border-radius: var(--border-radius);
   overflow: hidden;
+}
+
+.preview {
+  grid-area: preview;
+  max-height: 300px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .start {

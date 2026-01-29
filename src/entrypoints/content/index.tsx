@@ -45,7 +45,7 @@ export default defineContentScript({
 
     // --- Message Listener ---
     browser.runtime.onMessage.addListener(
-      (message: ExtensionMessage, _sender, _sendResponse) => {
+      async (message: ExtensionMessage, _sender, _sendResponse) => {
         if (message.type === 'START_GIF') {
           if (!activeVideoElement) {
             log('No active video element found to start GIF');
@@ -79,7 +79,21 @@ export default defineContentScript({
             activeVideoElement = document.querySelector('video');
           }
           if (activeVideoElement) {
-            activeVideoElement.currentTime = message.time;
+            const video = activeVideoElement;
+            const seekPromise = new Promise<void>((resolve) => {
+              const onSeeked = () => {
+                video.removeEventListener('seeked', onSeeked);
+                resolve();
+              };
+              video.addEventListener('seeked', onSeeked, { once: true });
+              // Safety timeout
+              setTimeout(() => {
+                video.removeEventListener('seeked', onSeeked);
+                resolve();
+              }, 2000);
+            });
+            video.currentTime = message.time;
+            await seekPromise;
           }
         } else if (message.type === 'PAUSE_VIDEO') {
           if (!activeVideoElement) {
@@ -88,6 +102,27 @@ export default defineContentScript({
           if (activeVideoElement) {
             activeVideoElement.pause();
           }
+        } else if (message.type === 'CAPTURE_VISIBLE_FRAME') {
+          if (!activeVideoElement) {
+            activeVideoElement = document.querySelector('video');
+          }
+          if (activeVideoElement) {
+            const canvas = document.createElement('canvas');
+            canvas.width = activeVideoElement.videoWidth;
+            canvas.height = activeVideoElement.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(
+                activeVideoElement,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+              );
+              return canvas.toDataURL();
+            }
+          }
+          return null;
         }
       }
     );

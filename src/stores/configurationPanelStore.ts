@@ -20,6 +20,7 @@ export interface ConfigState {
   videoDuration: number;
   videoWidth: number;
   videoHeight: number;
+  previewImage: string | null;
 }
 
 // Action payloads
@@ -67,11 +68,12 @@ export interface ConfigActions {
   handleVideoSeeked: (payload: VideoSeekedPayload) => void;
   handleSetStartToCurrentTime: (payload: SetStartToCurrentTimePayload) => void;
   resetState: (metadata?: VideoMetadata) => void;
-  seekVideo: (time: number) => void;
+  seekVideo: (time: number) => Promise<void>;
   loadInitialConfig: () => Promise<void>;
   fetchVideoMetadata: () => Promise<void>;
   syncStartToVideoTime: () => Promise<void>;
   pauseVideo: () => Promise<void>;
+  captureFrame: () => Promise<void>;
 }
 
 type ConfigurationPanelStore = ConfigState & ConfigActions;
@@ -124,7 +126,8 @@ const getInitialState = (
     aspectRatio: storedAspectRatio,
     videoDuration: metadata?.duration ?? 0,
     videoWidth: metadata?.width ?? 0,
-    videoHeight: metadata?.height ?? 0
+    videoHeight: metadata?.height ?? 0,
+    previewImage: null
   };
 };
 
@@ -228,7 +231,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
       });
       const id = tabs[0]?.id;
       if (id) {
-        browser.tabs
+        await browser.tabs
           .sendMessage(id, { type: 'SEEK_VIDEO', time })
           .catch(() => {});
       }
@@ -299,6 +302,27 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           await browser.tabs.sendMessage(id, {
             type: 'PAUSE_VIDEO'
           });
+        }
+      } catch {
+        // ignore
+      }
+    },
+
+    captureFrame: async () => {
+      try {
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true
+        });
+        const id = tabs[0]?.id;
+        if (id) {
+          const dataUrl = (await browser.tabs.sendMessage(id, {
+            type: 'CAPTURE_VISIBLE_FRAME'
+          })) as string | null;
+
+          if (dataUrl) {
+            set({ previewImage: dataUrl });
+          }
         }
       } catch {
         // ignore
