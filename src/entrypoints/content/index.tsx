@@ -81,6 +81,13 @@ export default defineContentScript({
           if (activeVideoElement) {
             activeVideoElement.currentTime = message.time;
           }
+        } else if (message.type === 'PAUSE_VIDEO') {
+          if (!activeVideoElement) {
+            activeVideoElement = document.querySelector('video');
+          }
+          if (activeVideoElement) {
+            activeVideoElement.pause();
+          }
         }
       }
     );

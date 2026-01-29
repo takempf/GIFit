@@ -71,6 +71,7 @@ export interface ConfigActions {
   loadInitialConfig: () => Promise<void>;
   fetchVideoMetadata: () => Promise<void>;
   syncStartToVideoTime: () => Promise<void>;
+  pauseVideo: () => Promise<void>;
 }
 
 type ConfigurationPanelStore = ConfigState & ConfigActions;
@@ -281,6 +282,23 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
               currentTime: metadata.currentTime
             });
           }
+        }
+      } catch {
+        // ignore
+      }
+    },
+
+    pauseVideo: async () => {
+      try {
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true
+        });
+        const id = tabs[0]?.id;
+        if (id) {
+          await browser.tabs.sendMessage(id, {
+            type: 'PAUSE_VIDEO'
+          });
         }
       } catch {
         // ignore

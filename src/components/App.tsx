@@ -9,6 +9,7 @@ import { ConfigurationPanel } from './ConfigurationPanel/ConfigurationPanel';
 import { Progress } from './Progress/Progress';
 
 import { useAppStore } from '@/stores/appStore';
+import { useConfigurationPanelStore } from '@/stores/configurationPanelStore';
 import { useGifStore } from '@/stores/gifGeneratorStore';
 
 import TKLogo from '@/assets/tk.svg';
@@ -41,6 +42,11 @@ export function App() {
   const updateProgress = useGifStore((state) => state.updateProgress);
   const complete = useGifStore((state) => state.complete);
   const setError = useGifStore((state) => state.setError);
+  const pauseVideo = useConfigurationPanelStore((state) => state.pauseVideo);
+
+  useEffect(() => {
+    pauseVideo();
+  }, [pauseVideo]);
 
   // Listen for messages from content script
   useEffect(() => {

@@ -76,6 +76,10 @@ export interface MsgGifError {
   error: string;
 }
 
+export interface MsgPauseVideo {
+  type: 'PAUSE_VIDEO';
+}
+
 export type ExtensionMessage =
   | MsgStartGif
   | MsgStopGif
@@ -85,4 +89,5 @@ export type ExtensionMessage =
   | MsgGifError
   | MsgGetVideoMetadata
   | MsgVideoMetadata
-  | MsgSeekVideo;
+  | MsgSeekVideo
+  | MsgPauseVideo;
