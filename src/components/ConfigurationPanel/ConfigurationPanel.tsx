@@ -69,7 +69,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
     await seekVideo(time);
     captureFrame();
-  }, 1000);
+  }, 100);
 
   useEffect(() => {
     fetchVideoMetadata().then(() => {
