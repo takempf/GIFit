@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { log } from '@/utils/logger';
 import { storedConfig } from '@/utils/storage';
 import { VideoMetadata } from '@/types';
-import { browser } from 'wxt/browser';
+import { videoController } from '@/services/VideoController';
 
 const DEFAULT_WIDTH = 420;
 const DEFAULT_HEIGHT = 180;
@@ -225,16 +225,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
       set({ start: payload.currentTime }),
 
     seekVideo: async (time) => {
-      const tabs = await browser.tabs.query({
-        active: true,
-        currentWindow: true
-      });
-      const id = tabs[0]?.id;
-      if (id) {
-        await browser.tabs
-          .sendMessage(id, { type: 'SEEK_VIDEO', time })
-          .catch(() => {});
-      }
+      await videoController.seek(time);
     },
 
     resetState: (metadata?: VideoMetadata) => {
@@ -243,89 +234,34 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
     },
 
     fetchVideoMetadata: async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
+      const metadata = await videoController.getMetadata();
+      if (metadata) {
+        get().handleVideoLoadedData({
+          aspectRatio: metadata.width / metadata.height,
+          duration: metadata.duration,
+          videoWidth: metadata.width,
+          videoHeight: metadata.height
         });
-        const id = tabs[0]?.id;
-        if (id) {
-          const metadata = (await browser.tabs.sendMessage(id, {
-            type: 'GET_VIDEO_METADATA'
-          })) as VideoMetadata | null;
-
-          if (metadata) {
-            get().handleVideoLoadedData({
-              aspectRatio: metadata.width / metadata.height,
-              duration: metadata.duration,
-              videoWidth: metadata.width,
-              videoHeight: metadata.height
-            });
-          }
-        }
-      } catch {
-        // Likely no content script or video found yet
       }
     },
 
     syncStartToVideoTime: async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
+      const metadata = await videoController.getMetadata();
+      if (metadata) {
+        get().handleSetStartToCurrentTime({
+          currentTime: metadata.currentTime
         });
-        const id = tabs[0]?.id;
-        if (id) {
-          const metadata = (await browser.tabs.sendMessage(id, {
-            type: 'GET_VIDEO_METADATA'
-          })) as VideoMetadata | null;
-
-          if (metadata) {
-            get().handleSetStartToCurrentTime({
-              currentTime: metadata.currentTime
-            });
-          }
-        }
-      } catch {
-        // ignore
       }
     },
 
     pauseVideo: async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
-        });
-        const id = tabs[0]?.id;
-        if (id) {
-          await browser.tabs.sendMessage(id, {
-            type: 'PAUSE_VIDEO'
-          });
-        }
-      } catch {
-        // ignore
-      }
+      await videoController.pause();
     },
 
     captureFrame: async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
-        });
-        const id = tabs[0]?.id;
-        if (id) {
-          const dataUrl = (await browser.tabs.sendMessage(id, {
-            type: 'CAPTURE_VISIBLE_FRAME'
-          })) as string | null;
-
-          if (dataUrl) {
-            set({ previewImage: dataUrl });
-          }
-        }
-      } catch {
-        // ignore
+      const dataUrl = await videoController.captureFrame();
+      if (dataUrl) {
+        set({ previewImage: dataUrl });
       }
     }
   })

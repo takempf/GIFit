@@ -75,6 +75,22 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     fetchVideoMetadata().then(() => {
       captureFrame();
     });
+
+    // Poll for video metadata if missing (race condition handling)
+    const intervalId = setInterval(() => {
+      const state = useConfigurationPanelStore.getState();
+      if (state.videoDuration === 0) {
+        fetchVideoMetadata().then(() => {
+          if (useConfigurationPanelStore.getState().videoDuration > 0) {
+            captureFrame();
+          }
+        });
+      } else {
+        clearInterval(intervalId);
+      }
+    }, 1000);
+
+    return () => clearInterval(intervalId);
   }, [fetchVideoMetadata, captureFrame]);
 
   if (videoDuration === 0) {

@@ -2,15 +2,15 @@ import { vi, describe, beforeEach, afterEach, expect, it, Mock } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useConfigurationPanelStore } from './configurationPanelStore';
 import { storedConfig } from '@/utils/storage';
-import { browser } from 'wxt/browser';
+import { videoController } from '@/services/VideoController';
 
-// Mock wxt/browser
-vi.mock('wxt/browser', () => ({
-  browser: {
-    tabs: {
-      query: vi.fn(),
-      sendMessage: vi.fn()
-    }
+// Mock VideoController
+vi.mock('@/services/VideoController', () => ({
+  videoController: {
+    seek: vi.fn(),
+    pause: vi.fn(),
+    getMetadata: vi.fn(),
+    captureFrame: vi.fn()
   }
 }));
 
@@ -50,8 +50,10 @@ describe('useConfigurationPanelStore', () => {
     vi.mocked(storedConfig.fps.setValue).mockResolvedValue(undefined);
     vi.mocked(storedConfig.quality.setValue).mockResolvedValue(undefined);
 
-    vi.mocked(browser.tabs.query).mockResolvedValue([{ id: 1 }] as never);
-    vi.mocked(browser.tabs.sendMessage).mockResolvedValue(undefined);
+    vi.mocked(videoController.seek).mockResolvedValue();
+    vi.mocked(videoController.pause).mockResolvedValue();
+    vi.mocked(videoController.getMetadata).mockResolvedValue(null);
+    vi.mocked(videoController.captureFrame).mockResolvedValue(null);
 
     act(() => {
       // Directly calling resetState which now internally calls loadInitialConfig
@@ -66,9 +68,7 @@ describe('useConfigurationPanelStore', () => {
   beforeEach(async () => {
     await resetMocksAndStores();
     // Simulate fetching metadata
-    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
-      mockMetadata
-    );
+    vi.mocked(videoController.getMetadata).mockResolvedValue(mockMetadata);
     await act(async () => {
       await useConfigurationPanelStore.getState().fetchVideoMetadata();
     });
@@ -218,7 +218,7 @@ describe('useConfigurationPanelStore', () => {
   it('syncStartToVideoTime should update start time based on fetched metadata', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
 
-    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue({
+    vi.mocked(videoController.getMetadata).mockResolvedValue({
       ...mockMetadata,
       currentTime: 3.5
     });
@@ -230,15 +230,12 @@ describe('useConfigurationPanelStore', () => {
     expect(result.current.start).toBe(3.5);
   });
 
-  it('seekVideo should send SEEK_VIDEO message', async () => {
+  it('seekVideo should call videoController.seek', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
     await act(async () => {
       await result.current.seekVideo(5);
     });
-    expect(browser.tabs.sendMessage).toHaveBeenCalledWith(1, {
-      type: 'SEEK_VIDEO',
-      time: 5
-    });
+    expect(videoController.seek).toHaveBeenCalledWith(5);
   });
 
   it('fetchVideoMetadata should update store with video metadata', async () => {
@@ -251,9 +248,7 @@ describe('useConfigurationPanelStore', () => {
       currentTime: 10,
       aspectRatio: 1280 / 720
     };
-    (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
-      newMetadata
-    );
+    vi.mocked(videoController.getMetadata).mockResolvedValue(newMetadata);
 
     await act(async () => {
       await result.current.fetchVideoMetadata();
@@ -262,5 +257,26 @@ describe('useConfigurationPanelStore', () => {
     expect(result.current.videoWidth).toBe(1280);
     expect(result.current.videoHeight).toBe(720);
     expect(result.current.videoDuration).toBe(30);
+  });
+
+  it('pauseVideo should call videoController.pause', async () => {
+    const { result } = renderHook(() => useConfigurationPanelStore());
+    await act(async () => {
+      await result.current.pauseVideo();
+    });
+    expect(videoController.pause).toHaveBeenCalled();
+  });
+
+  it('captureFrame should call videoController.captureFrame and update previewImage', async () => {
+    const { result } = renderHook(() => useConfigurationPanelStore());
+    const mockUrl = 'data:image/png;base64,...';
+    vi.mocked(videoController.captureFrame).mockResolvedValue(mockUrl);
+
+    await act(async () => {
+      await result.current.captureFrame();
+    });
+
+    expect(videoController.captureFrame).toHaveBeenCalled();
+    expect(result.current.previewImage).toBe(mockUrl);
   });
 });

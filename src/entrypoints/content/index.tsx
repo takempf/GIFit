@@ -10,9 +10,72 @@ export default defineContentScript({
   async main(ctx) {
     log('Running content script');
 
-    let activeVideoElement: HTMLVideoElement | null =
-      document.querySelector('video');
+    let activeVideoElement: HTMLVideoElement | null = null;
     const gifService = new GifService();
+
+    /**
+     * securely gets the video element, ensuring it is connected to the DOM.
+     * Use this instead of accessing activeVideoElement directly.
+     */
+    const getVideoElement = (): HTMLVideoElement | null => {
+      // If we have a reference, check if it's still valid (connected to DOM)
+      if (activeVideoElement && activeVideoElement.isConnected) {
+        return activeVideoElement;
+      }
+
+      // If not, try to find one
+      const video = document.querySelector('video');
+      if (video) {
+        if (activeVideoElement !== video) {
+          log('Found new video element via legacy search', video);
+        }
+        activeVideoElement = video;
+        return activeVideoElement;
+      }
+
+      // No video found
+      return null;
+    };
+
+    // --- Mutation Observer ---
+    // Watch for new video elements appearing in the DOM (e.g. SPA navigation)
+    const observer = new MutationObserver((mutations) => {
+      let foundNew = false;
+
+      // If current video is disconnected, we definitely need a new one
+      if (activeVideoElement && !activeVideoElement.isConnected) {
+        activeVideoElement = null;
+      }
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node instanceof HTMLVideoElement) {
+            activeVideoElement = node;
+            foundNew = true;
+            break;
+          }
+          if (node instanceof Element) {
+            // Check inside added subtrees
+            const video = node.querySelector('video');
+            if (video) {
+              activeVideoElement = video;
+              foundNew = true;
+              break; // assume first video is main
+            }
+          }
+        }
+        if (foundNew) break;
+      }
+
+      if (foundNew) {
+        log('Video element detected via MutationObserver', activeVideoElement);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Initial check
+    getVideoElement();
 
     // --- Service Event Listeners ---
     gifService.on(
@@ -47,39 +110,35 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener(
       async (message: ExtensionMessage, _sender, _sendResponse) => {
         if (message.type === 'START_GIF') {
-          if (!activeVideoElement) {
+          const video = getVideoElement();
+          if (!video) {
             log('No active video element found to start GIF');
-            // Start a manual search just in case
-            activeVideoElement = document.querySelector('video');
-            if (!activeVideoElement) return;
+            return;
           }
-          gifService.createGif(message.config, activeVideoElement);
+          gifService.createGif(message.config, video);
         } else if (message.type === 'STOP_GIF') {
           gifService.abort();
         } else if (message.type === 'GET_VIDEO_METADATA') {
-          if (!activeVideoElement) {
-            activeVideoElement = document.querySelector('video');
-          }
-          if (activeVideoElement) {
+          const video = getVideoElement();
+
+          if (video) {
             // Check if metadata is loaded
-            if (activeVideoElement.readyState < 1) {
+            if (video.readyState < 1) {
               // Return null or partial?
               return Promise.resolve(null);
             }
             return Promise.resolve({
-              duration: activeVideoElement.duration,
-              width: activeVideoElement.videoWidth,
-              height: activeVideoElement.videoHeight,
-              currentTime: activeVideoElement.currentTime
+              duration: video.duration,
+              width: video.videoWidth,
+              height: video.videoHeight,
+              currentTime: video.currentTime
             });
           }
           return Promise.resolve(null);
         } else if (message.type === 'SEEK_VIDEO') {
-          if (!activeVideoElement) {
-            activeVideoElement = document.querySelector('video');
-          }
-          if (activeVideoElement) {
-            const video = activeVideoElement;
+          const video = getVideoElement();
+
+          if (video) {
             const seekPromise = new Promise<void>((resolve) => {
               const onSeeked = () => {
                 video.removeEventListener('seeked', onSeeked);
@@ -96,29 +155,19 @@ export default defineContentScript({
             await seekPromise;
           }
         } else if (message.type === 'PAUSE_VIDEO') {
-          if (!activeVideoElement) {
-            activeVideoElement = document.querySelector('video');
-          }
-          if (activeVideoElement) {
-            activeVideoElement.pause();
+          const video = getVideoElement();
+          if (video) {
+            video.pause();
           }
         } else if (message.type === 'CAPTURE_VISIBLE_FRAME') {
-          if (!activeVideoElement) {
-            activeVideoElement = document.querySelector('video');
-          }
-          if (activeVideoElement) {
+          const video = getVideoElement();
+          if (video) {
             const canvas = document.createElement('canvas');
-            canvas.width = activeVideoElement.videoWidth;
-            canvas.height = activeVideoElement.videoHeight;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             if (ctx) {
-              ctx.drawImage(
-                activeVideoElement,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-              );
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
               return canvas.toDataURL();
             }
           }
@@ -127,16 +176,12 @@ export default defineContentScript({
       }
     );
 
-    // --- Video Detection ---
+    // --- Video Detection matches ---
+    // We can rely on MutationObserver mostly, but location change is a good fallback hint
     const updateVideoElement = () => {
-      const video = document.querySelector('video');
-      if (video) {
-        log('Found video element', video);
-        activeVideoElement = video;
-      }
+      // Just run the getter to refresh if needed
+      getVideoElement();
     };
-
-    updateVideoElement();
 
     ctx.addEventListener(window, 'wxt:locationchange', (event) => {
       log('URL changed, checking for video element', event);

@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo
+} from 'react';
 
 import { Input } from '../Input/Input';
 import { Button } from '../Button/Button';
@@ -8,10 +14,11 @@ import css from './InputTime.module.css';
 const SPIN_INTERVAL = 150;
 
 // --- Helper: Debounce Hook (same as before) ---
+// --- Helper: Debounce Hook ---
 function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
   delay: number
-): (...args: A) => void {
+): ((...args: A) => void) & { cancel: () => void } {
   const callbackRef = useRef(callback);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -19,17 +26,24 @@ function useDebouncedCallback<A extends unknown[]>(
     callbackRef.current = callback;
   }, [callback]);
 
-  return useCallback(
-    (...args: A) => {
+  return useMemo(() => {
+    const func = (...args: A) => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
       timeoutRef.current = setTimeout(() => {
         callbackRef.current(...args);
       }, delay);
-    },
-    [delay]
-  );
+    };
+
+    func.cancel = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+
+    return func as ((...args: A) => void) & { cancel: () => void };
+  }, [delay]);
 }
 
 // --- Helper: Time Formatting & Parsing ---
@@ -253,7 +267,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
     // On blur, always try to commit the current text input value immediately.
     // This cancels any pending debounced commit.
     // Clear any pending timeout from useDebouncedCallback
-    // (Ideally, useDebouncedCallback would return a cancel function)
+    debouncedCommit.cancel();
     const parsed = hmsStringToSeconds(displayValue);
     commitChange(parsed); // Commit immediately
   };

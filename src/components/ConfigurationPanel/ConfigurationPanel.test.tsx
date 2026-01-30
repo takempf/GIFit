@@ -92,8 +92,9 @@ describe('ConfigurationPanel', () => {
       handleSetStartToCurrentTime: vi.fn(), // Removed from component usage, but kept in store interface
       seekVideo: vi.fn(),
       resetState: vi.fn(),
-      fetchVideoMetadata: vi.fn(),
-      syncStartToVideoTime: vi.fn()
+      fetchVideoMetadata: vi.fn().mockResolvedValue(undefined),
+      syncStartToVideoTime: vi.fn().mockResolvedValue(undefined),
+      captureFrame: vi.fn()
     };
     (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
@@ -203,22 +204,28 @@ describe('ConfigurationPanel', () => {
   });
 
   test('duration input change seeks video', () => {
+    vi.useFakeTimers();
     (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 5
     });
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    act(() => {
-      fireEvent.change(screen.getByLabelText('Duration'), {
-        target: { name: 'duration', value: '10' }
-      });
+
+    fireEvent.change(screen.getByLabelText('Duration'), {
+      target: { name: 'duration', value: '10' }
     });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
     expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
       name: 'duration',
       value: 10
     });
     expect(mockConfigStoreActions.seekVideo).toHaveBeenCalledWith(15);
+    vi.useRealTimers();
   });
 
   test('max values for inputs are calculated correctly', () => {

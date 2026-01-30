@@ -1,7 +1,6 @@
 import css from './App.module.css';
 
 import { useCallback, useEffect } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
 import { browser } from 'wxt/browser';
 
 import { AppLogo } from './AppLogo/AppLogo';
@@ -34,8 +33,6 @@ async function getVideoTitle() {
 
 export function App() {
   const status = useAppStore((state) => state.status);
-  const generationId = useGifStore((state) => state.generationId);
-  // const close = useAppStore((state) => state.close); // AppStore close is irrelevant now
   const setStatus = useAppStore((state) => state.setStatus);
   const setName = useGifStore((state) => state.setName);
   const createGif = useGifStore((state) => state.createGif);
