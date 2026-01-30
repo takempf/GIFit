@@ -1,5 +1,5 @@
 import css from './ConfigurationPanel.module.css';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   useConfigurationPanelStore,
   type ConfigState
@@ -65,10 +65,21 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     captureFrame
   } = useConfigurationPanelStore();
 
+  const [previewTime, setPreviewTime] = useState(start);
+
   const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
     await seekVideo(time);
     captureFrame();
   }, 100);
+
+  // Separate preview update logic
+  const handlePreviewRequest = useCallback(
+    (time: number) => {
+      setPreviewTime(time);
+      debouncedSeekVideo(time);
+    },
+    [debouncedSeekVideo]
+  );
 
   useEffect(() => {
     fetchVideoMetadata().then(() => {
@@ -134,7 +145,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
     if (fieldName === 'duration') {
       const end = toSeconds(startMs + toMilliseconds(numericValue));
-      debouncedSeekVideo(end);
+      const oneFrame = toSeconds(1000 / framerate);
+      // For duration input, show the end frame (exclusive - 1 frame)
+      const previewEnd = Math.max(start, end - oneFrame);
+      handlePreviewRequest(previewEnd);
     }
   }
 
@@ -143,7 +157,23 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       name: 'start',
       value: newStart
     });
-    debouncedSeekVideo(newStart);
+    // When changing start time via input, show new start
+    handlePreviewRequest(newStart);
+  }
+
+  // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
+  function handleTimelineStartTimeChange(newStart: number) {
+    storeHandleInputChange({
+      name: 'start',
+      value: newStart
+    });
+  }
+
+  function handleTimelineDurationChange(newDuration: number) {
+    storeHandleInputChange({
+      name: 'duration',
+      value: newDuration
+    });
   }
 
   function handleLinkToggleChange(isLinked: boolean) {
@@ -196,15 +226,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             startTime={start}
             duration={duration}
             fps={framerate}
-            onStartTimeChange={handleStartTimeChange}
-            onDurationChange={(newDuration) => {
-              storeHandleInputChange({
-                name: 'duration',
-                value: newDuration
-              });
-              const end = toSeconds(startMs + toMilliseconds(newDuration));
-              debouncedSeekVideo(end);
-            }}
+            previewTime={previewTime}
+            onStartTimeChange={handleTimelineStartTimeChange}
+            onDurationChange={handleTimelineDurationChange}
+            onPreviewRequest={handlePreviewRequest}
           />
         </div>
 

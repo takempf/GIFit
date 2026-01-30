@@ -12,8 +12,10 @@ interface TimelineProps {
   startTime: number;
   duration: number; // Selection duration
   fps: number;
+  previewTime: number;
   onStartTimeChange: (newStartTime: number) => void;
   onDurationChange: (newDuration: number) => void;
+  onPreviewRequest?: (previewTime: number) => void;
   className?: string;
 }
 
@@ -25,8 +27,10 @@ export function Timeline({
   startTime,
   duration,
   fps,
+  previewTime,
   onStartTimeChange,
   onDurationChange,
+  onPreviewRequest,
   className
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,7 +59,8 @@ export function Timeline({
     totalDurationMs,
     fps,
     onStartTimeChange,
-    onDurationChange
+    onDurationChange,
+    onPreviewRequest
   });
 
   // Update ref on every render
@@ -65,7 +70,8 @@ export function Timeline({
     totalDurationMs,
     fps,
     onStartTimeChange,
-    onDurationChange
+    onDurationChange,
+    onPreviewRequest
   };
 
   const autoScrollSpeedRef = useRef<number>(0);
@@ -100,7 +106,8 @@ export function Timeline({
         totalDurationMs,
         fps,
         onStartTimeChange,
-        onDurationChange
+        onDurationChange,
+        onPreviewRequest
       } = propsRef.current;
 
       // Calculate mouse position relative to the scroll content
@@ -131,6 +138,7 @@ export function Timeline({
 
         if (newStartMs !== startTimeMs) {
           onStartTimeChange(toSeconds(newStartMs));
+          onPreviewRequest?.(toSeconds(newStartMs));
         }
       } else if (isDragging === 'left') {
         let newStartMs = Math.max(0, snappedTimeMs);
@@ -140,6 +148,7 @@ export function Timeline({
           onStartTimeChange(toSeconds(newStartMs));
           const newDurationMs = currentEndTimeMs - newStartMs;
           onDurationChange(toSeconds(newDurationMs));
+          onPreviewRequest?.(toSeconds(newStartMs));
         }
       } else if (isDragging === 'right') {
         let newEndMs = Math.max(startTimeMs + minDurationMs, snappedTimeMs);
@@ -148,6 +157,8 @@ export function Timeline({
         const newDurationMs = newEndMs - startTimeMs;
         if (newDurationMs !== durationMs) {
           onDurationChange(toSeconds(newDurationMs));
+          const oneFrameMs = 1000 / fps;
+          onPreviewRequest?.(toSeconds(newEndMs - oneFrameMs));
         }
       }
     };
@@ -241,6 +252,7 @@ export function Timeline({
 
     if (newStartMs !== startTimeMs) {
       onStartTimeChange(toSeconds(newStartMs));
+      onPreviewRequest?.(toSeconds(newStartMs));
     }
   };
 
@@ -307,6 +319,15 @@ export function Timeline({
           data-testid="timeline-interior">
           {/* Ticks Layer */}
           {renderTicks}
+
+          {/* Preview Highlight */}
+          <div
+            className={styles.previewHighlight}
+            style={{
+              left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
+              width: `${(1000 / fps) * PIXELS_PER_MS}px`
+            }}
+          />
 
           {/* Selection Layer */}
           <div

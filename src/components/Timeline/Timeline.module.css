@@ -93,3 +93,12 @@
   background-color: white;
   border-radius: 1px;
 }
+
+.previewHighlight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: oklch(from var(--color_accent) l c h / 0.3);
+  z-index: 1;
+  pointer-events: none;
+}

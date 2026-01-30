@@ -218,7 +218,13 @@ describe('ConfigurationPanel', () => {
       name: 'duration',
       value: 10
     });
-    expect(mockConfigStoreActions.seekVideo).toHaveBeenCalledWith(15);
+    expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
+      name: 'duration',
+      value: 10
+    });
+    // Calculation: start(5) + duration(10) - 1frame(10fps -> 0.1s)
+    // 5 + 10 - 0.1 = 14.9
+    expect(mockConfigStoreActions.seekVideo).toHaveBeenCalledWith(14.9);
     vi.useRealTimers();
   });
 

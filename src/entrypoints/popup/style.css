@@ -32,6 +32,7 @@
   --color_button: rgb(235, 235, 235);
   --color_button_background: rgb(25, 25, 25);
   --color_button_primary_background: rgb(235, 15, 15);
+  --color_accent: rgb(0, 225, 255);
   --color_subtle_shadow: rgba(0, 0, 0, 0.25);
 
   --ease_in_expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
