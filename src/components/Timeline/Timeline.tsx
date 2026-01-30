@@ -1,5 +1,11 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import styles from './Timeline.module.css';
+import {
+  toMilliseconds,
+  toSeconds,
+  snapToFrame,
+  formatMilliseconds
+} from '../../utils/time';
 
 interface TimelineProps {
   totalDuration: number;
@@ -12,6 +18,7 @@ interface TimelineProps {
 }
 
 const PIXELS_PER_SECOND = 120;
+const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
 
 export function Timeline({
   totalDuration,
@@ -32,29 +39,33 @@ export function Timeline({
   const dragOffsetRef = useRef<number>(0);
 
   // Calculate specific widths
-  const pixelsPerFrame = PIXELS_PER_SECOND / fps;
-  const totalWidth = totalDuration * PIXELS_PER_SECOND;
+  // const pixelsPerFrame = PIXELS_PER_SECOND / fps;
+
+  // Convert props to ms for internal calculations
+  const totalDurationMs = toMilliseconds(totalDuration);
+  const startTimeMs = toMilliseconds(startTime);
+  const durationMs = toMilliseconds(duration);
+
+  const totalWidth = totalDurationMs * PIXELS_PER_MS;
 
   // Store latest props in ref to avoid re-running effect on every prop change
   const propsRef = useRef({
-    startTime,
-    duration,
-    totalDuration,
+    startTimeMs,
+    durationMs,
+    totalDurationMs,
     fps,
     onStartTimeChange,
-    onDurationChange,
-    pixelsPerFrame: PIXELS_PER_SECOND / fps
+    onDurationChange
   });
 
   // Update ref on every render
   propsRef.current = {
-    startTime,
-    duration,
-    totalDuration,
+    startTimeMs,
+    durationMs,
+    totalDurationMs,
     fps,
     onStartTimeChange,
-    onDurationChange,
-    pixelsPerFrame: PIXELS_PER_SECOND / fps
+    onDurationChange
   };
 
   const autoScrollSpeedRef = useRef<number>(0);
@@ -70,13 +81,12 @@ export function Timeline({
       if (!scrollRef.current) return;
 
       const {
-        startTime,
-        duration,
-        totalDuration,
+        startTimeMs,
+        durationMs,
+        totalDurationMs,
         fps,
         onStartTimeChange,
-        onDurationChange,
-        pixelsPerFrame
+        onDurationChange
       } = propsRef.current;
 
       // Calculate mouse position relative to the scroll content
@@ -84,37 +94,46 @@ export function Timeline({
       const scrollLeft = scrollRef.current.scrollLeft;
       const relativeX = clientX - rect.left + scrollLeft;
 
-      // Snap to frame (used for handles)
-      const rawFrameCount = Math.round(relativeX / pixelsPerFrame);
-      const snappedTime = rawFrameCount / fps;
+      // Calculate approximate time in ms from pixels
+      const rawMs = relativeX / PIXELS_PER_MS;
+
+      // Snap to frame
+      const snappedTimeMs = snapToFrame(rawMs, fps);
 
       // Current End Time (fixed if dragging left)
-      const currentEndTime = startTime + duration;
-      const minDuration = 1 / fps;
+      const currentEndTimeMs = startTimeMs + durationMs;
+      const minDurationMs = Math.floor(1000 / fps); // Minimum 1 frame duration
 
       if (isDragging === 'move') {
         const proposedLeftBytes = relativeX - dragOffsetRef.current;
-        const snappedLeftFrame = Math.round(proposedLeftBytes / pixelsPerFrame);
-        let newStart = snappedLeftFrame / fps;
-        newStart = Math.max(0, newStart);
-        newStart = Math.min(newStart, totalDuration - duration);
-        if (newStart !== startTime) {
-          onStartTimeChange(newStart);
+        // Convert pixels back to ms
+        let newStartMs = proposedLeftBytes / PIXELS_PER_MS;
+
+        // Snap the new start time
+        newStartMs = snapToFrame(newStartMs, fps);
+
+        newStartMs = Math.max(0, newStartMs);
+        newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
+
+        if (newStartMs !== startTimeMs) {
+          onStartTimeChange(toSeconds(newStartMs));
         }
       } else if (isDragging === 'left') {
-        let newStart = Math.max(0, snappedTime);
-        newStart = Math.min(newStart, currentEndTime - minDuration);
-        if (newStart !== startTime) {
-          onStartTimeChange(newStart);
-          const newDuration = currentEndTime - newStart;
-          onDurationChange(newDuration);
+        let newStartMs = Math.max(0, snappedTimeMs);
+        newStartMs = Math.min(newStartMs, currentEndTimeMs - minDurationMs);
+
+        if (newStartMs !== startTimeMs) {
+          onStartTimeChange(toSeconds(newStartMs));
+          const newDurationMs = currentEndTimeMs - newStartMs;
+          onDurationChange(toSeconds(newDurationMs));
         }
       } else if (isDragging === 'right') {
-        let newEnd = Math.max(startTime + minDuration, snappedTime);
-        newEnd = Math.min(newEnd, totalDuration);
-        const newDuration = newEnd - startTime;
-        if (newDuration !== duration) {
-          onDurationChange(newDuration);
+        let newEndMs = Math.max(startTimeMs + minDurationMs, snappedTimeMs);
+        newEndMs = Math.min(newEndMs, totalDurationMs);
+
+        const newDurationMs = newEndMs - startTimeMs;
+        if (newDurationMs !== durationMs) {
+          onDurationChange(toSeconds(newDurationMs));
         }
       }
     };
@@ -122,11 +141,6 @@ export function Timeline({
     const performAutoScroll = () => {
       if (autoScrollSpeedRef.current !== 0 && scrollRef.current) {
         scrollRef.current.scrollLeft += autoScrollSpeedRef.current;
-        // If we adhere to "continuous update" while scrolling, we should technically
-        // re-run the drag logic here so the selection moves *with* the scroll
-        // even if the mouse doesn't move. But simplistically, if the mouse moves
-        // (which it usually does slightly) it triggers handleMouseMove.
-        // However, if holding still at edge, we want selection to update.
         if (lastMousePosRef.current !== null) {
           updateDragState(lastMousePosRef.current);
         }
@@ -149,7 +163,6 @@ export function Timeline({
 
       if (e.clientX < rect.left + edgeThreshold) {
         // Scroll Left
-        // intensity 0 to 1 based on how close to edge
         const intensity = Math.max(
           0,
           (rect.left + edgeThreshold - e.clientX) / edgeThreshold
@@ -188,14 +201,11 @@ export function Timeline({
     e.stopPropagation();
     if (!scrollRef.current) return;
 
-    // Check if we are interacting with a handle by checking target?
-    // Actually, handles have stopPropagation, so we don't need to check here.
-
     const rect = scrollRef.current.getBoundingClientRect();
     const scrollLeft = scrollRef.current.scrollLeft;
     const relativeX = e.clientX - rect.left + scrollLeft;
 
-    const currentLeftPixel = startTime * PIXELS_PER_SECOND;
+    const currentLeftPixel = startTimeMs * PIXELS_PER_MS;
     dragOffsetRef.current = relativeX - currentLeftPixel;
 
     setIsDragging('move');
@@ -208,20 +218,19 @@ export function Timeline({
     const scrollLeft = scrollRef.current.scrollLeft;
     const relativeX = e.clientX - rect.left + scrollLeft;
 
-    const rawFrameCount = Math.round(relativeX / pixelsPerFrame);
-    let newStart = rawFrameCount / fps;
+    const rawMs = relativeX / PIXELS_PER_MS;
+    let newStartMs = snapToFrame(rawMs, fps);
 
     // Clamp to valid range
-    newStart = Math.max(0, newStart);
-    newStart = Math.min(newStart, totalDuration - duration);
+    newStartMs = Math.max(0, newStartMs);
+    newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
 
-    if (newStart !== startTime) {
-      onStartTimeChange(newStart);
+    if (newStartMs !== startTimeMs) {
+      onStartTimeChange(toSeconds(newStartMs));
     }
   };
 
   // Generate Ticks
-  // Using useMemo to avoid re-calculating on every render if not needed
   const renderTicks = useMemo(() => {
     const ticks = [];
     const seconds = Math.floor(totalDuration);
@@ -233,33 +242,30 @@ export function Timeline({
           key={`sec-${i}`}
           className={styles.secondMarker}
           style={{ left: `${i * PIXELS_PER_SECOND}px` }}>
-          {formatTime(i)}
+          {formatMilliseconds(i * 1000)}
         </div>
       );
 
-      // Frame Markers (between this second and next)
-      // Only draw if not the last second (or if we have partial second at end)
+      // Frame Markers
       if (i < totalDuration) {
         for (let f = 1; f < fps; f++) {
-          const frameTime = i + f / fps;
-          if (frameTime > totalDuration) break;
+          const frameTimeMs = i * 1000 + (f * 1000) / fps;
+          if (frameTimeMs > totalDurationMs) break;
           ticks.push(
             <div
               key={`frame-${i}-${f}`}
               className={styles.frameMarker}
-              style={{ left: `${frameTime * PIXELS_PER_SECOND}px` }}
+              style={{ left: `${frameTimeMs * PIXELS_PER_MS}px` }}
             />
           );
         }
       }
     }
     return ticks;
-  }, [totalDuration, fps]);
+  }, [totalDuration, fps, totalDurationMs]);
 
   // Generate Frame Children for Selection
-  // "It should have children that represent the number of frames it spans."
   const selectionFrames = useMemo(() => {
-    // Number of frames in current duration
     const frameCount = Math.round(duration * fps);
     return Array.from({ length: frameCount }).map((_, i) => (
       <div key={`sel-frame-${i}`} className={styles.selectionFrame} />
@@ -267,8 +273,8 @@ export function Timeline({
   }, [duration, fps]);
 
   const selectionStyle = {
-    left: `${startTime * PIXELS_PER_SECOND}px`,
-    width: `${duration * PIXELS_PER_SECOND}px`
+    left: `${startTimeMs * PIXELS_PER_MS}px`,
+    width: `${durationMs * PIXELS_PER_MS}px`
   };
 
   return (
@@ -319,10 +325,4 @@ export function Timeline({
       </div>
     </div>
   );
-}
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
 }

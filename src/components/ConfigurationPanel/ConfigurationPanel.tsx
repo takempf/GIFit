@@ -4,6 +4,7 @@ import {
   useConfigurationPanelStore,
   type ConfigState
 } from '@/stores/configurationPanelStore';
+import { toMilliseconds, toSeconds } from '@/utils/time';
 
 import { Input } from '../Input/Input';
 import { InputNumber } from '../InputNumber/InputNumber';
@@ -99,8 +100,14 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const maxWidth = Math.min(configVideoWidth, 1920);
   const maxHeight = Math.min(configVideoHeight, 1080);
-  const maxStart = Math.max(0, videoDuration - duration);
-  const maxDuration = Math.min(videoDuration - start, 30);
+
+  // Use integer math for time calculations to avoid float errors
+  const videoDurationMs = toMilliseconds(videoDuration);
+  const durationMs = toMilliseconds(duration);
+  const startMs = toMilliseconds(start);
+
+  const maxStart = toSeconds(Math.max(0, videoDurationMs - durationMs));
+  const maxDuration = toSeconds(Math.min(videoDurationMs - startMs, 30000)); // 30s limit
 
   function handleGenericInputChange(
     event: React.ChangeEvent<HTMLInputElement>
@@ -128,7 +135,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
 
     if (fieldName === 'duration') {
-      const end = start + numericValue;
+      const end = toSeconds(startMs + toMilliseconds(numericValue));
       debouncedSeekVideo(end);
     }
   }
@@ -201,7 +208,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
                 name: 'duration',
                 value: newDuration
               });
-              const end = start + newDuration;
+              const end = toSeconds(startMs + toMilliseconds(newDuration));
               debouncedSeekVideo(end);
             }}
           />
