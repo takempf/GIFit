@@ -62,7 +62,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     handleInputChange: storeHandleInputChange,
     seekVideo,
     fetchVideoMetadata,
-    syncStartToVideoTime,
     captureFrame
   } = useConfigurationPanelStore();
 
@@ -177,14 +176,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     });
   }
 
-  // ...
-
-  function handleSetStartToCurrentTimeClick() {
-    syncStartToVideoTime().then(() => {
-      captureFrame();
-    });
-  }
-
   return (
     <div className={css.gifitConfiguration}>
       <form
@@ -226,16 +217,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             max={maxStart}
             onChange={handleStartTimeChange}
             data-testid="start-input"
-            append={
-              <Button
-                title="Set to current time"
-                variant="outline"
-                size="x-small"
-                padding="x-small"
-                onClick={handleSetStartToCurrentTimeClick}>
-                Now
-              </Button>
-            }
           />
         </div>
 

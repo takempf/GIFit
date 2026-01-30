@@ -144,12 +144,6 @@ describe('ConfigurationPanel', () => {
     });
   });
 
-  test('calls syncStartToVideoTime on "Now" button click', () => {
-    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    fireEvent.click(screen.getByRole('button', { name: /Now/i }));
-    expect(mockConfigStoreActions.syncStartToVideoTime).toHaveBeenCalled();
-  });
-
   test('calls store action on link dimensions toggle', () => {
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
     // The mocked ButtonToggle uses a checkbox
