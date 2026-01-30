@@ -45,7 +45,8 @@ describe('Timeline', () => {
   });
   it('updates startTime when clicking on background', () => {
     const onStartTimeChange = vi.fn();
-    const props = { ...defaultProps, onStartTimeChange };
+    // Set startTime to 0 to avoid auto-scroll affecting the calculation (scrollLeft stays 0)
+    const props = { ...defaultProps, onStartTimeChange, startTime: 0 };
     const { getByTestId } = render(<Timeline {...props} />);
 
     const interior = getByTestId('timeline-interior');
@@ -73,5 +74,16 @@ describe('Timeline', () => {
     fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
 
     expect(onStartTimeChange).toHaveBeenCalledWith(1);
+  });
+
+  it('scrolls to selection on mount', () => {
+    // We want the scroll to be at startTime - 1s
+    // startTime = 2, so scroll target time = 1s
+    // 1s * 120px/s = 120px
+    const props = { ...defaultProps, startTime: 2 };
+    const { getByTestId } = render(<Timeline {...props} />);
+
+    const scrollContainer = getByTestId('scroll-container');
+    expect(scrollContainer.scrollLeft).toBe(120);
   });
 });

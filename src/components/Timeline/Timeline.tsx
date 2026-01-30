@@ -70,6 +70,20 @@ export function Timeline({
 
   const autoScrollSpeedRef = useRef<number>(0);
   const lastMousePosRef = useRef<number | null>(null);
+  const hasInitialScrolled = useRef(false);
+
+  // Initial scroll to selection
+  useEffect(() => {
+    if (hasInitialScrolled.current || !scrollRef.current) return;
+
+    // Only scroll if we have a valid start time or if it's explicitly 0 (though 0 usually needs no scroll)
+    // We want to scroll to 1 second before the selection
+    const targetTimeMs = Math.max(0, startTimeMs - 1000);
+    const targetScrollLeft = targetTimeMs * PIXELS_PER_MS;
+
+    scrollRef.current.scrollLeft = targetScrollLeft;
+    hasInitialScrolled.current = true;
+  }, [startTimeMs]);
 
   // Handlers for Dragging
   useEffect(() => {

@@ -51,6 +51,7 @@ interface VideoLoadedDataPayload {
   duration: number;
   videoWidth: number;
   videoHeight: number;
+  currentTime?: number;
 }
 
 interface VideoSeekedPayload {
@@ -211,6 +212,10 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
         videoDuration: payload.duration,
         videoWidth: payload.videoWidth,
         videoHeight: payload.videoHeight,
+        start:
+          state.videoDuration === 0 && payload.currentTime !== undefined
+            ? payload.currentTime
+            : state.start,
         height:
           state.linkDimensions || state.height === DEFAULT_HEIGHT
             ? Math.round(state.width / payload.aspectRatio)
@@ -240,7 +245,8 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           aspectRatio: metadata.width / metadata.height,
           duration: metadata.duration,
           videoWidth: metadata.width,
-          videoHeight: metadata.height
+          videoHeight: metadata.height,
+          currentTime: metadata.currentTime
         });
       }
     },

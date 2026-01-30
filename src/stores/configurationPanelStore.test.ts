@@ -215,6 +215,38 @@ describe('useConfigurationPanelStore', () => {
     );
   });
 
+  it('handleVideoLoadedData should set start time on initial load', async () => {
+    const { result } = renderHook(() => useConfigurationPanelStore());
+
+    const initialData = {
+      aspectRatio: 16 / 9,
+      duration: 100,
+      videoWidth: 1920,
+      videoHeight: 1080,
+      currentTime: 50
+    };
+
+    act(() => {
+      // Ensure videoDuration starts at 0 (initial state)
+      useConfigurationPanelStore.setState({ videoDuration: 0, start: 0 });
+      result.current.handleVideoLoadedData(initialData);
+    });
+
+    expect(result.current.videoDuration).toBe(100);
+    expect(result.current.start).toBe(50);
+
+    // Subsequent updates should NOT overwrite start time
+    act(() => {
+      result.current.handleVideoLoadedData({
+        ...initialData,
+        currentTime: 75 // Different time
+      });
+    });
+
+    // Start time should remain 50
+    expect(result.current.start).toBe(50);
+  });
+
   it('syncStartToVideoTime should update start time based on fetched metadata', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
 
