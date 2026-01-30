@@ -15,6 +15,7 @@ export const test = base.extend<{
         `--load-extension=${pathToExtension}`
       ]
     });
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(context);
     await context.close();
   }

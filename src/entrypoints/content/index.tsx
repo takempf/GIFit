@@ -34,6 +34,7 @@ export default defineContentScript({
       }
 
       // No video found
+      log('No video element found in getVideoElement');
       return null;
     };
 
@@ -88,8 +89,8 @@ export default defineContentScript({
             frameCount,
             thumbnailDataUrl
           })
-          .catch(() => {
-            // Popup likely closed, ignore
+          .catch((error) => {
+            log('Failed to send GIF_PROGRESS message:', error);
           });
       }
     );
@@ -97,82 +98,120 @@ export default defineContentScript({
     gifService.on('COMPLETE', (data) => {
       browser.runtime
         .sendMessage({ type: 'GIF_COMPLETE', data })
-        .catch(() => {});
+        .catch((error) => {
+          log('Failed to send GIF_COMPLETE message:', error);
+        });
     });
 
     gifService.on('ERROR', (error) => {
       browser.runtime
         .sendMessage({ type: 'GIF_ERROR', error: error.message })
-        .catch(() => {});
+        .catch((error) => {
+          log('Failed to send GIF_ERROR message:', error);
+        });
     });
 
     // --- Message Listener ---
     browser.runtime.onMessage.addListener(
-      async (message: ExtensionMessage, _sender, _sendResponse) => {
-        if (message.type === 'START_GIF') {
-          const video = getVideoElement();
-          if (!video) {
-            log('No active video element found to start GIF');
-            return;
-          }
-          gifService.createGif(message.config, video);
-        } else if (message.type === 'STOP_GIF') {
-          gifService.abort();
-        } else if (message.type === 'GET_VIDEO_METADATA') {
-          const video = getVideoElement();
+      (message: ExtensionMessage, _sender, sendResponse) => {
+        // Handle async message processing
+        const handleMessage = async () => {
+          try {
+            log('Content Script received message:', message.type);
 
-          if (video) {
-            // Check if metadata is loaded
-            if (video.readyState < 1) {
-              // Return null or partial?
-              return Promise.resolve(null);
-            }
-            return Promise.resolve({
-              duration: video.duration,
-              width: video.videoWidth,
-              height: video.videoHeight,
-              currentTime: video.currentTime
-            });
-          }
-          return Promise.resolve(null);
-        } else if (message.type === 'SEEK_VIDEO') {
-          const video = getVideoElement();
+            if (message.type === 'START_GIF') {
+              const video = getVideoElement();
+              if (!video) {
+                log('No active video element found to start GIF');
+                return;
+              }
+              gifService.createGif(message.config, video);
+            } else if (message.type === 'STOP_GIF') {
+              gifService.abort();
+            } else if (message.type === 'GET_VIDEO_METADATA') {
+              log('Handling GET_VIDEO_METADATA');
+              const video = getVideoElement();
 
-          if (video) {
-            const seekPromise = new Promise<void>((resolve) => {
-              const onSeeked = () => {
-                video.removeEventListener('seeked', onSeeked);
-                resolve();
-              };
-              video.addEventListener('seeked', onSeeked, { once: true });
-              // Safety timeout
-              setTimeout(() => {
-                video.removeEventListener('seeked', onSeeked);
-                resolve();
-              }, 2000);
-            });
-            video.currentTime = message.time;
-            await seekPromise;
-          }
-        } else if (message.type === 'PAUSE_VIDEO') {
-          const video = getVideoElement();
-          if (video) {
-            video.pause();
-          }
-        } else if (message.type === 'CAPTURE_VISIBLE_FRAME') {
-          const video = getVideoElement();
-          if (video) {
-            const canvas = document.createElement('canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              return canvas.toDataURL();
+              if (video) {
+                // Check if metadata is loaded
+                if (video.readyState < 1) {
+                  log('Video metadata not loaded yet (readyState < 1)');
+                  sendResponse(null);
+                  return;
+                }
+                const metadata = {
+                  duration: video.duration,
+                  width: video.videoWidth,
+                  height: video.videoHeight,
+                  currentTime: video.currentTime
+                };
+                log('Returning video metadata:', metadata);
+                sendResponse(metadata);
+                return;
+              }
+              log('No video found for GET_VIDEO_METADATA');
+              sendResponse(null);
+              return;
+            } else if (message.type === 'SEEK_VIDEO') {
+              const video = getVideoElement();
+
+              if (video) {
+                const seekPromise = new Promise<void>((resolve) => {
+                  const onSeeked = () => {
+                    video.removeEventListener('seeked', onSeeked);
+                    resolve();
+                  };
+                  video.addEventListener('seeked', onSeeked, { once: true });
+                  // Safety timeout
+                  setTimeout(() => {
+                    video.removeEventListener('seeked', onSeeked);
+                    resolve();
+                  }, 2000);
+                });
+                video.currentTime = message.time;
+                await seekPromise;
+                sendResponse(true); // Acknowledgement
+                return;
+              }
+              sendResponse(false);
+              return;
+            } else if (message.type === 'PAUSE_VIDEO') {
+              const video = getVideoElement();
+              if (video) {
+                video.pause();
+                sendResponse(true); // Acknowledgement
+                return;
+              }
+              sendResponse(false);
+              return;
+            } else if (message.type === 'CAPTURE_VISIBLE_FRAME') {
+              const video = getVideoElement();
+              if (video) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                  sendResponse(canvas.toDataURL());
+                  return;
+                }
+              }
+              sendResponse(null);
+              return;
+            }
+          } catch (error) {
+            log('Error in message listener:', error);
+            if (error instanceof Error) {
+              sendResponse({ error: error.message });
+            } else {
+              sendResponse({ error: 'Unknown error' });
             }
           }
-          return null;
-        }
+        };
+
+        handleMessage();
+        return true; // Keep the message channel open for async response
       }
     );
 

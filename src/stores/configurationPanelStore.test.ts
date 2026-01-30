@@ -1,4 +1,4 @@
-import { vi, describe, beforeEach, afterEach, expect, it, Mock } from 'vitest';
+import { vi, describe, beforeEach, afterEach, expect, it } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useConfigurationPanelStore } from './configurationPanelStore';
 import { storedConfig } from '@/utils/storage';

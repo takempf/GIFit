@@ -3,6 +3,8 @@ import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import { log } from '@/utils/logger';
 import floydSteinberg from '@/utils/dither'; // Assumed to return dithered RGBA data
 
+type Palette = [number, number, number][];
+
 // TODO centralize this
 const MAX_QUALITY = 10;
 
@@ -377,9 +379,9 @@ class GifService extends EventEmitter {
         new Uint8ClampedArray(imageData.data),
         width,
         height,
-        palette as any
+        palette as Palette
       );
-      indexedData = applyPalette(ditheredRgbaData, palette as any, {
+      indexedData = applyPalette(ditheredRgbaData, palette as Palette, {
         format: 'rgb565'
       });
     }
@@ -419,7 +421,7 @@ class GifService extends EventEmitter {
       // Use a color palette
       const palette = quantize(imageData.data, actualMaxColors);
       const indexedData = this.indexImageData(imageData, {
-        palette: palette as any,
+        palette: palette as Palette,
         noDither: config.noDither,
         width: config.width,
         height: config.height
@@ -427,7 +429,7 @@ class GifService extends EventEmitter {
 
       // Actually write frame data
       this.encoder.writeFrame(indexedData, config.width, config.height, {
-        palette: palette as any,
+        palette: palette as Palette,
         delay: frameIntervalMs
       });
 

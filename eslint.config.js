@@ -20,7 +20,7 @@ export default [
   },
   // Main configuration for TypeScript files (type-aware)
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
     languageOptions: {
       globals: {
         ...globals.browser,
