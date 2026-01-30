@@ -42,6 +42,11 @@ function useDebouncedCallback<A extends unknown[]>(
   );
 }
 
+// --- Helper: Round to 3 decimal places ---
+function roundTo3Places(value: number) {
+  return Math.round(value * 1000) / 1000;
+}
+
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
 }
@@ -69,6 +74,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
     await seekVideo(time);
+    captureFrame();
     captureFrame();
   }, 100);
 
@@ -118,47 +124,61 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const maxStart = toSeconds(Math.max(0, videoDurationMs - durationMs));
   const maxDuration = toSeconds(Math.min(videoDurationMs - startMs, 30000)); // 30s limit
 
-  function handleGenericInputChange(
-    event: React.ChangeEvent<HTMLInputElement>
+  function handleDurationChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const value = parseFloat(event.target.value);
+    console.log('duration new value', value);
+    if (isNaN(value)) return;
+
+    const roundedValue = roundTo3Places(value);
+
+    storeHandleInputChange({
+      name: 'duration',
+      value: roundedValue
+    });
+
+    // Logic: Show the frame that the duration "ends within".
+    const frameIndex = Math.max(0, Math.ceil(roundedValue * framerate) - 1);
+    const previewTime = start + frameIndex / framerate;
+    handlePreviewRequest(previewTime);
+  }
+
+  function handleGenericChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+    field: 'width' | 'height' | 'framerate' | 'quality'
   ) {
-    // ... same logic ...
-    const inputElement = event.target;
-    const fieldName = inputElement.name as keyof ConfigState; // Type assertion
-
-    const numericValue = parseFloat(inputElement.value);
-    if (isNaN(numericValue) && fieldName !== 'linkDimensions') {
-      return;
-    }
-
-    if (
-      fieldName === 'duration' ||
-      fieldName === 'width' ||
-      fieldName === 'height' ||
-      fieldName === 'framerate' ||
-      fieldName === 'quality'
-    ) {
+    const value = parseFloat(event.target.value);
+    if (!isNaN(value)) {
       storeHandleInputChange({
-        name: fieldName,
-        value: numericValue
+        name: field,
+        value: value
       });
-    }
-
-    if (fieldName === 'duration') {
-      const end = toSeconds(startMs + toMilliseconds(numericValue));
-      const oneFrame = toSeconds(1000 / framerate);
-      // For duration input, show the end frame (exclusive - 1 frame)
-      const previewEnd = Math.max(start, end - oneFrame);
-      handlePreviewRequest(previewEnd);
     }
   }
 
+  function handleWidthChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleGenericChange(event, 'width');
+  }
+
+  function handleHeightChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleGenericChange(event, 'height');
+  }
+
+  function handleFramerateChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleGenericChange(event, 'framerate');
+  }
+
+  function handleQualityChange(event: React.ChangeEvent<HTMLInputElement>) {
+    handleGenericChange(event, 'quality');
+  }
+
   function handleStartTimeChange(newStart: number) {
+    const roundedStart = roundTo3Places(newStart);
     storeHandleInputChange({
       name: 'start',
-      value: newStart
+      value: roundedStart
     });
     // When changing start time via input, show new start
-    handlePreviewRequest(newStart);
+    handlePreviewRequest(roundedStart);
   }
 
   // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
@@ -211,7 +231,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       <form
         className={css.form}
         onSubmit={handleSubmit}
-        onKeyDown={handleKeyDown}>
+        onKeyDown={handleKeyDown}
+        noValidate>
         <div className={css.preview}>
           <GifPreview
             previewImage={previewImage}
@@ -253,8 +274,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             value={String(duration)}
             min={1 / framerate}
             max={maxDuration}
-            step={1 / framerate}
-            onChange={handleGenericInputChange}
+            step={roundTo3Places(1 / framerate)}
+            onChange={handleDurationChange}
             data-testid="duration-input"
           />
         </div>
@@ -267,7 +288,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             min={1}
             max={60}
             value={String(framerate)}
-            onChange={handleGenericInputChange}
+            onChange={handleFramerateChange}
             data-testid="fps-input"
           />
         </div>
@@ -280,7 +301,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             value={String(width)}
             min={32}
             max={maxWidth}
-            onChange={handleGenericInputChange}
+            onChange={handleWidthChange}
             data-testid="width-input"
           />
         </div>
@@ -312,7 +333,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             value={String(height)}
             min={32}
             max={maxHeight}
-            onChange={handleGenericInputChange}
+            onChange={handleHeightChange}
             data-testid="height-input"
           />
         </div>
@@ -325,7 +346,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             min={1}
             max={10}
             value={String(quality)}
-            onChange={handleGenericInputChange}
+            onChange={handleQualityChange}
             data-testid="quality-input"
           />
         </div>
