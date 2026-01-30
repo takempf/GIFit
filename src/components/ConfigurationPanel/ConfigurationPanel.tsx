@@ -188,119 +188,137 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         <div className={css.preview}>
           <GifPreview previewImage={previewImage} aspectRatio={aspectRatio} />
         </div>
-        {/* Rest of form ... */}
-        <InputTime
-          className={css.start}
-          name="start"
-          label="Start"
-          value={start}
-          min={0}
-          max={maxStart}
-          onChange={handleStartTimeChange}
-          data-testid="start-input"
-          append={
-            <Button
-              title="Set to current time"
-              variant="outline"
-              size="x-small"
-              padding="x-small"
-              onClick={handleSetStartToCurrentTimeClick}>
-              Now
-            </Button>
-          }
-        />
-        <InputNumber
-          className={css.duration}
-          name="duration"
-          label="Duration"
-          type="number"
-          value={String(duration)}
-          min={1 / framerate}
-          max={maxDuration}
-          step={1 / framerate}
-          onChange={handleGenericInputChange}
-          data-testid="duration-input"
-        />
-        <InputNumber
-          className={css.width}
-          name="width"
-          label="Width"
-          type="number"
-          value={String(width)}
-          min={32}
-          max={maxWidth}
-          onChange={handleGenericInputChange}
-          data-testid="width-input"
-        />
-        <ButtonToggle
-          className={css.linkDimensions}
-          name="linkDimensions"
-          size="x-small"
-          rounded={true}
-          variant="input"
-          padding="small"
-          evenPadding={true}
-          checked={linkDimensions}
-          onChange={handleLinkToggleChange}
-          data-testid="dimensions-link-toggle">
-          {linkDimensions ? (
-            <LinkIcon className={css.linkIcon} />
-          ) : (
-            <LinkEmptyIcon className={css.linkIcon} />
-          )}
-        </ButtonToggle>
-        <InputNumber
-          className={css.height}
-          name="height"
-          label="Height"
-          type="number"
-          value={String(height)}
-          min={32}
-          max={maxHeight}
-          onChange={handleGenericInputChange}
-          data-testid="height-input"
-        />
-        <InputNumber
-          className={css.fps}
-          name="framerate"
-          label="FPS"
-          type="number"
-          min={1}
-          max={60}
-          value={String(framerate)}
-          onChange={handleGenericInputChange}
-          data-testid="fps-input"
-        />
-        <Timeline
-          className={css.timeline}
-          totalDuration={videoDuration}
-          startTime={start}
-          duration={duration}
-          fps={framerate}
-          onStartTimeChange={handleStartTimeChange}
-          onDurationChange={(newDuration) => {
-            storeHandleInputChange({
-              name: 'duration',
-              value: newDuration
-            });
-            const end = start + newDuration;
-            debouncedSeekVideo(end);
-          }}
-        />
-        <Input
-          className={css.quality}
-          name="quality"
-          label="Quality"
-          type="range"
-          min={1}
-          max={10}
-          value={String(quality)}
-          onChange={handleGenericInputChange}
-          data-testid="quality-input"
-        />
-        <Button id="gifit-submit" className={css.submit} type="submit">
-          Create GIF
-        </Button>
+
+        <div className={css.timeline}>
+          <Timeline
+            totalDuration={videoDuration}
+            startTime={start}
+            duration={duration}
+            fps={framerate}
+            onStartTimeChange={handleStartTimeChange}
+            onDurationChange={(newDuration) => {
+              storeHandleInputChange({
+                name: 'duration',
+                value: newDuration
+              });
+              const end = start + newDuration;
+              debouncedSeekVideo(end);
+            }}
+          />
+        </div>
+
+        <div className={css.start}>
+          <InputTime
+            name="start"
+            label="Start"
+            value={start}
+            min={0}
+            max={maxStart}
+            onChange={handleStartTimeChange}
+            data-testid="start-input"
+            append={
+              <Button
+                title="Set to current time"
+                variant="outline"
+                size="x-small"
+                padding="x-small"
+                onClick={handleSetStartToCurrentTimeClick}>
+                Now
+              </Button>
+            }
+          />
+        </div>
+
+        <div className={css.duration}>
+          <InputNumber
+            name="duration"
+            label="Duration"
+            type="number"
+            value={String(duration)}
+            min={1 / framerate}
+            max={maxDuration}
+            step={1 / framerate}
+            onChange={handleGenericInputChange}
+            data-testid="duration-input"
+          />
+        </div>
+
+        <div className={css.fps}>
+          <InputNumber
+            name="framerate"
+            label="FPS"
+            type="number"
+            min={1}
+            max={60}
+            value={String(framerate)}
+            onChange={handleGenericInputChange}
+            data-testid="fps-input"
+          />
+        </div>
+
+        <div className={css.width}>
+          <InputNumber
+            name="width"
+            label="Width"
+            type="number"
+            value={String(width)}
+            min={32}
+            max={maxWidth}
+            onChange={handleGenericInputChange}
+            data-testid="width-input"
+          />
+        </div>
+
+        <div className={css.linkDimensions}>
+          <ButtonToggle
+            name="linkDimensions"
+            size="x-small"
+            rounded={true}
+            variant="input"
+            padding="small"
+            evenPadding={true}
+            checked={linkDimensions}
+            onChange={handleLinkToggleChange}
+            data-testid="dimensions-link-toggle">
+            {linkDimensions ? (
+              <LinkIcon className={css.linkIcon} />
+            ) : (
+              <LinkEmptyIcon className={css.linkIcon} />
+            )}
+          </ButtonToggle>
+        </div>
+
+        <div className={css.height}>
+          <InputNumber
+            name="height"
+            label="Height"
+            type="number"
+            value={String(height)}
+            min={32}
+            max={maxHeight}
+            onChange={handleGenericInputChange}
+            data-testid="height-input"
+          />
+        </div>
+
+        <div className={css.quality}>
+          <Input
+            name="quality"
+            label="Quality"
+            type="range"
+            min={1}
+            max={10}
+            value={String(quality)}
+            onChange={handleGenericInputChange}
+            data-testid="quality-input"
+          />
+        </div>
+
+        <div className={css.submit}>
+          <Button id="gifit-submit" type="submit" className={css.submitButton}>
+            Create GIF
+          </Button>
+        </div>
       </form>
     </div>
   );

@@ -11,14 +11,26 @@
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
     'preview preview preview'
-    'width height quality'
-    'start duration fps'
     'timeline timeline timeline'
+    'start duration fps'
+    'width height quality'
     'submit submit submit';
   gap: 1px;
-  background: rgba(225, 225, 225, 0.69);
-  border-radius: var(--border-radius);
-  overflow: hidden;
+  padding: 1px;
+  /* Since we're using gaps for borders, the background is actually the border color */
+  background: var(--color_panel_border);
+}
+
+.preview,
+.timeline,
+.start,
+.duration,
+.width,
+.height,
+.fps,
+.quality,
+.submit {
+  background: var(--color_panel_background);
 }
 
 .preview {
@@ -71,12 +83,17 @@
 
 .timeline {
   grid-area: timeline;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.5); /* Optional separation */
-  background: rgba(0, 0, 0, 0.1); /* Slight contrast to container */
 }
 
 .submit {
   grid-area: submit;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.submitButton {
+  flex-grow: 1;
 }
 
 .actions {

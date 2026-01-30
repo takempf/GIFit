@@ -105,7 +105,7 @@ export function App() {
           </section>
         )}
       </div>
-      <footer>
+      <footer className={css.footer}>
         <a
           className={css.credit}
           href="https://kempf.dev/#gifit"

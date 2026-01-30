@@ -18,8 +18,11 @@
 
   --color_primary: rgb(219, 7, 7);
 
+  --color_popup_background: rgb(15, 15, 15);
+  --color_panel_border: rgb(65, 65, 65);
+  --color_panel_background: rgb(35, 35, 35);
+
   --color_panel_text: rgb(125, 125, 125);
-  --color_panel_background: rgba(255, 255, 255, 0.95);
   --color_input_text: rgb(25, 25, 25);
 
   --color_slider_thumb: rgb(235, 235, 235);
@@ -49,6 +52,8 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+
+  background: var(--color_popup_background);
 }
 
 #root {
@@ -70,4 +75,12 @@ input::-webkit-inner-spin-button {
 input[type='number'] {
   -moz-appearance: textfield; /* Hide default spinners in Firefox */
   appearance: textfield;
+}
+
+a {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--color_primary);
+  text-decoration-thickness: 0.1em;
 }

@@ -9,7 +9,7 @@ type CleanButtonProps = Omit<ButtonProps, 'onChange'>;
 
 interface ButtonToggleProps extends CleanButtonProps {
   children: React.ReactNode;
-  className: string;
+  className?: string;
   checked: boolean;
   name: string;
   onChange: (value: boolean) => void;

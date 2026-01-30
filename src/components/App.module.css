@@ -43,3 +43,17 @@
     scale: 0.95;
   }
 }
+
+.footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  font-size: 14px;
+}
+
+.tkLogo {
+  height: 1em;
+  vertical-align: middle;
+}
