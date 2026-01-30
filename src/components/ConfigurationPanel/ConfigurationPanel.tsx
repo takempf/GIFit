@@ -59,7 +59,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     videoWidth: configVideoWidth,
     videoHeight: configVideoHeight,
     previewImage,
-    aspectRatio,
     handleInputChange: storeHandleInputChange,
     seekVideo,
     fetchVideoMetadata,
@@ -193,7 +192,11 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}>
         <div className={css.preview}>
-          <GifPreview previewImage={previewImage} aspectRatio={aspectRatio} />
+          <GifPreview
+            previewImage={previewImage}
+            width={width}
+            height={height}
+          />
         </div>
 
         <div className={css.timeline}>
