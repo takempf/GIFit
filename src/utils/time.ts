@@ -44,7 +44,23 @@ export function formatMilliseconds(milliseconds: number): string {
   if (hours > 0) {
     const mm = minutes.toString().padStart(2, '0');
     return `${hours}:${mm}:${ss}`;
-  } else {
-    return `${minutes}:${ss}`;
   }
+  return `${minutes}:${ss}`;
+}
+
+/**
+ * Calculates the start time of the last frame in a range.
+ * Useful for previewing the "end" of a GIF, which is visually the last frame.
+ */
+export function calculateLastFramePreview(
+  startMs: number,
+  durationMs: number,
+  framerate: number
+): number {
+  if (framerate <= 0) return startMs;
+  // Calculate total frames
+  const frameCount = Math.ceil((durationMs / 1000) * framerate);
+  // Last frame is the one before the "end"
+  const lastFrameRelativeIndex = Math.max(0, frameCount - 1);
+  return startMs + (lastFrameRelativeIndex / framerate) * 1000;
 }

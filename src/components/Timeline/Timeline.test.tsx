@@ -9,9 +9,9 @@ describe('Timeline', () => {
     duration: 3,
     fps: 10,
     previewTime: 2,
+    onChange: vi.fn(),
     onStartTimeChange: vi.fn(),
-    onDurationChange: vi.fn(),
-    onPreviewRequest: vi.fn()
+    onDurationChange: vi.fn()
   };
 
   it('renders correctly', () => {
@@ -46,9 +46,9 @@ describe('Timeline', () => {
     expect(getByTestId('handle-right')).toBeInTheDocument();
   });
   it('updates startTime when clicking on background', () => {
-    const onStartTimeChange = vi.fn();
+    const onChange = vi.fn();
     // Set startTime to 0 to avoid auto-scroll affecting the calculation (scrollLeft stays 0)
-    const props = { ...defaultProps, onStartTimeChange, startTime: 0 };
+    const props = { ...defaultProps, onChange, startTime: 0 };
     const { getByTestId } = render(<Timeline {...props} />);
 
     const interior = getByTestId('timeline-interior');
@@ -75,7 +75,7 @@ describe('Timeline', () => {
     // time = 10 / 10 = 1.0s.
     fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
 
-    expect(onStartTimeChange).toHaveBeenCalledWith(1);
+    expect(onChange).toHaveBeenCalledWith(1, 3, 'start'); // duration is 3
   });
 
   it('scrolls to selection on mount', () => {
@@ -90,7 +90,7 @@ describe('Timeline', () => {
   });
 
   it('renders preview highlight at correct position', () => {
-    const { container } = render(<Timeline {...defaultProps} />);
+    render(<Timeline {...defaultProps} />);
     // Select by class name since it doesn't have a test id in the original code,
     // although I added the class in previous steps.
     // Let's use logic to find it or adding a data-testid would be better but I can't edit source in this tool call easily.
@@ -106,12 +106,9 @@ describe('Timeline', () => {
     // It's the div BEFORE the selection layer in my previous edit.
 
     // best approach: check if there represents a div with left: 240px and width: 12px that is NOT the selection.
-    // selection is at 240px too (startTime=2), but width 360px.
-
-    // eslint-disable-next-line testing-library/no-node-access
-    const elements = container.querySelectorAll('div[style*="left: 240px"]');
-    // One should be selection (width 360), one preview (width 12).
-    const preview = Array.from(elements).find(
+    // We can iterate over the children of the interior.
+    const interior = screen.getByTestId('timeline-interior');
+    const preview = Array.from(interior.children).find(
       (el) => (el as HTMLElement).style.width === '12px'
     );
     expect(preview).toBeInTheDocument();
@@ -141,7 +138,8 @@ describe('Timeline', () => {
     // Drag move (background)
     // Click at 220px (relative 120px -> 1s)
     fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
-    expect(onPreviewRequest).toHaveBeenCalledWith(1);
+    // Expect onChange
+    expect(props.onChange).toHaveBeenCalledWith(1, 3, 'start');
 
     // Handles interactions logic is similar but requires mocking dragging state which is internal.
     // However, I can trigger mouseDown on handles.

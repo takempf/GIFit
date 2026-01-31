@@ -56,6 +56,7 @@
   flex-direction: row;
   overflow: hidden; /* logic for children frames */
   cursor: move;
+  backdrop-filter: blur(1px);
 }
 
 .selectionFrame {
@@ -101,4 +102,5 @@
   background: oklch(from var(--color_accent) l c h / 0.3);
   z-index: 1;
   pointer-events: none;
+  border-left: oklch(from var(--color_accent) l c h / 0.75) 1px solid;
 }

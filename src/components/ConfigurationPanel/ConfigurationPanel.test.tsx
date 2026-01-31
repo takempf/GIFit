@@ -15,6 +15,9 @@ import {
   ConfigActions
 } from '@/stores/configurationPanelStore';
 
+// Helper type for mocked store
+type MockStore = Mock<() => ConfigState & ConfigActions>;
+
 vi.mock('@/stores/configurationPanelStore');
 vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
 // Mock Input components to avoid complexity
@@ -24,8 +27,39 @@ vi.mock('../Input/Input', () => ({
   )
 }));
 vi.mock('../InputNumber/InputNumber', () => ({
-  InputNumber: (props: React.ComponentProps<'input'> & { label: string }) => (
-    <input aria-label={props.label} type="number" {...props} />
+  InputNumber: (
+    props: React.ComponentProps<'input'> & {
+      label: string;
+      onStep?: (val: number, dir: 'up' | 'down') => number;
+    }
+  ) => (
+    <div>
+      <input
+        aria-label={props.label}
+        type="number"
+        {...props}
+        onChange={(e) => props.onChange(e)}
+      />
+      <button
+        aria-label="Increment"
+        onClick={() => {
+          if (props.onStep && props.value !== undefined) {
+            const val =
+              typeof props.value === 'string'
+                ? parseFloat(props.value)
+                : Number(props.value);
+            const newVal = props.onStep(val, 'up');
+            // Simulate onChange
+            if (props.onChange) {
+              props.onChange({
+                target: { value: String(newVal), name: props.name }
+              } as React.ChangeEvent<HTMLInputElement>);
+            }
+          }
+        }}>
+        Increment
+      </button>
+    </div>
   )
 }));
 vi.mock('../InputTime/InputTime', () => ({
@@ -75,14 +109,14 @@ describe('ConfigurationPanel', () => {
 
     mockConfigStoreState = {
       start: 0,
-      duration: 2,
+      duration: 2000,
       width: 1280,
       height: 720,
       linkDimensions: true,
       framerate: 10,
       quality: 5,
       aspectRatio: 1280 / 720,
-      videoDuration: 100,
+      videoDuration: 100000,
       videoWidth: 1280,
       videoHeight: 720
     };
@@ -96,10 +130,10 @@ describe('ConfigurationPanel', () => {
       syncStartToVideoTime: vi.fn().mockResolvedValue(undefined),
       captureFrame: vi.fn()
     };
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions
-    });
+    } as ConfigState & ConfigActions);
     (
       useConfigurationPanelStore as unknown as {
         getState: () => Partial<ConfigState>;
@@ -117,7 +151,7 @@ describe('ConfigurationPanel', () => {
       '0'
     ); // InputTime mock renders value as is
     expect((screen.getByLabelText('Duration') as HTMLInputElement).value).toBe(
-      String(mockConfigStoreState.duration)
+      '2'
     );
     expect((screen.getByLabelText('Width') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.width)
@@ -166,7 +200,7 @@ describe('ConfigurationPanel', () => {
   test('submits form with current config from store', () => {
     const submittedState = {
       ...mockConfigStoreState,
-      videoDuration: 100,
+      videoDuration: 100000,
       videoWidth: 1280,
       videoHeight: 720
     };
@@ -186,11 +220,11 @@ describe('ConfigurationPanel', () => {
   });
 
   test('renders null if videoDuration is 0', () => {
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       videoDuration: 0
-    });
+    } as ConfigState & ConfigActions);
     const { container } = render(
       <ConfigurationPanel onSubmit={mockOnSubmit} />
     );
@@ -199,12 +233,12 @@ describe('ConfigurationPanel', () => {
 
   test('duration input change seeks video to last frame of duration', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
-      start: 5,
+      start: 5000,
       framerate: 10
-    });
+    } as ConfigState & ConfigActions);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
     // Logic: Duration 1.05.
@@ -226,65 +260,62 @@ describe('ConfigurationPanel', () => {
 
     expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
       name: 'duration',
-      value: 1.05
+      value: 1050
     });
 
     // Seek should happen to calculated preview time
-    expect(mockConfigStoreActions.seekVideo).toHaveBeenCalledWith(6.0);
+    expect(mockConfigStoreActions.seekVideo).toHaveBeenCalledWith(6000);
     vi.useRealTimers();
   });
 
   test('max values for inputs are calculated correctly', () => {
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
-      start: 10,
-      duration: 5,
-      videoDuration: 60,
+      start: 10000,
+      duration: 5000,
+      videoDuration: 60000,
       videoWidth: 1920, // configVideoWidth
       videoHeight: 1080 // configVideoHeight
-    });
+    } as ConfigState & ConfigActions);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
     expect(screen.getByLabelText('Duration')).toHaveAttribute('max', '30');
     expect(screen.getByLabelText('Width')).toHaveAttribute('max', '1920'); // calculated from configVideoWidth
     expect(screen.getByLabelText('Height')).toHaveAttribute('max', '1080'); // calculated from configVideoHeight
   });
-  test('increments duration on step up and honors rounding', () => {
+  test('increments duration on step up and honors flooring', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
-      duration: 1.0,
+      duration: 1000,
       framerate: 60
-    });
+    } as ConfigState & ConfigActions);
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
-    // Simulate stepping up: 1.0 + 1/60 (0.01666...) => 1.01666...
-    // Should display rounded to 1.017
+    // Simulate stepping up: 1.0 + 1/60 (0.016666666666666666)
+    // 1.016666... seconds = 1016.666... ms
+    // Floor -> 1016 ms (Round would be 1017 ms)
 
-    // We can't easily simulate browser's native stepUp calculation perfectly via fireEvent.change alone unless we do the math
-    // But we know our component receives the change event with the new value.
-    // InputNumber sets step={1/framerate}.
-    // We verify our rounding logic applies to the new value.
-
+    // We simulate the change event with the stepped value
     fireEvent.change(screen.getByLabelText('Duration'), {
       target: { name: 'duration', value: '1.01666666667' }
     });
 
     expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
       name: 'duration',
-      value: 1.017
+      value: 1016 // Floored
     });
     vi.useRealTimers();
   });
 
   test('allows arbitrary duration without snapping on blur', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as Mock).mockReturnValue({
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
-      duration: 1.7
-    });
+      duration: 1700
+    } as ConfigState & ConfigActions);
 
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 

@@ -4,7 +4,11 @@ import {
   useConfigurationPanelStore,
   type ConfigState
 } from '@/stores/configurationPanelStore';
-import { toMilliseconds, toSeconds } from '@/utils/time';
+import {
+  toMilliseconds,
+  toSeconds,
+  calculateLastFramePreview
+} from '@/utils/time';
 
 import { Input } from '../Input/Input';
 import { InputNumber } from '../InputNumber/InputNumber';
@@ -40,11 +44,6 @@ function useDebouncedCallback<A extends unknown[]>(
     },
     [delay]
   );
-}
-
-// --- Helper: Round to 3 decimal places ---
-function roundTo3Places(value: number) {
-  return Math.round(value * 1000) / 1000;
 }
 
 interface ConfigurationPanelProps {
@@ -109,6 +108,16 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     return () => clearInterval(intervalId);
   }, [fetchVideoMetadata, captureFrame]);
 
+  // Store values are now in Milliseconds
+  const videoDurationMs = videoDuration;
+  const durationMs = duration;
+  const startMs = start;
+
+  // Max calculations in MS
+  const maxStart = Math.max(0, videoDurationMs - durationMs);
+  const maxDuration = Math.min(videoDurationMs - startMs, 30000); // 30s limit
+
+  // Early return MUST be after all hooks
   if (videoDuration === 0) {
     return null;
   }
@@ -116,30 +125,29 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const maxWidth = Math.min(configVideoWidth, 1920);
   const maxHeight = Math.min(configVideoHeight, 1080);
 
-  // Use integer math for time calculations to avoid float errors
-  const videoDurationMs = toMilliseconds(videoDuration);
-  const durationMs = toMilliseconds(duration);
-  const startMs = toMilliseconds(start);
-
-  const maxStart = toSeconds(Math.max(0, videoDurationMs - durationMs));
-  const maxDuration = toSeconds(Math.min(videoDurationMs - startMs, 30000)); // 30s limit
-
-  function handleDurationChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = parseFloat(event.target.value);
-    console.log('duration new value', value);
-    if (isNaN(value)) return;
-
-    const roundedValue = roundTo3Places(value);
-
+  function handleDurationChangeMs(roundedMs: number) {
     storeHandleInputChange({
       name: 'duration',
-      value: roundedValue
+      value: roundedMs
     });
 
-    // Logic: Show the frame that the duration "ends within".
-    const frameIndex = Math.max(0, Math.ceil(roundedValue * framerate) - 1);
-    const previewTime = start + frameIndex / framerate;
-    handlePreviewRequest(previewTime);
+    const previewTimeMs = calculateLastFramePreview(
+      start,
+      roundedMs,
+      framerate
+    );
+    handlePreviewRequest(previewTimeMs);
+  }
+
+  function handleDurationChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const valueSeconds = parseFloat(event.target.value);
+    if (isNaN(valueSeconds)) return;
+
+    // Convert to MS
+    // Use floor for duration to prevent overstepping
+    const roundedMs = Math.floor(valueSeconds * 1000);
+
+    handleDurationChangeMs(roundedMs);
   }
 
   function handleGenericChange(
@@ -171,29 +179,49 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     handleGenericChange(event, 'quality');
   }
 
-  function handleStartTimeChange(newStart: number) {
-    const roundedStart = roundTo3Places(newStart);
+  function handleStartTimeChange(newStartMs: number) {
+    // InputTime returns MS
     storeHandleInputChange({
       name: 'start',
-      value: roundedStart
+      value: newStartMs
     });
     // When changing start time via input, show new start
-    handlePreviewRequest(roundedStart);
+    handlePreviewRequest(newStartMs);
   }
 
   // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
-  function handleTimelineStartTimeChange(newStart: number) {
+  // Timeline callbacks provide Seconds (legacy interface)
+  function handleTimelineChange(
+    newStartS: number,
+    newDurationS: number,
+    context: 'start' | 'end'
+  ) {
+    const newStartMs = toMilliseconds(newStartS);
+    // Use floor for duration to prevent overstepping
+    const newDurationMs = Math.floor(newDurationS * 1000);
+
     storeHandleInputChange({
       name: 'start',
-      value: newStart
+      value: newStartMs
     });
-  }
-
-  function handleTimelineDurationChange(newDuration: number) {
     storeHandleInputChange({
       name: 'duration',
-      value: newDuration
+      value: newDurationMs
     });
+
+    // Explicit Preview Logic based on context from Timeline
+    if (context === 'start') {
+      handlePreviewRequest(newStartMs);
+    } else {
+      // context === 'end'
+      // Logic: Preview the Last GIF Frame.
+      const previewTimeMs = calculateLastFramePreview(
+        newStartMs,
+        newDurationMs,
+        framerate
+      );
+      handlePreviewRequest(previewTimeMs);
+    }
   }
 
   function handleLinkToggleChange(isLinked: boolean) {
@@ -211,8 +239,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     event.preventDefault();
     const currentConfigState = useConfigurationPanelStore.getState();
     onSubmit({
-      start,
-      duration,
+      start, // MS
+      duration, // MS
       width,
       height,
       linkDimensions,
@@ -243,14 +271,12 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
         <div className={css.timeline}>
           <Timeline
-            totalDuration={videoDuration}
-            startTime={start}
-            duration={duration}
+            totalDuration={toSeconds(videoDuration)}
+            startTime={toSeconds(start)}
+            duration={toSeconds(duration)}
             fps={framerate}
-            previewTime={previewTime}
-            onStartTimeChange={handleTimelineStartTimeChange}
-            onDurationChange={handleTimelineDurationChange}
-            onPreviewRequest={handlePreviewRequest}
+            previewTime={toSeconds(previewTime)}
+            onChange={handleTimelineChange}
           />
         </div>
 
@@ -261,6 +287,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             value={start}
             min={0}
             max={maxStart}
+            step={1000 / framerate}
             onChange={handleStartTimeChange}
             data-testid="start-input"
           />
@@ -271,10 +298,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             name="duration"
             label="Duration"
             type="number"
-            value={String(duration)}
-            min={1 / framerate}
-            max={maxDuration}
-            step={roundTo3Places(1 / framerate)}
+            value={String(toSeconds(duration))}
+            min={1 / framerate} // Seconds
+            max={toSeconds(maxDuration)} // Seconds
+            step={1 / framerate} // Seconds (standard InputNumber step)
             onChange={handleDurationChange}
             data-testid="duration-input"
           />

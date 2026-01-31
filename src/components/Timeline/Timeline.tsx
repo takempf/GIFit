@@ -3,7 +3,6 @@ import styles from './Timeline.module.css';
 import {
   toMilliseconds,
   toSeconds,
-  snapToFrame,
   formatMilliseconds
 } from '../../utils/time';
 
@@ -13,9 +12,11 @@ interface TimelineProps {
   duration: number; // Selection duration
   fps: number;
   previewTime: number;
-  onStartTimeChange: (newStartTime: number) => void;
-  onDurationChange: (newDuration: number) => void;
-  onPreviewRequest?: (previewTime: number) => void;
+  onChange: (
+    newStartTime: number,
+    newDuration: number,
+    context: 'start' | 'end'
+  ) => void;
   className?: string;
 }
 
@@ -28,9 +29,7 @@ export function Timeline({
   duration,
   fps,
   previewTime,
-  onStartTimeChange,
-  onDurationChange,
-  onPreviewRequest,
+  onChange,
   className
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -41,6 +40,7 @@ export function Timeline({
     'left' | 'right' | 'move' | null
   >(null);
   const dragOffsetRef = useRef<number>(0);
+  const anchorEndTimeRef = useRef<number>(0);
 
   // Calculate specific widths
   // const pixelsPerFrame = PIXELS_PER_SECOND / fps;
@@ -58,9 +58,7 @@ export function Timeline({
     durationMs,
     totalDurationMs,
     fps,
-    onStartTimeChange,
-    onDurationChange,
-    onPreviewRequest
+    onChange
   });
 
   // Update ref on every render
@@ -69,9 +67,7 @@ export function Timeline({
     durationMs,
     totalDurationMs,
     fps,
-    onStartTimeChange,
-    onDurationChange,
-    onPreviewRequest
+    onChange
   };
 
   const autoScrollSpeedRef = useRef<number>(0);
@@ -100,15 +96,8 @@ export function Timeline({
     const updateDragState = (clientX: number) => {
       if (!scrollRef.current) return;
 
-      const {
-        startTimeMs,
-        durationMs,
-        totalDurationMs,
-        fps,
-        onStartTimeChange,
-        onDurationChange,
-        onPreviewRequest
-      } = propsRef.current;
+      const { startTimeMs, durationMs, totalDurationMs, onChange } =
+        propsRef.current;
 
       // Calculate mouse position relative to the scroll content
       const rect = scrollRef.current.getBoundingClientRect();
@@ -118,47 +107,41 @@ export function Timeline({
       // Calculate approximate time in ms from pixels
       const rawMs = relativeX / PIXELS_PER_MS;
 
-      // Snap to frame
-      const snappedTimeMs = snapToFrame(rawMs, fps);
+      // No snapping, use rawMs directly (clamped logic below handles boundaries)
+      const targetTimeMs = rawMs;
 
       // Current End Time (fixed if dragging left)
-      const currentEndTimeMs = startTimeMs + durationMs;
-      const minDurationMs = Math.floor(1000 / fps); // Minimum 1 frame duration
+      // We use the anchor for left drags to prevent floating point drift
+      const anchorEndTimeMs = anchorEndTimeRef.current;
+      // const minDurationMs = Math.floor(1000 / fps); // Minimum 1 frame duration
+      const minDurationMs = 1; // Allow arbitrary small duration (1ms)
 
       if (isDragging === 'move') {
         const proposedLeftBytes = relativeX - dragOffsetRef.current;
         // Convert pixels back to ms
         let newStartMs = proposedLeftBytes / PIXELS_PER_MS;
 
-        // Snap the new start time
-        newStartMs = snapToFrame(newStartMs, fps);
-
         newStartMs = Math.max(0, newStartMs);
         newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
 
-        if (newStartMs !== startTimeMs) {
-          onStartTimeChange(toSeconds(newStartMs));
-          onPreviewRequest?.(toSeconds(newStartMs));
+        if (Math.abs(newStartMs - startTimeMs) > 0.001) {
+          onChange(toSeconds(newStartMs), toSeconds(durationMs), 'start');
         }
       } else if (isDragging === 'left') {
-        let newStartMs = Math.max(0, snappedTimeMs);
-        newStartMs = Math.min(newStartMs, currentEndTimeMs - minDurationMs);
+        let newStartMs = Math.max(0, targetTimeMs);
+        newStartMs = Math.min(newStartMs, anchorEndTimeMs - minDurationMs);
 
-        if (newStartMs !== startTimeMs) {
-          onStartTimeChange(toSeconds(newStartMs));
-          const newDurationMs = currentEndTimeMs - newStartMs;
-          onDurationChange(toSeconds(newDurationMs));
-          onPreviewRequest?.(toSeconds(newStartMs));
+        if (Math.abs(newStartMs - startTimeMs) > 0.001) {
+          const newDurationMs = anchorEndTimeMs - newStartMs;
+          onChange(toSeconds(newStartMs), toSeconds(newDurationMs), 'start');
         }
       } else if (isDragging === 'right') {
-        let newEndMs = Math.max(startTimeMs + minDurationMs, snappedTimeMs);
+        let newEndMs = Math.max(startTimeMs + minDurationMs, targetTimeMs);
         newEndMs = Math.min(newEndMs, totalDurationMs);
 
         const newDurationMs = newEndMs - startTimeMs;
-        if (newDurationMs !== durationMs) {
-          onDurationChange(toSeconds(newDurationMs));
-          const oneFrameMs = 1000 / fps;
-          onPreviewRequest?.(toSeconds(newEndMs - oneFrameMs));
+        if (Math.abs(newDurationMs - durationMs) > 0.001) {
+          onChange(toSeconds(startTimeMs), toSeconds(newDurationMs), 'end');
         }
       }
     };
@@ -244,15 +227,15 @@ export function Timeline({
     const relativeX = e.clientX - rect.left + scrollLeft;
 
     const rawMs = relativeX / PIXELS_PER_MS;
-    let newStartMs = snapToFrame(rawMs, fps);
+    // No snapping
+    let newStartMs = rawMs;
 
     // Clamp to valid range
     newStartMs = Math.max(0, newStartMs);
     newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
 
     if (newStartMs !== startTimeMs) {
-      onStartTimeChange(toSeconds(newStartMs));
-      onPreviewRequest?.(toSeconds(newStartMs));
+      onChange(toSeconds(newStartMs), toSeconds(durationMs), 'start');
     }
   };
 
@@ -289,14 +272,6 @@ export function Timeline({
     }
     return ticks;
   }, [totalDuration, fps, totalDurationMs]);
-
-  // Generate Frame Children for Selection
-  const selectionFrames = useMemo(() => {
-    const frameCount = Math.round(duration * fps);
-    return Array.from({ length: frameCount }).map((_, i) => (
-      <div key={`sel-frame-${i}`} className={styles.selectionFrame} />
-    ));
-  }, [duration, fps]);
 
   const selectionStyle = {
     left: `${startTimeMs * PIXELS_PER_MS}px`,
@@ -335,14 +310,15 @@ export function Timeline({
             style={selectionStyle}
             onMouseDown={handleSelectionMouseDown}
             data-testid="selection-rect">
-            {/* Frames Visual */}
-            {selectionFrames}
+            {/* Frames Visual Removed */}
 
             {/* Handles */}
             <div
               className={`${styles.handle} ${styles.handleLeft}`}
               onMouseDown={(e) => {
                 e.stopPropagation();
+                // Set anchor for left drag
+                anchorEndTimeRef.current = startTimeMs + durationMs;
                 setIsDragging('left');
               }}
               data-testid="handle-left"

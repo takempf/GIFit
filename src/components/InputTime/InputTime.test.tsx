@@ -39,12 +39,12 @@ describe('InputTime', { timeout: 10000 }, () => {
   });
 
   it('renders with initial value and correct formatting (e.g. 90.5s)', () => {
-    render(<InputTime {...defaultProps} value={90.5} />); // 1m 30.5s
+    render(<InputTime {...defaultProps} value={90500} />); // 1m 30.5s
     expect(getInput().value).toBe('1:30.5');
   });
 
   it('renders with initial value and correct formatting for hours (e.g. 3661.2s)', () => {
-    render(<InputTime {...defaultProps} value={3661.2} step={0.1} />); // 1h 1m 1.2s
+    render(<InputTime {...defaultProps} value={3661200} step={100} />); // 1h 1m 1.2s
     expect(getInput().value).toBe('1:01:01.2');
   });
 
@@ -67,12 +67,14 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).toHaveBeenCalledWith(83.4);
+    expect(handleChange).toHaveBeenCalledWith(83400); // 1:23.4 -> 83.4s -> 83400ms
   });
 
   it('handles invalid user input and reverts on blur', async () => {
     const handleChange = vi.fn();
-    render(<InputTime {...defaultProps} value={10} onChange={handleChange} />);
+    render(
+      <InputTime {...defaultProps} value={10000} onChange={handleChange} />
+    );
     const input = getInput();
     expect(input.value).toBe('0:10.0');
 
@@ -86,12 +88,12 @@ describe('InputTime', { timeout: 10000 }, () => {
 
   it('calls onChange with new value when step buttons are clicked', async () => {
     const handleChange = vi.fn();
-    let value = 5;
+    let value = 5000;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -101,12 +103,12 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.pointerDown(getIncrementButton());
     fireEvent.pointerUp(getIncrementButton());
-    expect(handleChange).toHaveBeenCalledWith(6);
+    expect(handleChange).toHaveBeenCalledWith(6000);
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -116,19 +118,19 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.pointerDown(getDecrementButton());
     fireEvent.pointerUp(getDecrementButton());
-    expect(handleChange).toHaveBeenCalledWith(5);
+    expect(handleChange).toHaveBeenCalledWith(5000);
   });
 
   it('respects min and max props on step button clicks', async () => {
     const handleChange = vi.fn();
-    let value = 0.5;
+    let value = 500;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
-        step={0.1}
-        min={0.5}
-        max={0.7}
+        step={100}
+        min={500}
+        max={700}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -140,14 +142,14 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.pointerDown(getIncrementButton());
     fireEvent.pointerUp(getIncrementButton());
-    expect(handleChange).toHaveBeenCalledWith(0.6);
+    expect(handleChange).toHaveBeenCalledWith(600);
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
-        step={0.1}
-        min={0.5}
-        max={0.7}
+        step={100}
+        min={500}
+        max={700}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -157,14 +159,14 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.pointerDown(getIncrementButton());
     fireEvent.pointerUp(getIncrementButton());
-    expect(handleChange).toHaveBeenCalledWith(0.7);
+    expect(handleChange).toHaveBeenCalledWith(700);
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
-        step={0.1}
-        min={0.5}
-        max={0.7}
+        step={100}
+        min={500}
+        max={700}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -176,14 +178,14 @@ describe('InputTime', { timeout: 10000 }, () => {
 
   it('respects min and max props on direct input', async () => {
     const handleChange = vi.fn();
-    let value = 5;
+    let value = 5000;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         min={0}
-        max={10}
+        max={10000}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -194,14 +196,14 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.change(input, { target: { value: '15' } });
     fireEvent.blur(input);
-    expect(handleChange).toHaveBeenCalledWith(10);
+    expect(handleChange).toHaveBeenCalledWith(10000);
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         min={0}
-        max={10}
+        max={10000}
         onChange={(_newVal) => {
           handleChange(_newVal);
           value = _newVal;
@@ -216,12 +218,12 @@ describe('InputTime', { timeout: 10000 }, () => {
 
   it('handles keyboard arrow up/down for stepping', async () => {
     const handleChange = vi.fn();
-    let value = 5;
+    let value = 5000;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         onChange={(newVal) => {
           handleChange(newVal);
           value = newVal;
@@ -232,12 +234,12 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.click(input); // Focus
     fireEvent.keyDown(input, { key: 'ArrowUp' });
-    expect(handleChange).toHaveBeenCalledWith(6);
+    expect(handleChange).toHaveBeenCalledWith(6000);
     rerender(
       <InputTime
         {...defaultProps}
         value={value}
-        step={1}
+        step={1000}
         onChange={(newVal) => {
           handleChange(newVal);
           value = newVal;
@@ -247,7 +249,7 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     fireEvent.click(input);
     fireEvent.keyDown(input, { key: 'ArrowDown' });
-    expect(handleChange).toHaveBeenCalledWith(5);
+    expect(handleChange).toHaveBeenCalledWith(5000);
   });
 
   it('commits change on Enter key press', async () => {
@@ -270,7 +272,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).toHaveBeenCalledWith(180);
+    expect(handleChange).toHaveBeenCalledWith(180000);
   });
 
   it('is disabled when disabled prop is true', () => {
@@ -281,20 +283,20 @@ describe('InputTime', { timeout: 10000 }, () => {
   });
 
   it('formats value based on step (e.g. step 1 -> no decimals)', () => {
-    render(<InputTime {...defaultProps} value={10.5} step={1} />);
+    render(<InputTime {...defaultProps} value={10500} step={1000} />);
     expect(getInput().value).toBe('0:11');
   });
 
   it('formats value with specified decimal places from step (e.g. step 0.01)', () => {
-    render(<InputTime {...defaultProps} value={5.123} step={0.01} />);
+    render(<InputTime {...defaultProps} value={5123} step={10} />);
     expect(getInput().value).toBe('0:05.12');
   });
 
   it('re-formats prop value change if not editing', () => {
-    const { rerender } = render(<InputTime {...defaultProps} value={10} />);
+    const { rerender } = render(<InputTime {...defaultProps} value={10000} />);
     expect(getInput().value).toBe('0:10.0');
 
-    rerender(<InputTime {...defaultProps} value={20.5} />);
+    rerender(<InputTime {...defaultProps} value={20500} />);
     expect(getInput().value).toBe('0:20.5');
   });
 
@@ -304,7 +306,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     const { rerender } = render(
       <InputTime
         {...defaultProps}
-        value={10}
+        value={10000}
         onChange={handleChange}
         debounceMs={debounceMs}
       />
@@ -317,7 +319,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     rerender(
       <InputTime
         {...defaultProps}
-        value={30}
+        value={30000}
         onChange={handleChange}
         debounceMs={debounceMs}
       />
@@ -332,7 +334,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).not.toHaveBeenCalledWith(30);
+    expect(handleChange).not.toHaveBeenCalledWith(30000);
     // It might have been called with 60 if the debounce for '1:0' completed.
     // If it was, that's fine. The main point is '1:0' display and no overwrite from '30'.
   });
@@ -359,7 +361,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).toHaveBeenCalledWith(3.5);
+    expect(handleChange).toHaveBeenCalledWith(3500);
 
     // Rerender with the new value to check formatting
     rerender(
@@ -396,7 +398,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).toHaveBeenCalledWith(150);
+    expect(handleChange).toHaveBeenCalledWith(150000);
 
     rerender(
       <InputTime
@@ -432,7 +434,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     act(() => {
       vi.advanceTimersByTime(debounceMs + 200);
     });
-    expect(handleChange).toHaveBeenCalledWith(3910);
+    expect(handleChange).toHaveBeenCalledWith(3910000);
 
     rerender(
       <InputTime
@@ -449,7 +451,7 @@ describe('InputTime', { timeout: 10000 }, () => {
 
   it('correctly parses and formats time around 60 seconds, like "0:59.9" stepping up', async () => {
     const handleChange = vi.fn();
-    let value = 59.9;
+    let value = 59900;
     const { rerender } = render(
       <InputTime
         {...defaultProps}
@@ -458,14 +460,14 @@ describe('InputTime', { timeout: 10000 }, () => {
           value = v;
           handleChange(v);
         }}
-        step={0.1}
+        step={100}
       />
     );
     expect(getInput().value).toBe('0:59.9');
 
     fireEvent.pointerDown(getIncrementButton());
     fireEvent.pointerUp(getIncrementButton());
-    expect(handleChange).toHaveBeenCalledWith(60.0);
+    expect(handleChange).toHaveBeenCalledWith(60000);
     rerender(
       <InputTime
         {...defaultProps}
@@ -474,7 +476,7 @@ describe('InputTime', { timeout: 10000 }, () => {
           value = v;
           handleChange(v);
         }}
-        step={0.1}
+        step={100}
       />
     );
     expect(getInput().value).toBe('1:00.0');
@@ -482,7 +484,7 @@ describe('InputTime', { timeout: 10000 }, () => {
 
   it('correctly parses and formats time around 60 minutes, like "59:59.0" stepping up with step 1s', async () => {
     const handleChange = vi.fn();
-    let value = 3599; // 59m 59s
+    let value = 3599000; // 59m 59s
     const { rerender } = render(
       <InputTime
         {...defaultProps}
@@ -491,14 +493,14 @@ describe('InputTime', { timeout: 10000 }, () => {
           value = v;
           handleChange(v);
         }}
-        step={1}
+        step={1000}
       />
     );
     expect(getInput().value).toBe('59:59');
 
     fireEvent.pointerDown(getIncrementButton());
     fireEvent.pointerUp(getIncrementButton());
-    expect(handleChange).toHaveBeenCalledWith(3600);
+    expect(handleChange).toHaveBeenCalledWith(3600000);
     rerender(
       <InputTime
         {...defaultProps}
@@ -507,7 +509,7 @@ describe('InputTime', { timeout: 10000 }, () => {
           value = v;
           handleChange(v);
         }}
-        step={1}
+        step={1000}
       />
     );
     expect(getInput().value).toBe('1:00:00');
@@ -517,7 +519,7 @@ describe('InputTime', { timeout: 10000 }, () => {
     it('increment button hold calls onChange multiple times and updates value', async () => {
       const handleChange = vi.fn();
       let currentValue = 0;
-      const step = 0.1;
+      const step = 100;
       const SPIN_INTERVAL = 150; // Should match component's SPIN_INTERVAL
 
       const { rerender } = render(
@@ -541,7 +543,7 @@ describe('InputTime', { timeout: 10000 }, () => {
 
       // First immediate call
       expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(currentValue).toBeCloseTo(0.1);
+      expect(currentValue).toBe(100);
       rerender(
         <InputTime
           {...defaultProps}
@@ -560,8 +562,8 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       });
       // expect(handleChange).toHaveBeenCalledTimes(2);
-      expect(handleChange).toHaveBeenNthCalledWith(2, 0.2);
-      expect(currentValue).toBeCloseTo(0.2); // This will still fail if called with 0.1
+      expect(handleChange).toHaveBeenNthCalledWith(2, 200);
+      expect(currentValue).toBe(200);
       rerender(
         <InputTime
           {...defaultProps}
@@ -580,7 +582,7 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       });
       expect(handleChange).toHaveBeenCalledTimes(3);
-      expect(currentValue).toBeCloseTo(0.3);
+      expect(currentValue).toBe(300);
       rerender(
         <InputTime
           {...defaultProps}
@@ -608,8 +610,8 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     it('decrement button hold calls onChange multiple times and updates value', async () => {
       const handleChange = vi.fn();
-      let currentValue = 0.3;
-      const step = 0.1;
+      let currentValue = 300;
+      const step = 100;
       const SPIN_INTERVAL = 150;
 
       const { rerender } = render(
@@ -631,7 +633,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       await act(async () => {});
 
       expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(currentValue).toBeCloseTo(0.2);
+      expect(currentValue).toBe(200);
       rerender(
         <InputTime
           {...defaultProps}
@@ -649,7 +651,7 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       });
       expect(handleChange).toHaveBeenCalledTimes(2);
-      expect(currentValue).toBeCloseTo(0.1);
+      expect(currentValue).toBe(100);
       rerender(
         <InputTime
           {...defaultProps}
@@ -674,9 +676,9 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     it('increment button hold stops at max value', async () => {
       const handleChange = vi.fn();
-      let currentValue = 0.8;
-      const step = 0.1;
-      const max = 1.0;
+      let currentValue = 800;
+      const step = 100;
+      const max = 1000;
       const SPIN_INTERVAL = 150;
 
       const { rerender } = render(
@@ -697,7 +699,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       fireEvent.pointerDown(incrementButton);
       await act(async () => {});
       expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(currentValue).toBeCloseTo(0.9);
+      expect(currentValue).toBe(900);
       rerender(
         <InputTime
           {...defaultProps}
@@ -715,7 +717,7 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       }); // 0.9 -> 1.0 (call 2)
       expect(handleChange).toHaveBeenCalledTimes(2);
-      expect(currentValue).toBeCloseTo(1.0);
+      expect(currentValue).toBe(1000);
       rerender(
         <InputTime
           {...defaultProps}
@@ -735,7 +737,7 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       });
       expect(handleChange).toHaveBeenCalledTimes(2); // Still 2
-      expect(currentValue).toBeCloseTo(1.0);
+      expect(currentValue).toBe(1000);
 
       // await user.pointer({ keys: '[/MouseLeft]', target: incrementButton });
       fireEvent.pointerUp(incrementButton);
@@ -744,9 +746,9 @@ describe('InputTime', { timeout: 10000 }, () => {
 
     it('decrement button hold stops at min value', async () => {
       const handleChange = vi.fn();
-      let currentValue = 0.2;
-      const step = 0.1;
-      const min = 0.0;
+      let currentValue = 200;
+      const step = 100;
+      const min = 0;
       const SPIN_INTERVAL = 150;
 
       const { rerender } = render(
@@ -767,7 +769,7 @@ describe('InputTime', { timeout: 10000 }, () => {
       fireEvent.pointerDown(decrementButton);
       await act(async () => {});
       expect(handleChange).toHaveBeenCalledTimes(1);
-      expect(currentValue).toBeCloseTo(0.1);
+      expect(currentValue).toBe(100);
       rerender(
         <InputTime
           {...defaultProps}
@@ -785,7 +787,7 @@ describe('InputTime', { timeout: 10000 }, () => {
         vi.advanceTimersByTime(SPIN_INTERVAL);
       }); // 0.1 -> 0.0 (call 2)
       expect(handleChange).toHaveBeenCalledTimes(2);
-      expect(currentValue).toBeCloseTo(0.0);
+      expect(currentValue).toBe(0);
       rerender(
         <InputTime
           {...defaultProps}
@@ -810,5 +812,32 @@ describe('InputTime', { timeout: 10000 }, () => {
       fireEvent.pointerUp(decrementButton);
       await act(async () => {});
     });
+  });
+
+  it('uses onStep prop when provided for stepping', async () => {
+    const handleChange = vi.fn();
+    const handleStep = vi.fn((val, dir) => (dir === 'up' ? val + 2 : val - 2));
+    let value = 10;
+    render(
+      <InputTime
+        {...defaultProps}
+        value={value}
+        step={1}
+        onChange={handleChange}
+        onStep={handleStep}
+      />
+    );
+
+    fireEvent.pointerDown(screen.getByLabelText('Increment time'));
+    fireEvent.pointerUp(screen.getByLabelText('Increment time'));
+
+    expect(handleStep).toHaveBeenCalledWith(10, 'up');
+    expect(handleChange).toHaveBeenCalledWith(12);
+
+    // Check keydown
+    const input = screen.getByLabelText('Time');
+    fireEvent.keyDown(input, { key: 'ArrowDown' });
+    expect(handleStep).toHaveBeenCalledWith(10, 'down');
+    expect(handleChange).toHaveBeenCalledWith(8);
   });
 });

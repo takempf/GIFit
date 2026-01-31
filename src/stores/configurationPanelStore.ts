@@ -3,13 +3,14 @@ import { log } from '@/utils/logger';
 import { storedConfig } from '@/utils/storage';
 import { VideoMetadata } from '@/types';
 import { videoController } from '@/services/VideoController';
+import { toMilliseconds, toSeconds } from '@/utils/time';
 
 const DEFAULT_WIDTH = 420;
 const DEFAULT_HEIGHT = 180;
 
 export interface ConfigState {
-  start: number;
-  duration: number;
+  start: number; // Milliseconds
+  duration: number; // Milliseconds
   width: number;
   height: number;
   linkDimensions: boolean;
@@ -17,7 +18,7 @@ export interface ConfigState {
   quality: number;
   aspectRatio: number;
   // Internal state
-  videoDuration: number;
+  videoDuration: number; // Milliseconds
   videoWidth: number;
   videoHeight: number;
   previewImage: string | null;
@@ -48,18 +49,18 @@ type InputActionPayload = {
 
 interface VideoLoadedDataPayload {
   aspectRatio: number;
-  duration: number;
+  duration: number; // Seconds (from video metadata)
   videoWidth: number;
   videoHeight: number;
-  currentTime?: number;
+  currentTime?: number; // Seconds (from video metadata)
 }
 
 interface VideoSeekedPayload {
-  currentTime: number;
+  currentTime: number; // Seconds
 }
 
 interface SetStartToCurrentTimePayload {
-  currentTime: number;
+  currentTime: number; // Seconds
 }
 
 // Store actions interface
@@ -69,7 +70,7 @@ export interface ConfigActions {
   handleVideoSeeked: (payload: VideoSeekedPayload) => void;
   handleSetStartToCurrentTime: (payload: SetStartToCurrentTimePayload) => void;
   resetState: (metadata?: VideoMetadata) => void;
-  seekVideo: (time: number) => Promise<void>;
+  seekVideo: (timeMs: number) => Promise<void>;
   loadInitialConfig: () => Promise<void>;
   fetchVideoMetadata: () => Promise<void>;
   syncStartToVideoTime: () => Promise<void>;
@@ -117,15 +118,15 @@ const getInitialState = (
   }
 
   return {
-    start: metadata?.currentTime ?? 0,
-    duration: 2,
+    start: metadata?.currentTime ? toMilliseconds(metadata.currentTime) : 0,
+    duration: 2000, // 2000ms default
     width: displayWidth,
     height: displayHeight,
     linkDimensions: true,
     framerate: initialFramerate,
     quality: initialQuality,
     aspectRatio: storedAspectRatio,
-    videoDuration: metadata?.duration ?? 0,
+    videoDuration: metadata?.duration ? toMilliseconds(metadata.duration) : 0,
     videoWidth: metadata?.width ?? 0,
     videoHeight: metadata?.height ?? 0,
     previewImage: null
@@ -149,8 +150,8 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
             ? {
                 width: get().videoWidth,
                 height: get().videoHeight,
-                duration: get().videoDuration,
-                currentTime: get().start // approximation
+                duration: toSeconds(get().videoDuration),
+                currentTime: toSeconds(get().start) // approximation
               }
             : undefined;
 
@@ -209,12 +210,12 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
       set((state) => ({
         ...state,
         aspectRatio: payload.aspectRatio,
-        videoDuration: payload.duration,
+        videoDuration: toMilliseconds(payload.duration),
         videoWidth: payload.videoWidth,
         videoHeight: payload.videoHeight,
         start:
           state.videoDuration === 0 && payload.currentTime !== undefined
-            ? payload.currentTime
+            ? toMilliseconds(payload.currentTime)
             : state.start,
         height:
           state.linkDimensions || state.height === DEFAULT_HEIGHT
@@ -227,10 +228,11 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
     },
 
     handleSetStartToCurrentTime: (payload) =>
-      set({ start: payload.currentTime }),
+      set({ start: toMilliseconds(payload.currentTime) }),
 
-    seekVideo: async (time) => {
-      await videoController.seek(time);
+    seekVideo: async (timeMs) => {
+      // Video controller expects seconds
+      await videoController.seek(toSeconds(timeMs));
     },
 
     resetState: (metadata?: VideoMetadata) => {
@@ -255,7 +257,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
       const metadata = await videoController.getMetadata();
       if (metadata) {
         get().handleSetStartToCurrentTime({
-          currentTime: metadata.currentTime
+          currentTime: metadata.currentTime // Seconds
         });
       }
     },

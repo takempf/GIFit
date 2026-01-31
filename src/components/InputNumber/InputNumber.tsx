@@ -15,6 +15,7 @@ interface InputNumberProps extends InputProps {
   value: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   append?: React.ReactNode;
+  onStep?: (currentValue: number, direction: 'up' | 'down') => number;
 }
 
 // --- Helper: Rounding ---
@@ -43,6 +44,7 @@ export function InputNumber({
   value,
   onChange,
   append,
+  onStep,
   ...restProps
 }: InputNumberProps) {
   const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
@@ -64,8 +66,15 @@ export function InputNumber({
 
   function performStep(direction: 'up' | 'down') {
     const currentVal = parseFloat(valueRef.current) || 0;
-    let newValue = currentVal + (direction === 'up' ? stepVal : -stepVal);
-    newValue = roundToStep(newValue, stepVal, decimalPlaces);
+
+    let newValue: number;
+    if (onStep) {
+      newValue = onStep(currentVal, direction);
+    } else {
+      newValue = currentVal + (direction === 'up' ? stepVal : -stepVal);
+      newValue = roundToStep(newValue, stepVal, decimalPlaces);
+    }
+
     newValue = Math.max(minVal, Math.min(maxVal, newValue));
 
     // Trigger change
@@ -181,6 +190,9 @@ export function InputNumber({
       onChange={onChange}
       type="number"
       {...restProps}
+      // Force step="any" on the DOM input to prevent browser validation blocking submission
+      // while still using restProps.step for internal calculation if onStep is not provided.
+      step="any"
       onKeyDown={handleKeyDown}
       ref={inputRef}
     />
