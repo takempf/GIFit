@@ -1,73 +1,64 @@
 import css from './ConfigurationPanel.module.css';
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import {
   useConfigurationPanelStore,
   type ConfigState
-} from '@/stores/configurationPanelStore';
+} from '@/features/editor/stores/configurationPanelStore';
 import {
   toMilliseconds,
   toSeconds,
   calculateLastFramePreview
 } from '@/utils/time';
 
-import { Input } from '../Input/Input';
-import { InputNumber } from '../InputNumber/InputNumber';
-import { InputTime } from '../InputTime/InputTime';
-import { Button } from '../Button/Button';
-import { ButtonToggle } from '../ButtonToggle/ButtonToggle';
+import { Input } from '@/components/ui/Input/Input';
+import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
+import { InputTime } from '@/components/ui/InputTime/InputTime';
+import { Button } from '@/components/ui/Button/Button';
+import { ButtonToggle } from '@/components/ui/ButtonToggle/ButtonToggle';
 import { Timeline } from '../Timeline/Timeline';
 import { GifPreview } from '../GifPreview/GifPreview';
 
 import LinkIcon from '@/assets/link.svg?react';
 import LinkEmptyIcon from '@/assets/link-empty.svg?react';
-
-// --- Helper: Debounce Hook ---
-function useDebouncedCallback<A extends unknown[]>(
-  callback: (...args: A) => void,
-  delay: number
-): (...args: A) => void {
-  const callbackRef = useRef(callback);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    callbackRef.current = callback;
-  }, [callback]);
-
-  return useCallback(
-    (...args: A) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      timeoutRef.current = setTimeout(() => {
-        callbackRef.current(...args);
-      }, delay);
-    },
-    [delay]
-  );
-}
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
 }
 
 export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
-  const {
-    start,
-    duration,
-    width,
-    height,
-    linkDimensions,
-    framerate,
-    quality,
-    videoDuration,
-    videoWidth: configVideoWidth,
-    videoHeight: configVideoHeight,
-    previewImage,
-    handleInputChange: storeHandleInputChange,
-    seekVideo,
-    fetchVideoMetadata,
-    captureFrame
-  } = useConfigurationPanelStore();
+  const start = useConfigurationPanelStore((state) => state.start);
+  const duration = useConfigurationPanelStore((state) => state.duration);
+  const width = useConfigurationPanelStore((state) => state.width);
+  const height = useConfigurationPanelStore((state) => state.height);
+  const linkDimensions = useConfigurationPanelStore(
+    (state) => state.linkDimensions
+  );
+  const framerate = useConfigurationPanelStore((state) => state.framerate);
+  const quality = useConfigurationPanelStore((state) => state.quality);
+  const videoDuration = useConfigurationPanelStore(
+    (state) => state.videoDuration
+  );
+  const configVideoWidth = useConfigurationPanelStore(
+    (state) => state.videoWidth
+  );
+  const configVideoHeight = useConfigurationPanelStore(
+    (state) => state.videoHeight
+  );
+  const previewImage = useConfigurationPanelStore(
+    (state) => state.previewImage
+  );
+
+  const storeHandleInputChange = useConfigurationPanelStore(
+    (state) => state.handleInputChange
+  );
+  const seekVideo = useConfigurationPanelStore((state) => state.seekVideo);
+  const fetchVideoMetadata = useConfigurationPanelStore(
+    (state) => state.fetchVideoMetadata
+  );
+  const captureFrame = useConfigurationPanelStore(
+    (state) => state.captureFrame
+  );
 
   const [previewTime, setPreviewTime] = useState(start);
 

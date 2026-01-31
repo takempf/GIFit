@@ -4,12 +4,12 @@ import { useCallback, useEffect } from 'react';
 import { browser } from 'wxt/browser';
 
 import { AppLogo } from './AppLogo/AppLogo';
-import { ConfigurationPanel } from './ConfigurationPanel/ConfigurationPanel';
-import { Progress } from './Progress/Progress';
+import { ConfigurationPanel } from '../features/editor/components/ConfigurationPanel/ConfigurationPanel';
+import { Progress } from '../features/generator/components/Progress/Progress';
 
 import { useAppStore } from '@/stores/appStore';
-import { useConfigurationPanelStore } from '@/stores/configurationPanelStore';
-import { useGifStore } from '@/stores/gifGeneratorStore';
+import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 
 import TKLogo from '@/assets/tk.svg';
 

@@ -206,7 +206,7 @@ describe('useConfigurationPanelStore', () => {
       result.current.handleVideoLoadedData(newVideoData);
     });
     expect(result.current.aspectRatio).toBe(1920 / 1080);
-    expect(result.current.videoDuration).toBe(15);
+    expect(result.current.videoDuration).toBe(15000); // 15s * 1000
     expect(result.current.videoWidth).toBe(1920);
     expect(result.current.videoHeight).toBe(1080);
     // Height should adjust based on current display width and NEW video aspect ratio if linked
@@ -232,8 +232,8 @@ describe('useConfigurationPanelStore', () => {
       result.current.handleVideoLoadedData(initialData);
     });
 
-    expect(result.current.videoDuration).toBe(100);
-    expect(result.current.start).toBe(50);
+    expect(result.current.videoDuration).toBe(100000); // 100s * 1000
+    expect(result.current.start).toBe(50000); // 50s * 1000
 
     // Subsequent updates should NOT overwrite start time
     act(() => {
@@ -244,7 +244,7 @@ describe('useConfigurationPanelStore', () => {
     });
 
     // Start time should remain 50
-    expect(result.current.start).toBe(50);
+    expect(result.current.start).toBe(50000);
   });
 
   it('syncStartToVideoTime should update start time based on fetched metadata', async () => {
@@ -259,13 +259,13 @@ describe('useConfigurationPanelStore', () => {
       await result.current.syncStartToVideoTime();
     });
 
-    expect(result.current.start).toBe(3.5);
+    expect(result.current.start).toBe(3500); // 3.5s * 1000
   });
 
   it('seekVideo should call videoController.seek', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
     await act(async () => {
-      await result.current.seekVideo(5);
+      await result.current.seekVideo(5000); // 5000ms = 5s
     });
     expect(videoController.seek).toHaveBeenCalledWith(5);
   });
@@ -288,7 +288,7 @@ describe('useConfigurationPanelStore', () => {
 
     expect(result.current.videoWidth).toBe(1280);
     expect(result.current.videoHeight).toBe(720);
-    expect(result.current.videoDuration).toBe(30);
+    expect(result.current.videoDuration).toBe(30000); // 30s in ms
   });
 
   it('pauseVideo should call videoController.pause', async () => {

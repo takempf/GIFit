@@ -13,20 +13,22 @@ import {
   useConfigurationPanelStore,
   ConfigState,
   ConfigActions
-} from '@/stores/configurationPanelStore';
+} from '@/features/editor/stores/configurationPanelStore';
 
 // Helper type for mocked store
-type MockStore = Mock<() => ConfigState & ConfigActions>;
+type MockStore = Mock<
+  (selector?: (state: ConfigState & ConfigActions) => unknown) => unknown
+>;
 
-vi.mock('@/stores/configurationPanelStore');
+vi.mock('@/features/editor/stores/configurationPanelStore');
 vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
 // Mock Input components to avoid complexity
-vi.mock('../Input/Input', () => ({
+vi.mock('@/components/ui/Input/Input', () => ({
   Input: (props: React.ComponentProps<'input'> & { label: string }) => (
     <input aria-label={props.label} {...props} />
   )
 }));
-vi.mock('../InputNumber/InputNumber', () => ({
+vi.mock('@/components/ui/InputNumber/InputNumber', () => ({
   InputNumber: (
     props: React.ComponentProps<'input'> & {
       label: string;
@@ -62,7 +64,7 @@ vi.mock('../InputNumber/InputNumber', () => ({
     </div>
   )
 }));
-vi.mock('../InputTime/InputTime', () => ({
+vi.mock('@/components/ui/InputTime/InputTime', () => ({
   InputTime: (
     props: React.ComponentProps<'input'> & {
       label: string;
@@ -75,12 +77,12 @@ vi.mock('../InputTime/InputTime', () => ({
     </div>
   )
 }));
-vi.mock('../Button/Button', () => ({
+vi.mock('@/components/ui/Button/Button', () => ({
   Button: (props: React.ComponentProps<'button'>) => (
     <button {...props}>{props.children}</button>
   )
 }));
-vi.mock('../ButtonToggle/ButtonToggle', () => ({
+vi.mock('@/components/ui/ButtonToggle/ButtonToggle', () => ({
   ButtonToggle: (props: {
     label: string;
     name: string;
@@ -130,10 +132,22 @@ describe('ConfigurationPanel', () => {
       syncStartToVideoTime: vi.fn().mockResolvedValue(undefined),
       captureFrame: vi.fn()
     };
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+
+    // Update mock to support atomic selectors
+    const fullState = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions
-    } as ConfigState & ConfigActions);
+    };
+
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        if (selector) {
+          return selector(fullState as ConfigState & ConfigActions);
+        }
+        return fullState;
+      }
+    );
+
     (
       useConfigurationPanelStore as unknown as {
         getState: () => Partial<ConfigState>;
@@ -220,11 +234,18 @@ describe('ConfigurationPanel', () => {
   });
 
   test('renders null if videoDuration is 0', () => {
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       videoDuration: 0
-    } as ConfigState & ConfigActions);
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
     const { container } = render(
       <ConfigurationPanel onSubmit={mockOnSubmit} />
     );
@@ -233,12 +254,19 @@ describe('ConfigurationPanel', () => {
 
   test('duration input change seeks video to last frame of duration', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 5000,
       framerate: 10
-    } as ConfigState & ConfigActions);
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
     // Logic: Duration 1.05.
@@ -269,15 +297,22 @@ describe('ConfigurationPanel', () => {
   });
 
   test('max values for inputs are calculated correctly', () => {
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: 10000,
       duration: 5000,
       videoDuration: 60000,
-      videoWidth: 1920, // configVideoWidth
-      videoHeight: 1080 // configVideoHeight
-    } as ConfigState & ConfigActions);
+      videoWidth: 1920,
+      videoHeight: 1080
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
     expect(screen.getByLabelText('Duration')).toHaveAttribute('max', '30');
     expect(screen.getByLabelText('Width')).toHaveAttribute('max', '1920'); // calculated from configVideoWidth
@@ -285,12 +320,19 @@ describe('ConfigurationPanel', () => {
   });
   test('increments duration on step up and honors flooring', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       duration: 1000,
       framerate: 60
-    } as ConfigState & ConfigActions);
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
     // Simulate stepping up: 1.0 + 1/60 (0.016666666666666666)
@@ -311,11 +353,18 @@ describe('ConfigurationPanel', () => {
 
   test('allows arbitrary duration without snapping on blur', () => {
     vi.useFakeTimers();
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       duration: 1700
-    } as ConfigState & ConfigActions);
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
 
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
@@ -335,13 +384,20 @@ describe('ConfigurationPanel', () => {
     // Last frame for 10 FPS, 1s duration:
     // Frame count = 10. Last index = 9. Time = 9/10 * 1000 = 900ms.
 
-    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+    const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
       start: startMs,
       duration: durationMs,
       framerate: oldFps
-    } as ConfigState & ConfigActions);
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
+    );
 
     render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 

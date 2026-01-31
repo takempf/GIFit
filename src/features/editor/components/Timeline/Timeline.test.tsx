@@ -9,9 +9,7 @@ describe('Timeline', () => {
     duration: 3,
     fps: 10,
     previewTime: 2,
-    onChange: vi.fn(),
-    onStartTimeChange: vi.fn(),
-    onDurationChange: vi.fn()
+    onChange: vi.fn()
   };
 
   it('renders correctly', () => {
@@ -114,9 +112,8 @@ describe('Timeline', () => {
     expect(preview).toBeInTheDocument();
   });
 
-  it('calls onPreviewRequest when dragging', () => {
-    const onPreviewRequest = vi.fn();
-    const props = { ...defaultProps, onPreviewRequest, startTime: 0 };
+  it('calls onChange when dragging', () => {
+    const props = { ...defaultProps, startTime: 0 };
     const { getByTestId } = render(<Timeline {...props} />);
 
     const interior = getByTestId('timeline-interior');
@@ -156,7 +153,6 @@ describe('Timeline', () => {
     // We need to simulate that.
 
     // Reset mock
-    onPreviewRequest.mockClear();
 
     // We are in 'right' drag mode now for the component (internal state).
     // Move mouse to "expand" selection by 1 second.

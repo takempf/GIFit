@@ -1,63 +1,41 @@
-import React, { useRef, useState, useEffect, useMemo } from 'react';
-import styles from './Timeline.module.css';
-import {
-  toMilliseconds,
-  toSeconds,
-  formatMilliseconds
-} from '../../utils/time';
+import { useState, useRef, useEffect } from 'react';
+import { toSeconds } from '@/utils/time';
 
-interface TimelineProps {
-  totalDuration: number;
-  startTime: number;
-  duration: number; // Selection duration
-  fps: number;
-  previewTime: number;
+const PIXELS_PER_SECOND = 120;
+const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
+
+interface UseTimelineDragProps {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  startTimeMs: number;
+  durationMs: number;
+  totalDurationMs: number;
   onChange: (
     newStartTime: number,
     newDuration: number,
     context: 'start' | 'end'
   ) => void;
-  className?: string;
 }
 
-const PIXELS_PER_SECOND = 120;
-const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
-
-export function Timeline({
-  totalDuration,
-  startTime,
-  duration,
-  fps,
-  previewTime,
-  onChange,
-  className
-}: TimelineProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Dragging State
+export function useTimelineDrag({
+  scrollRef,
+  startTimeMs,
+  durationMs,
+  totalDurationMs,
+  onChange
+}: UseTimelineDragProps) {
   const [isDragging, setIsDragging] = useState<
     'left' | 'right' | 'move' | null
   >(null);
   const dragOffsetRef = useRef<number>(0);
   const anchorEndTimeRef = useRef<number>(0);
-
-  // Calculate specific widths
-  // const pixelsPerFrame = PIXELS_PER_SECOND / fps;
-
-  // Convert props to ms for internal calculations
-  const totalDurationMs = toMilliseconds(totalDuration);
-  const startTimeMs = toMilliseconds(startTime);
-  const durationMs = toMilliseconds(duration);
-
-  const totalWidth = totalDurationMs * PIXELS_PER_MS;
+  const autoScrollSpeedRef = useRef<number>(0);
+  const lastMousePosRef = useRef<number | null>(null);
 
   // Store latest props in ref to avoid re-running effect on every prop change
   const propsRef = useRef({
     startTimeMs,
     durationMs,
     totalDurationMs,
-    fps,
     onChange
   });
 
@@ -66,26 +44,8 @@ export function Timeline({
     startTimeMs,
     durationMs,
     totalDurationMs,
-    fps,
     onChange
   };
-
-  const autoScrollSpeedRef = useRef<number>(0);
-  const lastMousePosRef = useRef<number | null>(null);
-  const hasInitialScrolled = useRef(false);
-
-  // Initial scroll to selection
-  useEffect(() => {
-    if (hasInitialScrolled.current || !scrollRef.current) return;
-
-    // Only scroll if we have a valid start time or if it's explicitly 0 (though 0 usually needs no scroll)
-    // We want to scroll to 1 second before the selection
-    const targetTimeMs = Math.max(0, startTimeMs - 1000);
-    const targetScrollLeft = targetTimeMs * PIXELS_PER_MS;
-
-    scrollRef.current.scrollLeft = targetScrollLeft;
-    hasInitialScrolled.current = true;
-  }, [startTimeMs]);
 
   // Handlers for Dragging
   useEffect(() => {
@@ -113,7 +73,6 @@ export function Timeline({
       // Current End Time (fixed if dragging left)
       // We use the anchor for left drags to prevent floating point drift
       const anchorEndTimeMs = anchorEndTimeRef.current;
-      // const minDurationMs = Math.floor(1000 / fps); // Minimum 1 frame duration
       const minDurationMs = 1; // Allow arbitrary small duration (1ms)
 
       if (isDragging === 'move') {
@@ -201,7 +160,7 @@ export function Timeline({
       window.removeEventListener('mouseup', handleMouseUp);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [isDragging]);
+  }, [isDragging, scrollRef]);
 
   // Handle Mouse Down on Selection Body
   const handleSelectionMouseDown = (e: React.MouseEvent) => {
@@ -239,101 +198,24 @@ export function Timeline({
     }
   };
 
-  // Generate Ticks
-  const renderTicks = useMemo(() => {
-    const ticks = [];
-    const seconds = Math.floor(totalDuration);
-
-    for (let i = 0; i <= seconds; i++) {
-      // Second Marker
-      ticks.push(
-        <div
-          key={`sec-${i}`}
-          className={styles.secondMarker}
-          style={{ left: `${i * PIXELS_PER_SECOND}px` }}>
-          {formatMilliseconds(i * 1000)}
-        </div>
-      );
-
-      // Frame Markers
-      if (i < totalDuration) {
-        for (let f = 1; f < fps; f++) {
-          const frameTimeMs = i * 1000 + (f * 1000) / fps;
-          if (frameTimeMs > totalDurationMs) break;
-          ticks.push(
-            <div
-              key={`frame-${i}-${f}`}
-              className={styles.frameMarker}
-              style={{ left: `${frameTimeMs * PIXELS_PER_MS}px` }}
-            />
-          );
-        }
-      }
-    }
-    return ticks;
-  }, [totalDuration, fps, totalDurationMs]);
-
-  const selectionStyle = {
-    left: `${startTimeMs * PIXELS_PER_MS}px`,
-    width: `${durationMs * PIXELS_PER_MS}px`
+  const startLeftDrag = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Set anchor for left drag
+    anchorEndTimeRef.current = startTimeMs + durationMs;
+    setIsDragging('left');
   };
 
-  return (
-    <div
-      className={`${styles.timeline} ${className || ''}`}
-      ref={containerRef}
-      data-testid="timeline-container">
-      <div
-        className={styles.scrollContainer}
-        ref={scrollRef}
-        data-testid="scroll-container">
-        <div
-          className={styles.interior}
-          style={{ width: `${totalWidth}px` }}
-          onMouseDown={handleBackgroundMouseDown}
-          data-testid="timeline-interior">
-          {/* Ticks Layer */}
-          {renderTicks}
+  const startRightDrag = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDragging('right');
+  };
 
-          {/* Preview Highlight */}
-          <div
-            className={styles.previewHighlight}
-            style={{
-              left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
-              width: `${(1000 / fps) * PIXELS_PER_MS}px`
-            }}
-          />
-
-          {/* Selection Layer */}
-          <div
-            className={styles.selection}
-            style={selectionStyle}
-            onMouseDown={handleSelectionMouseDown}
-            data-testid="selection-rect">
-            {/* Frames Visual Removed */}
-
-            {/* Handles */}
-            <div
-              className={`${styles.handle} ${styles.handleLeft}`}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                // Set anchor for left drag
-                anchorEndTimeRef.current = startTimeMs + durationMs;
-                setIsDragging('left');
-              }}
-              data-testid="handle-left"
-            />
-            <div
-              className={`${styles.handle} ${styles.handleRight}`}
-              onMouseDown={(e) => {
-                e.stopPropagation();
-                setIsDragging('right');
-              }}
-              data-testid="handle-right"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return {
+    isDragging: isDragging !== null,
+    draggingState: isDragging,
+    handleSelectionMouseDown,
+    handleBackgroundMouseDown,
+    startLeftDrag,
+    startRightDrag
+  };
 }

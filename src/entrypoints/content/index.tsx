@@ -1,6 +1,6 @@
 import { defineContentScript } from '#imports';
 import { browser } from 'wxt/browser';
-import GifService from '@/services/GifService';
+import GifService from '@/features/generator/services/GifService';
 import { log } from '@/utils/logger';
 import { ExtensionMessage } from '@/types';
 

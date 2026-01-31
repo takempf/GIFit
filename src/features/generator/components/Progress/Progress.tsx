@@ -4,12 +4,12 @@ import { useEffect, useState, CSSProperties } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useAppStore } from '@/stores/appStore';
-import { useGifStore } from '@/stores/gifGeneratorStore';
+import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 import { times } from '@/utils/times';
 import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
 import { observeBoundingClientRect } from '@/utils/observeBoundingClientRect';
 
-import { Button } from '../Button/Button';
+import { Button } from '@/components/ui/Button/Button';
 import {
   getChunkVariants,
   chunkTransition,
