@@ -172,6 +172,26 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   }
 
   function handleFramerateChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newFramerate = parseFloat(event.target.value);
+    if (!isNaN(newFramerate)) {
+      // Check if we are currently at the "last frame" of the OLD framerate
+      const currentLastFrameMs = calculateLastFramePreview(
+        start,
+        duration,
+        framerate
+      );
+
+      // Floating point tolerance
+      if (Math.abs(previewTime - currentLastFrameMs) < 1) {
+        // We are at the end, so we should jump to the new end
+        const newLastFrameMs = calculateLastFramePreview(
+          start,
+          duration,
+          newFramerate
+        );
+        handlePreviewRequest(newLastFrameMs);
+      }
+    }
     handleGenericChange(event, 'framerate');
   }
 

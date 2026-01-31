@@ -38,7 +38,7 @@ vi.mock('../InputNumber/InputNumber', () => ({
         aria-label={props.label}
         type="number"
         {...props}
-        onChange={(e) => props.onChange(e)}
+        onChange={(e) => props.onChange && props.onChange(e)}
       />
       <button
         aria-label="Increment"
@@ -324,6 +324,111 @@ describe('ConfigurationPanel', () => {
 
     // Should NOT call handleInputChange with a snapped value
     expect(mockConfigStoreActions.handleInputChange).not.toHaveBeenCalled();
+    vi.useRealTimers();
+  });
+
+  test('updates preview to new last frame when FPS changes if currently at last frame', () => {
+    vi.useFakeTimers();
+    const startMs = 0;
+    const durationMs = 1000;
+    const oldFps = 10;
+    // Last frame for 10 FPS, 1s duration:
+    // Frame count = 10. Last index = 9. Time = 9/10 * 1000 = 900ms.
+
+    (useConfigurationPanelStore as unknown as MockStore).mockReturnValue({
+      ...mockConfigStoreState,
+      ...mockConfigStoreActions,
+      start: startMs,
+      duration: durationMs,
+      framerate: oldFps
+    } as ConfigState & ConfigActions);
+
+    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
+
+    // 1. Position preview at the calculated last frame manually
+    // We can't easily set state directly, but we can trigger it via handleTimelineChange 'end' logic
+    // OR just use our knowledge that previewTime init state is `start` (0).
+    // Let's trigger a timeline change "end" to snap it to last frame.
+    // However, timeline change updates store.
+    // Easier way: The component has `handlePreviewRequest` which updates state.
+    // We can't access that directly.
+    // But! initial state for previewTime is `start`.
+    // Let's set start to what the last frame IS, just to trick it? No, that's messy.
+
+    // Better: Simulate clicking the "end" handle on the Timeline?
+    // The timeline mock is just a div but we can assume the real Timeline calls onChange.
+    // But Timeline is NOT mocked in this file! It's imported real?
+    // Looking at imports: `import { Timeline } from '../Timeline/Timeline';`
+    // And mocks... Timeline IS NOT mocked. Great.
+
+    // We can fire the onChange prop of Timeline.
+    // But we don't have reference to the prop passed to Timeline.
+    // Actually, looking at the code for ConfigurationPanel, it renders Timeline.
+    // We can just rely on the fact that if we change FPS, it should behave.
+
+    // Wait, to test "if currently at last frame", we need to BE at last frame.
+    // How to get `previewTime` state to be `900`?
+    // `handleTimelineChange(..., 'end')` does:
+    // previewTime = calculateLastFramePreview(...).
+
+    // So we need to trigger `onChange` on the Timeline component.
+    // Since Timeline is real, we can find the timeline component in the render.
+    // But doing `fireEvent` on internal Timeline logic is hard.
+
+    // Let's Mock Timeline to expose its onChange?
+    // Or just re-render with a different store state? No, previewTime is local state.
+
+    // Strategy:
+    // 1. Mock 'calculateLastFramePreview' to be sure? No, logic is simple.
+    // 2. We can trigger `handleTimelineChange` by simulating an interaction if we understood Timeline better.
+    //    Timeline calls onChange when dragging.
+    //    Timeline has `onChange` prop.
+
+    // Let's just mock Timeline for THIS test file (or generally) to make it easier to trigger onChange.
+    // Currently Timeline IS NOT mocked locally.
+    // It might be better to Mock Timeline for the whole file since we are testing ConfigurationPanel, not Timeline integration.
+    // But existing tests might rely on it.
+    // Let-s look at existing tests. `test('renders correctly...')`.
+
+    // Let's add a Mock for Timeline at the top of the file if it's not too disruptive.
+    // Actually, I can just use `handleTimelineChange` if I can access it. I can't.
+
+    // Alternative: The `InputTime` for start updates preview. But that updates `start` too.
+
+    // Let's look at `handleDurationChange`.
+    // input change -> `handleDurationChangeMs` -> `handlePreviewRequest(calculatedLastFrame)`.
+    // So if I update duration, it sets preview to last frame.
+    // PERFECT.
+
+    // 1. Change Duration input. This sets previewTime to "last frame of old FPS".
+    // 2. Change FPS input. This should detect we are at last frame, and update previewTime to "last frame of NEW FPS".
+
+    const durationInput = screen.getByLabelText('Duration');
+    fireEvent.change(durationInput, {
+      target: { name: 'duration', value: '1.0' }
+    });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    // Now previewTime should be 900ms (for 10FPS).
+    expect(mockConfigStoreActions.seekVideo).toHaveBeenLastCalledWith(900);
+
+    // 2. Change FPS to 20.
+    // New last frame for 1000ms @ 20fps:
+    // Frames = 20. Last index = 19. Time = 19/20 * 1000 = 950ms.
+
+    const fpsInput = screen.getByLabelText('FPS');
+    fireEvent.change(fpsInput, { target: { name: 'framerate', value: '20' } });
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    // Verify seekVideo was called with 950.
+    expect(mockConfigStoreActions.seekVideo).toHaveBeenLastCalledWith(950);
+
     vi.useRealTimers();
   });
 });
