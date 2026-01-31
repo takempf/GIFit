@@ -207,7 +207,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
         return;
       }
 
-      let processedValue = roundToStep(newMsValueCandidate, step);
+      let processedValue = newMsValueCandidate;
       processedValue = Math.max(min, Math.min(max, processedValue));
 
       if (processedValue !== value) {
@@ -220,7 +220,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       }
       setIsEditing(false);
     },
-    [value, onChange, step, min, max, decimalPlaces, displayValue]
+    [value, onChange, min, max, decimalPlaces, displayValue]
   );
 
   const debouncedCommit = useDebouncedCallback(commitChange, debounceMs);
