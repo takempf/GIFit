@@ -40,6 +40,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  background-color: oklch(from var(--color_panel_background) 0.2 c h);
 }
 
 .start {
