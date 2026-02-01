@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import { ScrollArea } from '@base-ui/react/scroll-area';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import styles from './Timeline.module.css';
 import { toMilliseconds, formatMilliseconds } from '@/utils/time';
 
@@ -18,9 +19,6 @@ interface TimelineProps {
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 
-const PIXELS_PER_SECOND = 120;
-const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
-
 export function Timeline({
   totalDuration,
   startTime,
@@ -32,6 +30,27 @@ export function Timeline({
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Show ~7 seconds in the viewport
+  const VISIBLE_DURATION_SECONDS = 7;
+  // Fallback width prevents division by zero issues on initial render
+  const effectiveWidth = containerWidth || 840; // 120 * 7
+  const pixelsPerSecond = effectiveWidth / VISIBLE_DURATION_SECONDS;
+  const PIXELS_PER_MS = pixelsPerSecond / 1000;
+  // Round PIXELS_PER_SECOND for tick rendering alignment if needed, but float is usually fine for positioning
 
   // Convert props to ms for internal calculations
   const totalDurationMs = toMilliseconds(totalDuration);
@@ -50,6 +69,7 @@ export function Timeline({
     startTimeMs,
     durationMs,
     totalDurationMs,
+    pixelsPerSecond,
     onChange
   });
 
@@ -66,7 +86,7 @@ export function Timeline({
 
     scrollRef.current.scrollLeft = targetScrollLeft;
     hasInitialScrolled.current = true;
-  }, [startTimeMs]);
+  }, [startTimeMs, PIXELS_PER_MS]);
 
   // Generate Ticks
   const renderTicks = useMemo(() => {
@@ -79,7 +99,7 @@ export function Timeline({
         <div
           key={`sec-${i}`}
           className={styles.secondMarker}
-          style={{ left: `${i * PIXELS_PER_SECOND}px` }}>
+          style={{ left: `${i * pixelsPerSecond}px` }}>
           {formatMilliseconds(i * 1000)}
         </div>
       );
@@ -99,62 +119,88 @@ export function Timeline({
         }
       }
     }
+
     return ticks;
-  }, [totalDuration, fps, totalDurationMs]);
+  }, [totalDuration, fps, totalDurationMs, pixelsPerSecond, PIXELS_PER_MS]);
 
   const selectionStyle = {
     left: `${startTimeMs * PIXELS_PER_MS}px`,
     width: `${durationMs * PIXELS_PER_MS}px`
   };
 
+  // Selection Indicator Calculation
+  // Total duration logic for percentages
+  // Avoid division by zero
+  const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
+  const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
+  const selectionIndicatorWidthPct = (durationMs / safeTotalDuration) * 100;
+
   return (
     <div
       className={`${styles.timeline} ${className || ''}`}
       ref={containerRef}
       data-testid="timeline-container">
-      <div
-        className={styles.scrollContainer}
-        ref={scrollRef}
-        data-testid="scroll-container">
-        <div
-          className={styles.interior}
-          style={{ width: `${totalWidth}px` }}
-          onMouseDown={handleBackgroundMouseDown}
-          data-testid="timeline-interior">
-          {/* Ticks Layer */}
-          {renderTicks}
-
-          {/* Preview Highlight */}
+      <ScrollArea.Root className={styles.scrollRoot}>
+        <ScrollArea.Scrollbar
+          className={styles.scrollbar}
+          orientation="horizontal">
+          <ScrollArea.Thumb className={styles.scrollbarThumb} />
+          {/* Selection Indicator on Scrollbar Track */}
           <div
-            className={styles.previewHighlight}
+            className={styles.scrollbarSelectionIndicator}
             style={{
-              left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
-              width: `${(1000 / fps) * PIXELS_PER_MS}px`
+              left: `${selectionIndicatorLeftPct}%`,
+              width: `${selectionIndicatorWidthPct}%`
             }}
           />
-
-          {/* Selection Layer */}
-          <div
-            className={styles.selection}
-            style={selectionStyle}
-            onMouseDown={handleSelectionMouseDown}
-            data-testid="selection-rect">
-            {/* Frames Visual Removed */}
-
-            {/* Handles */}
+        </ScrollArea.Scrollbar>
+        <ScrollArea.Viewport
+          className={styles.scrollViewport}
+          ref={scrollRef}
+          data-testid="scroll-container">
+          <ScrollArea.Content
+            className={styles.scrollContent}
+            style={{ width: `${totalWidth}px` }}>
             <div
-              className={`${styles.handle} ${styles.handleLeft}`}
-              onMouseDown={startLeftDrag}
-              data-testid="handle-left"
-            />
-            <div
-              className={`${styles.handle} ${styles.handleRight}`}
-              onMouseDown={startRightDrag}
-              data-testid="handle-right"
-            />
-          </div>
-        </div>
-      </div>
+              className={styles.interior}
+              onMouseDown={handleBackgroundMouseDown}
+              data-testid="timeline-interior">
+              {/* Ticks Layer */}
+              {renderTicks}
+
+              {/* Preview Highlight */}
+              <div
+                className={styles.previewHighlight}
+                style={{
+                  left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
+                  width: `${(1000 / fps) * PIXELS_PER_MS}px`
+                }}
+              />
+
+              {/* Selection Layer */}
+              <div
+                className={styles.selection}
+                style={selectionStyle}
+                onMouseDown={handleSelectionMouseDown}
+                data-testid="selection-rect">
+                {/* Frames Visual Removed */}
+
+                {/* Handles */}
+                <div
+                  className={`${styles.handle} ${styles.handleLeft}`}
+                  onMouseDown={startLeftDrag}
+                  data-testid="handle-left"
+                />
+                <div
+                  className={`${styles.handle} ${styles.handleRight}`}
+                  onMouseDown={startRightDrag}
+                  data-testid="handle-right"
+                />
+              </div>
+            </div>
+          </ScrollArea.Content>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
     </div>
   );
 }

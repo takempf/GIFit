@@ -24,6 +24,7 @@
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
   },
   "dependencies": {
+    "@base-ui/react": "^1.1.0",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
     "gifenc": "^1.0.3",

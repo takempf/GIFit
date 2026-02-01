@@ -1,14 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { toSeconds } from '@/utils/time';
 
-const PIXELS_PER_SECOND = 120;
-const PIXELS_PER_MS = PIXELS_PER_SECOND / 1000;
-
 interface UseTimelineDragProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
   startTimeMs: number;
   durationMs: number;
   totalDurationMs: number;
+  pixelsPerSecond: number;
   onChange: (
     newStartTime: number,
     newDuration: number,
@@ -21,6 +19,7 @@ export function useTimelineDrag({
   startTimeMs,
   durationMs,
   totalDurationMs,
+  pixelsPerSecond,
   onChange
 }: UseTimelineDragProps) {
   const [isDragging, setIsDragging] = useState<
@@ -36,6 +35,7 @@ export function useTimelineDrag({
     startTimeMs,
     durationMs,
     totalDurationMs,
+    pixelsPerSecond,
     onChange
   });
 
@@ -44,6 +44,7 @@ export function useTimelineDrag({
     startTimeMs,
     durationMs,
     totalDurationMs,
+    pixelsPerSecond,
     onChange
   };
 
@@ -56,8 +57,15 @@ export function useTimelineDrag({
     const updateDragState = (clientX: number) => {
       if (!scrollRef.current) return;
 
-      const { startTimeMs, durationMs, totalDurationMs, onChange } =
-        propsRef.current;
+      const {
+        startTimeMs,
+        durationMs,
+        totalDurationMs,
+        pixelsPerSecond,
+        onChange
+      } = propsRef.current;
+
+      const PIXELS_PER_MS = pixelsPerSecond / 1000;
 
       // Calculate mouse position relative to the scroll content
       const rect = scrollRef.current.getBoundingClientRect();
@@ -172,6 +180,9 @@ export function useTimelineDrag({
     const scrollLeft = scrollRef.current.scrollLeft;
     const relativeX = e.clientX - rect.left + scrollLeft;
 
+    const { pixelsPerSecond } = propsRef.current;
+    const PIXELS_PER_MS = pixelsPerSecond / 1000;
+
     const currentLeftPixel = startTimeMs * PIXELS_PER_MS;
     dragOffsetRef.current = relativeX - currentLeftPixel;
 
@@ -184,6 +195,9 @@ export function useTimelineDrag({
     const rect = scrollRef.current.getBoundingClientRect();
     const scrollLeft = scrollRef.current.scrollLeft;
     const relativeX = e.clientX - rect.left + scrollLeft;
+
+    const { pixelsPerSecond } = propsRef.current;
+    const PIXELS_PER_MS = pixelsPerSecond / 1000;
 
     const rawMs = relativeX / PIXELS_PER_MS;
     // No snapping
