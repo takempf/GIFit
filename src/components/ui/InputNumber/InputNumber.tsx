@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 
 import { Input } from '../Input/Input';
+// Adjust path to point to existing Button
 import { Button } from '../Button/Button';
 
 import css from './InputNumber.module.css';
@@ -47,7 +48,7 @@ export function InputNumber({
   onStep,
   ...restProps
 }: InputNumberProps) {
-  const inputRef: React.RefObject<HTMLInputElement | null> = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const spinTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Keep track of the latest value to avoid stale closures in setTimeout
@@ -79,15 +80,6 @@ export function InputNumber({
 
     // Trigger change
     if (inputRef.current) {
-      // We need to trigger the React onChange handler passed as prop.
-      // We can create a synthetic event-like object or try to trigger native event.
-      // Creating a full synthetic event is hard.
-      // Easiest is to call onChange directly if we trust it doesn't need strictly native event properties (like bubbles).
-      // Standard React pattern:
-
-      // 1. Update native value (for UI consistency if controlled component is slow)
-      // inputRef.current.value = String(newValue);
-
       // 2. Call parent handler
       // Create a mock event.
       const mockEvent = {
@@ -162,7 +154,9 @@ export function InputNumber({
           onPointerUp={handleUpPressEnd}
           onPointerLeave={handleUpPressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={restProps.disabled}
-          aria-label="Increment">
+          aria-label="Increment"
+          tabIndex={-1} // Prevent tabbing to spinner
+        >
           ▲
         </Button>
         <Button
@@ -173,7 +167,8 @@ export function InputNumber({
           onPointerUp={handleDownPressEnd}
           onPointerLeave={handleDownPressEnd} // Stop spinning if mouse leaves button while pressed
           disabled={restProps.disabled}
-          aria-label="Decrement">
+          aria-label="Decrement"
+          tabIndex={-1}>
           ▼
         </Button>
       </div>

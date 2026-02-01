@@ -1,6 +1,9 @@
-import css from './Input.module.css';
-
+import React from 'react';
+import { Input as BaseInput } from '@base-ui/react/input';
+import { Field } from '@base-ui/react/field';
 import cx from 'classnames';
+
+import css from './Input.module.css';
 
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -8,10 +11,10 @@ export interface InputProps
   append?: React.ReactNode;
   name: string;
   label: React.ReactNode;
-  type?: HTMLInputElement['type'];
-  value: string;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  ref?: React.RefObject<HTMLInputElement | null>;
+  // We use the same interface for 'ref' as the original component
+  // which expects a RefObject, although React 19 / Base UI might handle refs differently.
+  // We'll pass it to BaseInput.
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 export function Input({
@@ -20,28 +23,28 @@ export function Input({
   append,
   name,
   label,
-  type = 'text',
   value,
   onChange,
+  type = 'text',
   ref,
   ...restProps
 }: InputProps) {
   return (
-    <div className={cx(css.input, className)}>
-      {prepend}
-      <label className={css.inputAndLabel}>
-        <strong className={css.label}>{label}</strong>
-        <input
-          className={css.actualInput}
+    <Field.Root className={cx(css.root, className)}>
+      <Field.Label className={css.label}>{label}</Field.Label>
+      <div className={css.inputWrapper}>
+        {prepend && <div className={css.prepend}>{prepend}</div>}
+        <BaseInput
+          className={css.input}
           name={name}
           type={type}
           value={value}
           onChange={onChange}
-          {...restProps}
           ref={ref}
+          {...restProps}
         />
-      </label>
-      {append}
-    </div>
+        {append && <div className={css.append}>{append}</div>}
+      </div>
+    </Field.Root>
   );
 }

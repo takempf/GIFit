@@ -2,4 +2,19 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  margin-left: 4px; /* separation from input */
+  gap: 0px;
+}
+
+.stepper button {
+  height: 10px; /* very small */
+  line-height: 10px;
+  min-height: auto;
+  font-size: 8px;
+  opacity: 0.7;
+}
+
+.stepper button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
 }

@@ -80,6 +80,8 @@
 
 .quality {
   grid-area: quality;
+  display: flex;
+  align-items: center;
 }
 
 .timeline {

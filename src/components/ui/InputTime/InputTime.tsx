@@ -13,7 +13,6 @@ import css from './InputTime.module.css';
 
 const SPIN_INTERVAL = 150;
 
-// --- Helper: Debounce Hook (same as before) ---
 // --- Helper: Debounce Hook ---
 function useDebouncedCallback<A extends unknown[]>(
   callback: (...args: A) => void,
@@ -49,28 +48,17 @@ function useDebouncedCallback<A extends unknown[]>(
 // --- Helper: Time Formatting & Parsing ---
 
 const getDecimalPlacesFromMsStep = (stepMs: number): number => {
-  // Convert step to seconds to determine visible decimal places
-  // e.g. 100ms -> 0.1s -> 1 decimal place
-  // e.g. 1ms -> 0.001s -> 3 decimal places
-  // e.g. 33.33ms -> 0.03333s -> ~2-3 decimal places?
-  // Assume generic:
   const stepSeconds = stepMs / 1000;
   const stepStr = String(stepSeconds);
   const decimalPointIndex = stepStr.indexOf('.');
   return decimalPointIndex === -1 ? 0 : stepStr.length - decimalPointIndex - 1;
 };
 
-/**
- * Converts total milliseconds to a dynamic H:MM:SS.s or M:SS.s format.
- * - If hours > 0: H:MM:SS.s (e.g., 1:00:00.2)
- * - Else: M:SS.s (e.g., 0:12.0, 1:15.2)
- */
 const msToHMSs = (totalMs: number, decimalPlaces: number): string => {
   if (isNaN(totalMs) || totalMs < 0) {
     totalMs = 0;
   }
 
-  // Ensure integer milliseconds
   totalMs = Math.round(totalMs);
 
   const totalSeconds = totalMs / 1000;
@@ -80,13 +68,11 @@ const msToHMSs = (totalMs: number, decimalPlaces: number): string => {
 
   const padTwo = (num: number) => String(num).padStart(2, '0');
 
-  // Format seconds part (SS.s or SS)
-  // Max resolution for ms is 3 decimal places of a second (1ms = 0.001s)
   const effectiveDecimalPlaces = Math.min(decimalPlaces, 3);
   const formattedFullSeconds = secondsComponent.toFixed(effectiveDecimalPlaces);
   const [secIntStr, secDecStrCandidate] = formattedFullSeconds.split('.');
 
-  let displaySeconds = padTwo(parseInt(secIntStr, 10)); // Pad integer part of seconds
+  let displaySeconds = padTwo(parseInt(secIntStr, 10));
 
   if (effectiveDecimalPlaces > 0) {
     const decimalPart = secDecStrCandidate || '';
@@ -110,14 +96,11 @@ const hmsStringToMs = (hmsString: string): number | null => {
 
   try {
     if (parts.length === 1) {
-      // SS.s
       seconds = parseFloat(parts[0]);
     } else if (parts.length === 2) {
-      // MM:SS.s
       minutes = parseInt(parts[0], 10);
       seconds = parseFloat(parts[1]);
     } else if (parts.length === 3) {
-      // HH:MM:SS.s
       hours = parseInt(parts[0], 10);
       minutes = parseInt(parts[1], 10);
       seconds = parseFloat(parts[2]);
@@ -127,14 +110,6 @@ const hmsStringToMs = (hmsString: string): number | null => {
 
     if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
       return null;
-    }
-    // Basic validation
-    if (minutes < 0 || minutes > 59 || seconds < 0 || seconds >= 60) {
-      if (seconds === 60 && (minutes < 59 || hours > 0)) {
-        // Allow 60s carry over logic if needed
-      } else if (seconds >= 60) {
-        // loose validation
-      }
     }
 
     const totalSeconds = hours * 3600 + minutes * 60 + seconds;
@@ -296,7 +271,6 @@ export const InputTime: React.FC<InputTimeProps> = ({
 
       let continueSpinning = true;
 
-      // In MS, simple comparison works better than rounding checks
       if (newValue !== currentValForStep) {
         onChange(newValue);
         setDisplayValue(msToHMSs(newValue, decimalPlaces));
@@ -385,7 +359,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
           onPointerUp={handlePressEnd}
           onPointerLeave={handlePressEnd}
           disabled={disabled || value >= max}
-          aria-label="Increment time">
+          aria-label="Increment time"
+          tabIndex={-1}>
           ▲
         </Button>
         <Button
@@ -396,7 +371,8 @@ export const InputTime: React.FC<InputTimeProps> = ({
           onPointerUp={handlePressEnd}
           onPointerLeave={handlePressEnd}
           disabled={disabled || value <= min}
-          aria-label="Decrement time">
+          aria-label="Decrement time"
+          tabIndex={-1}>
           ▼
         </Button>
       </div>
@@ -404,7 +380,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
   );
 
   return (
-    <div className={`time-input-container ${className}`}>
+    <div className={className}>
       <Input
         name={name}
         label={label}
@@ -416,7 +392,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
         onFocus={() => setIsEditing(true)}
         onKeyDown={handleKeyDown}
         disabled={disabled}
-        className={`time-input-field ${inputClassName}`}
+        className={inputClassName}
         aria-valuenow={value}
         aria-valuemin={min}
         aria-valuemax={max === Infinity ? undefined : max}
