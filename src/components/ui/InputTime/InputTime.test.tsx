@@ -831,13 +831,13 @@ describe('InputTime', { timeout: 10000 }, () => {
     fireEvent.pointerDown(screen.getByLabelText('Increment time'));
     fireEvent.pointerUp(screen.getByLabelText('Increment time'));
 
-    expect(handleStep).toHaveBeenCalledWith(10, 'up');
+    expect(handleStep).toHaveBeenCalledWith(10, 'up', 1);
     expect(handleChange).toHaveBeenCalledWith(12);
 
     // Check keydown
     const input = screen.getByLabelText('Time');
     fireEvent.keyDown(input, { key: 'ArrowDown' });
-    expect(handleStep).toHaveBeenCalledWith(10, 'down');
+    expect(handleStep).toHaveBeenCalledWith(10, 'down', 1);
     expect(handleChange).toHaveBeenCalledWith(8);
   });
 

@@ -26,6 +26,21 @@ export function StartTimeInput({
     onPreviewRequest(newStartMs);
   }
 
+  function handleStep(
+    currentValue: number,
+    direction: 'up' | 'down',
+    multiplier: number
+  ) {
+    const frameDurationMs = 1000 / framerate;
+    const stepAmount = frameDurationMs * multiplier;
+    let newValue =
+      currentValue + (direction === 'up' ? stepAmount : -stepAmount);
+
+    // Clamp
+    newValue = Math.max(0, Math.min(maxStart, newValue));
+    return newValue;
+  }
+
   return (
     <div className={css.start}>
       <InputTime
@@ -34,7 +49,8 @@ export function StartTimeInput({
         value={start}
         min={0}
         max={maxStart}
-        step={1000 / framerate}
+        step={1} // Allow 1ms precision (3 decimal places)
+        onStep={handleStep}
         onChange={handleStartTimeChange}
         data-testid="start-input"
       />

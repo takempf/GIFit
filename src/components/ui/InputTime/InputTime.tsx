@@ -139,7 +139,11 @@ interface InputTimeProps {
   className?: string;
   inputClassName?: string;
   buttonClassName?: string;
-  onStep?: (currentValue: number, direction: 'up' | 'down') => number;
+  onStep?: (
+    currentValue: number,
+    direction: 'up' | 'down',
+    multiplier: number
+  ) => number;
 }
 
 export const InputTime: React.FC<InputTimeProps> = ({
@@ -229,7 +233,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       multiplier: number = 1
     ): number => {
       if (onStep) {
-        return onStep(currentVal, direction);
+        return onStep(currentVal, direction, multiplier);
       }
 
       const effectiveStep = step * multiplier;
