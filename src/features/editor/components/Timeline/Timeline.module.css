@@ -176,3 +176,43 @@
   pointer-events: none;
   border-left: oklch(from var(--color_accent) l c h / 0.75) 1px solid;
 }
+
+/* Container for Viewport and Gradients */
+.viewportContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Gradients */
+.gradient {
+  position: absolute;
+  top: 0;
+  bottom: 0px;
+  width: 1.5em;
+  z-index: 20; /* Above selection (10) and ticks */
+  pointer-events: none;
+  transition: opacity 160ms ease-out;
+}
+
+.gradientLeft {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.1),
+    transparent
+  );
+}
+
+.gradientRight {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0.35),
+    rgba(0, 0, 0, 0.1),
+    transparent
+  );
+}

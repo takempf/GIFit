@@ -34,6 +34,15 @@ export function Timeline({
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [showLeftGradient, setShowLeftGradient] = useState(false);
+  const [showRightGradient, setShowRightGradient] = useState(false);
+
+  const updateGradients = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setShowLeftGradient(scrollLeft > 0);
+    setShowRightGradient(scrollLeft + clientWidth < scrollWidth - 1);
+  };
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -46,6 +55,10 @@ export function Timeline({
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
+
+  useEffect(() => {
+    updateGradients();
+  }, [containerWidth, totalDuration]);
 
   // Show ~7 seconds in the viewport
   const VISIBLE_DURATION_SECONDS = 7;
@@ -145,47 +158,62 @@ export function Timeline({
             }}
           />
         </ScrollArea.Scrollbar>
-        <ScrollArea.Viewport
-          className={styles.scrollViewport}
-          ref={scrollRef}
-          data-testid="scroll-container">
-          <ScrollArea.Content
-            className={styles.scrollContent}
-            style={{ width: `${rowVirtualizer.getTotalSize()}px` }}>
-            <div
-              className={styles.interior}
-              onMouseDown={handleBackgroundMouseDown}
-              data-testid="timeline-interior">
-              {/* Ticks Layer (Virtual Items) */}
-              <TimelineSegments
-                virtualItems={rowVirtualizer.getVirtualItems()}
-                totalDuration={totalDuration}
-                totalDurationMs={totalDurationMs}
-                fps={fps}
-              />
 
-              {/* Preview Highlight */}
+        <div className={styles.viewportContainer}>
+          <div
+            className={`${styles.gradient} ${styles.gradientLeft}`}
+            style={{ opacity: showLeftGradient ? 1 : 0 }}
+            data-testid="gradient-left"
+          />
+          <div
+            className={`${styles.gradient} ${styles.gradientRight}`}
+            style={{ opacity: showRightGradient ? 1 : 0 }}
+            data-testid="gradient-right"
+          />
+
+          <ScrollArea.Viewport
+            className={styles.scrollViewport}
+            ref={scrollRef}
+            data-testid="scroll-container"
+            onScroll={updateGradients}>
+            <ScrollArea.Content
+              className={styles.scrollContent}
+              style={{ width: `${rowVirtualizer.getTotalSize()}px` }}>
               <div
-                className={styles.previewHighlight}
-                style={{
-                  left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
-                  width: `${(1000 / fps) * PIXELS_PER_MS}px`
-                }}
-              />
+                className={styles.interior}
+                onMouseDown={handleBackgroundMouseDown}
+                data-testid="timeline-interior">
+                {/* Ticks Layer (Virtual Items) */}
+                <TimelineSegments
+                  virtualItems={rowVirtualizer.getVirtualItems()}
+                  totalDuration={totalDuration}
+                  totalDurationMs={totalDurationMs}
+                  fps={fps}
+                />
 
-              {/* Selection Layer */}
-              <TimelineSelection
-                startTimeMs={startTimeMs}
-                durationMs={durationMs}
-                pixelsPerMs={PIXELS_PER_MS}
-                onMouseDown={handleSelectionMouseDown}
-                onLeftDrag={startLeftDrag}
-                onRightDrag={startRightDrag}
-                draggingState={draggingState}
-              />
-            </div>
-          </ScrollArea.Content>
-        </ScrollArea.Viewport>
+                {/* Preview Highlight */}
+                <div
+                  className={styles.previewHighlight}
+                  style={{
+                    left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
+                    width: `${(1000 / fps) * PIXELS_PER_MS}px`
+                  }}
+                />
+
+                {/* Selection Layer */}
+                <TimelineSelection
+                  startTimeMs={startTimeMs}
+                  durationMs={durationMs}
+                  pixelsPerMs={PIXELS_PER_MS}
+                  onMouseDown={handleSelectionMouseDown}
+                  onLeftDrag={startLeftDrag}
+                  onRightDrag={startRightDrag}
+                  draggingState={draggingState}
+                />
+              </div>
+            </ScrollArea.Content>
+          </ScrollArea.Viewport>
+        </div>
       </ScrollArea.Root>
     </div>
   );
