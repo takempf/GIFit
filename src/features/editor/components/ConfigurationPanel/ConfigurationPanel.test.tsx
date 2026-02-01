@@ -101,6 +101,23 @@ vi.mock('@/components/ui/ButtonToggle/ButtonToggle', () => ({
   )
 }));
 
+vi.mock('@/components/ui/Slider/Slider', () => ({
+  Slider: (props: {
+    label: string;
+    value: number;
+    onChange: (val: number) => void;
+  }) => (
+    <div aria-label={props.label}>
+      <div
+        role="slider"
+        aria-label={props.label}
+        aria-valuenow={props.value}
+        data-testid="quality-input"
+      />
+    </div>
+  )
+}));
+
 describe('ConfigurationPanel', () => {
   const mockOnSubmit = vi.fn();
   let mockConfigStoreState: Partial<ConfigState>;
@@ -176,7 +193,8 @@ describe('ConfigurationPanel', () => {
     expect((screen.getByLabelText('FPS') as HTMLInputElement).value).toBe(
       String(mockConfigStoreState.framerate)
     );
-    expect((screen.getByLabelText('Quality') as HTMLInputElement).value).toBe(
+    expect(screen.getByRole('slider', { name: /Quality/i })).toHaveAttribute(
+      'aria-valuenow',
       String(mockConfigStoreState.quality)
     );
   });
