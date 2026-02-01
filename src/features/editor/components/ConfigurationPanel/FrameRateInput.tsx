@@ -39,9 +39,14 @@ export function FrameRateInput({
         onPreviewRequest(newLastFrameMs);
       }
 
+      // Clamping
+      let clampedFramerate = newFramerate;
+      if (clampedFramerate > 60) clampedFramerate = 60;
+      if (clampedFramerate < 1) clampedFramerate = 1;
+
       storeHandleInputChange({
         name: 'framerate',
-        value: newFramerate
+        value: clampedFramerate
       });
     }
   }

@@ -39,7 +39,14 @@ export function DurationInput({
     if (isNaN(valueSeconds)) return;
 
     // Convert to MS
-    const roundedMs = Math.floor(valueSeconds * 1000);
+    let roundedMs = Math.floor(valueSeconds * 1000);
+
+    // Clamping
+    const maxDurationMs = maxDuration;
+    if (roundedMs > maxDurationMs) {
+      roundedMs = maxDurationMs;
+    }
+
     handleDurationChangeMs(roundedMs);
   }
 
