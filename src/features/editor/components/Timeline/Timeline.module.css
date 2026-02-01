@@ -98,7 +98,8 @@
   top: 25px;
   bottom: 12px;
   background-color: oklch(from var(--selection-color) l c h / 0.3);
-  border: 1px solid var(--selection-color);
+  border: 1px solid oklch(from var(--selection-color) l c h / 0.75);
+  opacity: 0.5;
   border-radius: 4px;
   /* z-index to stay above ticks? or below? usually above. */
   z-index: 10;
@@ -107,6 +108,13 @@
   overflow: hidden; /* logic for children frames */
   cursor: move;
   backdrop-filter: blur(1px);
+  transition: opacity 250ms 200ms ease-out;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
+
+  &:hover {
+    opacity: 1;
+    transition: opacity 100ms ease-out;
+  }
 }
 
 .selectionFrame {
