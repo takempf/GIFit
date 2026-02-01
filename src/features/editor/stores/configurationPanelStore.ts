@@ -13,7 +13,7 @@ export interface ConfigState {
   duration: number; // Milliseconds
   width: number;
   height: number;
-  linkDimensions: boolean;
+
   framerate: number;
   quality: number;
   aspectRatio: number;
@@ -28,23 +28,11 @@ export interface ConfigState {
 type InputActionPayload = {
   [K in keyof Pick<
     ConfigState,
-    | 'start'
-    | 'duration'
-    | 'width'
-    | 'height'
-    | 'linkDimensions'
-    | 'framerate'
-    | 'quality'
+    'start' | 'duration' | 'width' | 'height' | 'framerate' | 'quality'
   >]: { name: K; value: ConfigState[K] };
 }[keyof Pick<
   ConfigState,
-  | 'start'
-  | 'duration'
-  | 'width'
-  | 'height'
-  | 'linkDimensions'
-  | 'framerate'
-  | 'quality'
+  'start' | 'duration' | 'width' | 'height' | 'framerate' | 'quality'
 >];
 
 interface VideoLoadedDataPayload {
@@ -122,7 +110,7 @@ const getInitialState = (
     duration: 2000, // 2000ms default
     width: displayWidth,
     height: displayHeight,
-    linkDimensions: true,
+
     framerate: initialFramerate,
     quality: initialQuality,
     aspectRatio: storedAspectRatio,
@@ -177,16 +165,8 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           storedConfig.width
             .setValue(value)
             .catch((err) => log('Error saving width:', err));
-          if (state.linkDimensions) {
-            newState.height = Math.round(value / state.aspectRatio);
-          }
         } else if (name === 'height' && typeof value === 'number') {
-          if (state.linkDimensions) {
-            newState.width = Math.round(value * state.aspectRatio);
-            storedConfig.width
-              .setValue(newState.width)
-              .catch((err) => log('Error saving width:', err));
-          }
+          // no side effects for height change anymore
         } else if (name === 'framerate' && typeof value === 'number') {
           storedConfig.fps
             .setValue(value)
@@ -195,12 +175,6 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           storedConfig.quality
             .setValue(value)
             .catch((err) => log('Error saving quality:', err));
-        }
-
-        if (state.linkDimensions && name !== 'width' && name !== 'height') {
-          // do nothing
-        } else if (name === 'linkDimensions' && value) {
-          newState.height = Math.round(newState.width / newState.aspectRatio);
         }
 
         return newState;
@@ -218,7 +192,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
             ? toMilliseconds(payload.currentTime)
             : state.start,
         height:
-          state.linkDimensions || state.height === DEFAULT_HEIGHT
+          state.height === DEFAULT_HEIGHT
             ? Math.round(state.width / payload.aspectRatio)
             : state.height
       })),

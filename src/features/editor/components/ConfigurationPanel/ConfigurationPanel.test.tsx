@@ -114,7 +114,7 @@ describe('ConfigurationPanel', () => {
       duration: 2000,
       width: 1280,
       height: 720,
-      linkDimensions: true,
+
       framerate: 10,
       quality: 5,
       aspectRatio: 1280 / 720,
@@ -189,25 +189,6 @@ describe('ConfigurationPanel', () => {
     expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
       name: 'width',
       value: 640
-    });
-  });
-
-  test('calls store action on link dimensions toggle', () => {
-    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
-    // The mocked ButtonToggle uses a checkbox
-    // Searching for checkbox with name="linkDimensions" might not find it by role easily with my mock.
-    // The mock is: <label>{props.label}<input type="checkbox" ... /></label>
-    // But props.label is undefined in the component usage?
-    // In component: <ButtonToggle ... name="linkDimensions" ... >
-    // Let's find by type checkbox
-    const linkCheckbox = screen
-      .getAllByRole('checkbox')
-      .find((el) => el.getAttribute('name') === 'linkDimensions');
-    expect(linkCheckbox).toBeDefined();
-    fireEvent.click(linkCheckbox!);
-    expect(mockConfigStoreActions.handleInputChange).toHaveBeenCalledWith({
-      name: 'linkDimensions',
-      value: !mockConfigStoreState.linkDimensions
     });
   });
 

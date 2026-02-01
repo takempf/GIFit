@@ -59,21 +59,6 @@
   grid-area: height;
 }
 
-.linkDimensions {
-  grid-column-end: height;
-  grid-column-start: width;
-  grid-row-end: height;
-  grid-row-start: width;
-  align-self: center;
-  justify-self: center;
-  z-index: 5;
-  backdrop-filter: blur(2px);
-}
-
-.linkIcon {
-  height: 1em;
-}
-
 .fps {
   grid-area: fps;
 }

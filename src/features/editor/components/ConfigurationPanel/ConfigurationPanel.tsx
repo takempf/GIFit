@@ -20,7 +20,7 @@ import { DurationInput } from './DurationInput';
 import { FrameRateInput } from './FrameRateInput';
 import { WidthInput } from './WidthInput';
 import { HeightInput } from './HeightInput';
-import { DimensionsLinkInput } from './DimensionsLinkInput';
+
 import { QualityInput } from './QualityInput';
 
 interface ConfigurationPanelProps {
@@ -150,7 +150,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       duration, // MS
       width,
       height,
-      linkDimensions: currentConfigState.linkDimensions,
+
       framerate,
       quality: currentConfigState.quality,
       aspectRatio: currentConfigState.aspectRatio,
@@ -203,8 +203,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         />
 
         <WidthInput />
-
-        <DimensionsLinkInput />
 
         <HeightInput />
 
