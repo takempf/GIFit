@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
+    "@tanstack/react-virtual": "^3.13.18",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
     "gifenc": "^1.0.3",

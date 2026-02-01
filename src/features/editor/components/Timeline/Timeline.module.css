@@ -96,27 +96,6 @@
   opacity: 0.5;
 }
 
-/* Ticks Layer */
-.secondMarker {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-left: 1px solid #555;
-  font-size: 12px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  padding-left: 4px;
-  pointer-events: none;
-}
-
-.frameMarker {
-  position: absolute;
-  bottom: 0;
-  height: 20%;
-  border-left: 1px solid #333;
-  pointer-events: none;
-}
-
 /* Selection Rectangle */
 .selection {
   position: absolute;

@@ -1,12 +1,27 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Timeline } from './Timeline';
-import { vi, describe, it, expect, beforeAll } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 
-beforeAll(() => {
-  global.ResizeObserver = class ResizeObserver {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+vi.mock('@tanstack/react-virtual', () => {
+  return {
+    useVirtualizer: ({ count }: { count: number }) => {
+      return {
+        getVirtualItems: () => {
+          const items = [];
+          for (let i = 0; i < count; i++) {
+            items.push({
+              key: `sec-${i}`,
+              index: i,
+              start: i * 120, // Assuming default fallback width 840 / 7s = 120px/s
+              size: 120,
+              lane: 0
+            });
+          }
+          return items;
+        },
+        getTotalSize: () => count * 120
+      };
+    }
   };
 });
 

@@ -24,7 +24,11 @@ vi.mock('wxt/browser', () => ({
 vi.mock(
   '../features/editor/components/ConfigurationPanel/ConfigurationPanel',
   () => ({
-    ConfigurationPanel: ({ onSubmit }: { onSubmit: (val: any) => void }) => (
+    ConfigurationPanel: ({
+      onSubmit
+    }: {
+      onSubmit: (val: unknown) => void;
+    }) => (
       <button
         data-testid="mock-submit-btn"
         onClick={() =>
@@ -66,7 +70,7 @@ describe('App Integration', () => {
 
     // App Store
     (useAppStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (selector: any) => {
+      (selector: (state: unknown) => unknown) => {
         return selector({
           status: 'idle',
           setStatus: mockSetStatus
@@ -76,7 +80,7 @@ describe('App Integration', () => {
 
     // Gif Gen Store
     (useGifStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (selector: any) => {
+      (selector: (state: unknown) => unknown) => {
         return selector({
           createGif: mockCreateGif,
           setName: mockSetName,
@@ -91,7 +95,7 @@ describe('App Integration', () => {
     // Config Panel Store
     (
       useConfigurationPanelStore as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((selector: any) => {
+    ).mockImplementation((selector: (state: unknown) => unknown) => {
       return selector({
         pauseVideo: mockPauseVideo
       });

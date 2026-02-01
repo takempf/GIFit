@@ -1,0 +1,26 @@
+.timelineSegment {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: end;
+}
+
+.frameMarker {
+  height: 0.75em;
+  border-left: 1px solid #333;
+  pointer-events: none;
+}
+
+/* Ticks Layer */
+.secondMarker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dotted #555;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  padding-left: 4px;
+  pointer-events: none;
+  left: 0;
+}

@@ -1,7 +1,8 @@
 import { ScrollArea } from '@base-ui/react/scroll-area';
-import React, { useRef, useEffect, useMemo, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import styles from './Timeline.module.css';
-import { toMilliseconds, formatMilliseconds } from '@/utils/time';
+import { toMilliseconds } from '@/utils/time';
 
 interface TimelineProps {
   totalDuration: number;
@@ -16,6 +17,8 @@ interface TimelineProps {
   ) => void;
   className?: string;
 }
+
+import { TimelineSegment } from './TimelineSegment';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 
@@ -50,14 +53,11 @@ export function Timeline({
   const effectiveWidth = containerWidth || 840; // 120 * 7
   const pixelsPerSecond = effectiveWidth / VISIBLE_DURATION_SECONDS;
   const PIXELS_PER_MS = pixelsPerSecond / 1000;
-  // Round PIXELS_PER_SECOND for tick rendering alignment if needed, but float is usually fine for positioning
 
   // Convert props to ms for internal calculations
   const totalDurationMs = toMilliseconds(totalDuration);
   const startTimeMs = toMilliseconds(startTime);
   const durationMs = toMilliseconds(duration);
-
-  const totalWidth = totalDurationMs * PIXELS_PER_MS;
 
   const {
     handleSelectionMouseDown,
@@ -88,40 +88,24 @@ export function Timeline({
     hasInitialScrolled.current = true;
   }, [startTimeMs, PIXELS_PER_MS]);
 
-  // Generate Ticks
-  const renderTicks = useMemo(() => {
-    const ticks = [];
-    const seconds = Math.floor(totalDuration);
+  const count = Math.floor(totalDuration) + 1; // Number of seconds to render
 
-    for (let i = 0; i <= seconds; i++) {
-      // Second Marker
-      ticks.push(
-        <div
-          key={`sec-${i}`}
-          className={styles.secondMarker}
-          style={{ left: `${i * pixelsPerSecond}px` }}>
-          {formatMilliseconds(i * 1000)}
-        </div>
-      );
-
-      // Frame Markers
-      if (i < totalDuration) {
-        for (let f = 1; f < fps; f++) {
-          const frameTimeMs = i * 1000 + (f * 1000) / fps;
-          if (frameTimeMs > totalDurationMs) break;
-          ticks.push(
-            <div
-              key={`frame-${i}-${f}`}
-              className={styles.frameMarker}
-              style={{ left: `${frameTimeMs * PIXELS_PER_MS}px` }}
-            />
-          );
-        }
+  const rowVirtualizer = useVirtualizer({
+    count,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (index) => {
+      // If it's the last segment, calculate precise width
+      if (index === count - 1) {
+        const segmentStartTimeMs = index * 1000;
+        const remainingMs = totalDurationMs - segmentStartTimeMs;
+        const segmentDurationMs = Math.min(1000, Math.max(0, remainingMs));
+        return segmentDurationMs * PIXELS_PER_MS;
       }
-    }
-
-    return ticks;
-  }, [totalDuration, fps, totalDurationMs, pixelsPerSecond, PIXELS_PER_MS]);
+      return pixelsPerSecond;
+    },
+    horizontal: true,
+    overscan: 2 // Render 2 extra items off-screen
+  });
 
   const selectionStyle = {
     left: `${startTimeMs * PIXELS_PER_MS}px`,
@@ -129,8 +113,6 @@ export function Timeline({
   };
 
   // Selection Indicator Calculation
-  // Total duration logic for percentages
-  // Avoid division by zero
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
   const selectionIndicatorWidthPct = (durationMs / safeTotalDuration) * 100;
@@ -160,13 +142,44 @@ export function Timeline({
           data-testid="scroll-container">
           <ScrollArea.Content
             className={styles.scrollContent}
-            style={{ width: `${totalWidth}px` }}>
+            style={{ width: `${rowVirtualizer.getTotalSize()}px` }}>
             <div
               className={styles.interior}
               onMouseDown={handleBackgroundMouseDown}
               data-testid="timeline-interior">
-              {/* Ticks Layer */}
-              {renderTicks}
+              {/* Ticks Layer (Virtual Items) */}
+              {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                const i = virtualItem.index;
+                // Don't render if it goes beyond totalDuration (though count limits it, last second might be partial in theory but we treat seconds as blocks)
+                if (i > totalDuration) return null;
+
+                const segmentStartTimeMs = i * 1000;
+                // Determine duration of this segment. Usually 1000ms, but last one might be less.
+                const remainingMs = totalDurationMs - segmentStartTimeMs;
+                const segmentDurationMs = Math.min(
+                  1000,
+                  Math.max(0, remainingMs)
+                );
+
+                return (
+                  <TimelineSegment
+                    key={virtualItem.key}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: `${virtualItem.size}px`,
+                      height: '100%',
+                      transform: `translateX(${virtualItem.start}px)`
+                    }}
+                    index={i}
+                    startTimeMs={segmentStartTimeMs}
+                    durationMs={segmentDurationMs}
+                    fps={fps}
+                    totalDurationMs={totalDurationMs}
+                  />
+                );
+              })}
 
               {/* Preview Highlight */}
               <div
@@ -183,8 +196,6 @@ export function Timeline({
                 style={selectionStyle}
                 onMouseDown={handleSelectionMouseDown}
                 data-testid="selection-rect">
-                {/* Frames Visual Removed */}
-
                 {/* Handles */}
                 <div
                   className={`${styles.handle} ${styles.handleLeft}`}
