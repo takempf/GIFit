@@ -223,13 +223,21 @@ export const InputTime: React.FC<InputTimeProps> = ({
   };
 
   const performStep = useCallback(
-    (currentVal: number, direction: 'up' | 'down'): number => {
+    (
+      currentVal: number,
+      direction: 'up' | 'down',
+      multiplier: number = 1
+    ): number => {
       if (onStep) {
         return onStep(currentVal, direction);
       }
 
-      let newValue = currentVal + (direction === 'up' ? step : -step);
-      newValue = roundToStep(newValue, step);
+      const effectiveStep = step * multiplier;
+      let newValue =
+        currentVal + (direction === 'up' ? effectiveStep : -effectiveStep);
+      newValue = roundToStep(newValue, step); // Rounding usually wants the base step to keep clean intervals?
+      // Actually if we step by 5*step, we might want to round to base step anyway to ensure we land on clean numbers.
+      // passing `step` (not effectiveStep) to roundToStep ensures we stay on the grid.
       newValue = Math.max(min, Math.min(max, newValue));
       return newValue;
     },
@@ -237,20 +245,21 @@ export const InputTime: React.FC<InputTimeProps> = ({
   );
 
   const handleStep = useCallback(
-    (direction: 'up' | 'down') => {
-      const newValue = performStep(value, direction);
+    (direction: 'up' | 'down', multiplier: number = 1) => {
+      const newValue = performStep(value, direction, multiplier);
       commitChange(newValue);
     },
     [value, performStep, commitChange]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const multiplier = e.shiftKey ? 5 : 1;
     if (e.key === 'ArrowUp') {
       e.preventDefault();
-      handleStep('up');
+      handleStep('up', multiplier);
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
-      handleStep('down');
+      handleStep('down', multiplier);
     } else if (e.key === 'Enter') {
       e.preventDefault();
       handleBlur();
@@ -261,12 +270,13 @@ export const InputTime: React.FC<InputTimeProps> = ({
   const currentSpinDirection = useRef<'up' | 'down' | null>(null);
 
   const stepContinuously = useCallback(
-    (currentValForStep: number) => {
+    (currentValForStep: number, multiplier: number) => {
       if (!currentSpinDirection.current) return;
 
       const newValue = performStep(
         currentValForStep,
-        currentSpinDirection.current
+        currentSpinDirection.current,
+        multiplier
       );
 
       let continueSpinning = true;
@@ -288,7 +298,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
 
       if (currentSpinDirection.current && continueSpinning) {
         spinTimeoutRef.current = setTimeout(
-          () => stepContinuously(newValue),
+          () => stepContinuously(newValue, multiplier),
           SPIN_INTERVAL
         );
       } else {
@@ -303,14 +313,18 @@ export const InputTime: React.FC<InputTimeProps> = ({
     [performStep, onChange, decimalPlaces, min, max]
   );
 
-  const handlePressStart = (direction: 'up' | 'down') => {
+  const handlePressStart = (
+    direction: 'up' | 'down',
+    e: React.PointerEvent
+  ) => {
     if (spinTimeoutRef.current) {
       clearTimeout(spinTimeoutRef.current);
     }
     currentSpinDirection.current = direction;
 
+    const multiplier = e.shiftKey ? 5 : 1;
     const initialMsValue = hmsStringToMs(displayValue) ?? value;
-    const firstStepValue = performStep(initialMsValue, direction);
+    const firstStepValue = performStep(initialMsValue, direction, multiplier);
 
     if (firstStepValue !== initialMsValue) {
       onChange(firstStepValue);
@@ -323,7 +337,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       (direction === 'down' && firstStepValue > min)
     ) {
       spinTimeoutRef.current = setTimeout(
-        () => stepContinuously(firstStepValue),
+        () => stepContinuously(firstStepValue, multiplier),
         SPIN_INTERVAL
       );
     }
@@ -355,7 +369,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onPointerDown={() => handlePressStart('up')}
+          onPointerDown={(e) => handlePressStart('up', e)}
           onPointerUp={handlePressEnd}
           onPointerLeave={handlePressEnd}
           disabled={disabled || value >= max}
@@ -367,7 +381,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
           size="x-small"
           variant="ghost"
           padding="none"
-          onPointerDown={() => handlePressStart('down')}
+          onPointerDown={(e) => handlePressStart('down', e)}
           onPointerUp={handlePressEnd}
           onPointerLeave={handlePressEnd}
           disabled={disabled || value <= min}

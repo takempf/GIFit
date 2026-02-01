@@ -840,4 +840,47 @@ describe('InputTime', { timeout: 10000 }, () => {
     expect(handleStep).toHaveBeenCalledWith(10, 'down');
     expect(handleChange).toHaveBeenCalledWith(8);
   });
+
+  it('step up with Shift key increments by 5x step', async () => {
+    const handleChange = vi.fn();
+    render(
+      <InputTime
+        {...defaultProps}
+        value={0}
+        step={100}
+        onChange={handleChange}
+      />
+    );
+
+    const upButton = screen.getByLabelText('Increment time');
+
+    fireEvent(
+      upButton,
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        cancelable: true,
+        shiftKey: true
+      })
+    );
+    fireEvent.pointerUp(upButton);
+
+    expect(handleChange).toHaveBeenCalledWith(500); // 100 * 5 = 500
+  });
+
+  it('arrow up with Shift key increments by 5x step', async () => {
+    const handleChange = vi.fn();
+    render(
+      <InputTime
+        {...defaultProps}
+        value={0}
+        step={100}
+        onChange={handleChange}
+      />
+    );
+
+    const input = screen.getByLabelText('Time');
+    fireEvent.keyDown(input, { key: 'ArrowUp', shiftKey: true });
+
+    expect(handleChange).toHaveBeenCalledWith(500); // 100 * 5 = 500
+  });
 });
