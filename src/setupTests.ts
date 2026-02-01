@@ -24,11 +24,17 @@ const mockBrowser = {
 global.chrome = mockBrowser;
 global.browser = mockBrowser;
 
+// Extend Window interface to include chrome and browser
+declare global {
+  interface Window {
+    chrome: unknown;
+    browser: unknown;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).chrome = mockBrowser;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).browser = mockBrowser;
+  window.chrome = mockBrowser;
+  window.browser = mockBrowser;
 }
 
 // Mock wxt/utils/storage since it runs at module scope and checks permissions

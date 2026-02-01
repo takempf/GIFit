@@ -10,17 +10,18 @@ import {
   calculateLastFramePreview
 } from '@/utils/time';
 
-import { Input } from '@/components/ui/Input/Input';
-import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
-import { InputTime } from '@/components/ui/InputTime/InputTime';
 import { Button } from '@/components/ui/Button/Button';
-import { ButtonToggle } from '@/components/ui/ButtonToggle/ButtonToggle';
 import { Timeline } from '../Timeline/Timeline';
 import { GifPreview } from '../GifPreview/GifPreview';
 
-import LinkIcon from '@/assets/link.svg?react';
-import LinkEmptyIcon from '@/assets/link-empty.svg?react';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { StartTimeInput } from './StartTimeInput';
+import { DurationInput } from './DurationInput';
+import { FrameRateInput } from './FrameRateInput';
+import { WidthInput } from './WidthInput';
+import { HeightInput } from './HeightInput';
+import { DimensionsLinkInput } from './DimensionsLinkInput';
+import { QualityInput } from './QualityInput';
 
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
@@ -31,19 +32,9 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const duration = useConfigurationPanelStore((state) => state.duration);
   const width = useConfigurationPanelStore((state) => state.width);
   const height = useConfigurationPanelStore((state) => state.height);
-  const linkDimensions = useConfigurationPanelStore(
-    (state) => state.linkDimensions
-  );
   const framerate = useConfigurationPanelStore((state) => state.framerate);
-  const quality = useConfigurationPanelStore((state) => state.quality);
   const videoDuration = useConfigurationPanelStore(
     (state) => state.videoDuration
-  );
-  const configVideoWidth = useConfigurationPanelStore(
-    (state) => state.videoWidth
-  );
-  const configVideoHeight = useConfigurationPanelStore(
-    (state) => state.videoHeight
   );
   const previewImage = useConfigurationPanelStore(
     (state) => state.previewImage
@@ -64,7 +55,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
     await seekVideo(time);
-    captureFrame();
     captureFrame();
   }, 100);
 
@@ -113,93 +103,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     return null;
   }
 
-  const maxWidth = Math.min(configVideoWidth, 1920);
-  const maxHeight = Math.min(configVideoHeight, 1080);
-
-  function handleDurationChangeMs(roundedMs: number) {
-    storeHandleInputChange({
-      name: 'duration',
-      value: roundedMs
-    });
-
-    const previewTimeMs = calculateLastFramePreview(
-      start,
-      roundedMs,
-      framerate
-    );
-    handlePreviewRequest(previewTimeMs);
-  }
-
-  function handleDurationChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const valueSeconds = parseFloat(event.target.value);
-    if (isNaN(valueSeconds)) return;
-
-    // Convert to MS
-    // Use floor for duration to prevent overstepping
-    const roundedMs = Math.floor(valueSeconds * 1000);
-
-    handleDurationChangeMs(roundedMs);
-  }
-
-  function handleGenericChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-    field: 'width' | 'height' | 'framerate' | 'quality'
-  ) {
-    const value = parseFloat(event.target.value);
-    if (!isNaN(value)) {
-      storeHandleInputChange({
-        name: field,
-        value: value
-      });
-    }
-  }
-
-  function handleWidthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    handleGenericChange(event, 'width');
-  }
-
-  function handleHeightChange(event: React.ChangeEvent<HTMLInputElement>) {
-    handleGenericChange(event, 'height');
-  }
-
-  function handleFramerateChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const newFramerate = parseFloat(event.target.value);
-    if (!isNaN(newFramerate)) {
-      // Check if we are currently at the "last frame" of the OLD framerate
-      const currentLastFrameMs = calculateLastFramePreview(
-        start,
-        duration,
-        framerate
-      );
-
-      // Floating point tolerance
-      if (Math.abs(previewTime - currentLastFrameMs) < 1) {
-        // We are at the end, so we should jump to the new end
-        const newLastFrameMs = calculateLastFramePreview(
-          start,
-          duration,
-          newFramerate
-        );
-        handlePreviewRequest(newLastFrameMs);
-      }
-    }
-    handleGenericChange(event, 'framerate');
-  }
-
-  function handleQualityChange(event: React.ChangeEvent<HTMLInputElement>) {
-    handleGenericChange(event, 'quality');
-  }
-
-  function handleStartTimeChange(newStartMs: number) {
-    // InputTime returns MS
-    storeHandleInputChange({
-      name: 'start',
-      value: newStartMs
-    });
-    // When changing start time via input, show new start
-    handlePreviewRequest(newStartMs);
-  }
-
   // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
   // Timeline callbacks provide Seconds (legacy interface)
   function handleTimelineChange(
@@ -235,13 +138,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
   }
 
-  function handleLinkToggleChange(isLinked: boolean) {
-    storeHandleInputChange({
-      name: 'linkDimensions',
-      value: isLinked
-    });
-  }
-
   function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
     event.stopPropagation();
   }
@@ -254,9 +150,9 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       duration, // MS
       width,
       height,
-      linkDimensions,
+      linkDimensions: currentConfigState.linkDimensions,
       framerate,
-      quality,
+      quality: currentConfigState.quality,
       aspectRatio: currentConfigState.aspectRatio,
       videoDuration: currentConfigState.videoDuration,
       videoWidth: currentConfigState.videoWidth,
@@ -291,103 +187,28 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
           />
         </div>
 
-        <div className={css.start}>
-          <InputTime
-            name="start"
-            label="Start"
-            value={start}
-            min={0}
-            max={maxStart}
-            step={1000 / framerate}
-            onChange={handleStartTimeChange}
-            data-testid="start-input"
-          />
-        </div>
+        <StartTimeInput
+          onPreviewRequest={handlePreviewRequest}
+          maxStart={maxStart}
+        />
 
-        <div className={css.duration}>
-          <InputNumber
-            name="duration"
-            label="Duration"
-            type="number"
-            value={String(toSeconds(duration))}
-            min={1 / framerate} // Seconds
-            max={toSeconds(maxDuration)} // Seconds
-            step={1 / framerate} // Seconds (standard InputNumber step)
-            onChange={handleDurationChange}
-            data-testid="duration-input"
-          />
-        </div>
+        <DurationInput
+          onPreviewRequest={handlePreviewRequest}
+          maxDuration={maxDuration}
+        />
 
-        <div className={css.fps}>
-          <InputNumber
-            name="framerate"
-            label="FPS"
-            type="number"
-            min={1}
-            max={60}
-            value={String(framerate)}
-            onChange={handleFramerateChange}
-            data-testid="fps-input"
-          />
-        </div>
+        <FrameRateInput
+          onPreviewRequest={handlePreviewRequest}
+          previewTime={previewTime}
+        />
 
-        <div className={css.width}>
-          <InputNumber
-            name="width"
-            label="Width"
-            type="number"
-            value={String(width)}
-            min={32}
-            max={maxWidth}
-            onChange={handleWidthChange}
-            data-testid="width-input"
-          />
-        </div>
+        <WidthInput />
 
-        <div className={css.linkDimensions}>
-          <ButtonToggle
-            name="linkDimensions"
-            size="x-small"
-            rounded={true}
-            variant="input"
-            padding="small"
-            evenPadding={true}
-            checked={linkDimensions}
-            onChange={handleLinkToggleChange}
-            data-testid="dimensions-link-toggle">
-            {linkDimensions ? (
-              <LinkIcon className={css.linkIcon} />
-            ) : (
-              <LinkEmptyIcon className={css.linkIcon} />
-            )}
-          </ButtonToggle>
-        </div>
+        <DimensionsLinkInput />
 
-        <div className={css.height}>
-          <InputNumber
-            name="height"
-            label="Height"
-            type="number"
-            value={String(height)}
-            min={32}
-            max={maxHeight}
-            onChange={handleHeightChange}
-            data-testid="height-input"
-          />
-        </div>
+        <HeightInput />
 
-        <div className={css.quality}>
-          <Input
-            name="quality"
-            label="Quality"
-            type="range"
-            min={1}
-            max={10}
-            value={String(quality)}
-            onChange={handleQualityChange}
-            data-testid="quality-input"
-          />
-        </div>
+        <QualityInput />
 
         <div className={css.submit}>
           <Button id="gifit-submit" type="submit" className={css.submitButton}>

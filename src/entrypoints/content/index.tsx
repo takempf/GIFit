@@ -162,7 +162,12 @@ export default defineContentScript({
                 const seekPromise = new Promise<void>((resolve) => {
                   const onSeeked = () => {
                     video.removeEventListener('seeked', onSeeked);
-                    resolve();
+                    // Wait for the next frame to be painted
+                    requestAnimationFrame(() => {
+                      requestAnimationFrame(() => {
+                        resolve();
+                      });
+                    });
                   };
                   video.addEventListener('seeked', onSeeked, { once: true });
                   // Safety timeout

@@ -1,0 +1,61 @@
+import React from 'react';
+import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
+import { toSeconds, calculateLastFramePreview } from '@/utils/time';
+import css from './ConfigurationPanel.module.css';
+
+interface DurationInputProps {
+  onPreviewRequest: (timeMs: number) => void;
+  maxDuration: number;
+}
+
+export function DurationInput({
+  onPreviewRequest,
+  maxDuration
+}: DurationInputProps) {
+  const start = useConfigurationPanelStore((state) => state.start);
+  const duration = useConfigurationPanelStore((state) => state.duration);
+  const framerate = useConfigurationPanelStore((state) => state.framerate);
+  const storeHandleInputChange = useConfigurationPanelStore(
+    (state) => state.handleInputChange
+  );
+
+  function handleDurationChangeMs(roundedMs: number) {
+    storeHandleInputChange({
+      name: 'duration',
+      value: roundedMs
+    });
+
+    const previewTimeMs = calculateLastFramePreview(
+      start,
+      roundedMs,
+      framerate
+    );
+    onPreviewRequest(previewTimeMs);
+  }
+
+  function handleDurationChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const valueSeconds = parseFloat(event.target.value);
+    if (isNaN(valueSeconds)) return;
+
+    // Convert to MS
+    const roundedMs = Math.floor(valueSeconds * 1000);
+    handleDurationChangeMs(roundedMs);
+  }
+
+  return (
+    <div className={css.duration}>
+      <InputNumber
+        name="duration"
+        label="Duration"
+        type="number"
+        value={String(toSeconds(duration))}
+        min={1 / framerate} // Seconds
+        max={toSeconds(maxDuration)} // Seconds
+        step={1 / framerate} // Seconds (standard InputNumber step)
+        onChange={handleDurationChange}
+        data-testid="duration-input"
+      />
+    </div>
+  );
+}
