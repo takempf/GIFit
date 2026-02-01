@@ -163,32 +163,28 @@ describe('useConfigurationPanelStore', () => {
     expect(storedConfig.width.setValue).toHaveBeenCalledWith(expectedWidth);
   });
 
-  it('handleInputChange should correctly toggle linkDimensions and adjust height', async () => {
+  it('handleInputChange should always link dimensions', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
-    const initialWidth = result.current.width;
     const initialAspectRatio = result.current.aspectRatio;
 
+    // Change Width -> Height should update
+    const newWidth = 320;
     act(() => {
-      result.current.handleInputChange({
-        name: 'linkDimensions',
-        value: false
-      });
+      result.current.handleInputChange({ name: 'width', value: newWidth });
     });
-    expect(result.current.linkDimensions).toBe(false);
-    const manualHeight = 300;
-    act(() => {
-      result.current.handleInputChange({ name: 'height', value: manualHeight });
-    });
-    expect(result.current.width).toBe(initialWidth); // Width should not change
-    expect(result.current.height).toBe(manualHeight);
-
-    act(() => {
-      result.current.handleInputChange({ name: 'linkDimensions', value: true });
-    });
-    expect(result.current.linkDimensions).toBe(true);
-    // Height should re-calculate based on current width and aspect ratio
+    expect(result.current.width).toBe(newWidth);
     expect(result.current.height).toBe(
-      Math.round(initialWidth / initialAspectRatio)
+      Math.round(newWidth / initialAspectRatio)
+    );
+
+    // Change Height -> Width should update
+    const newHeight = 400;
+    act(() => {
+      result.current.handleInputChange({ name: 'height', value: newHeight });
+    });
+    expect(result.current.height).toBe(newHeight);
+    expect(result.current.width).toBe(
+      Math.round(newHeight * initialAspectRatio)
     );
   });
 

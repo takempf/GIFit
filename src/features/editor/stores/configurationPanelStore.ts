@@ -6,7 +6,6 @@ import { videoController } from '@/services/VideoController';
 import { toMilliseconds, toSeconds } from '@/utils/time';
 
 const DEFAULT_WIDTH = 420;
-const DEFAULT_HEIGHT = 180;
 
 export interface ConfigState {
   start: number; // Milliseconds
@@ -165,8 +164,12 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           storedConfig.width
             .setValue(value)
             .catch((err) => log('Error saving width:', err));
+          newState.height = Math.round(value / state.aspectRatio);
         } else if (name === 'height' && typeof value === 'number') {
-          // no side effects for height change anymore
+          newState.width = Math.round(value * state.aspectRatio);
+          storedConfig.width
+            .setValue(newState.width)
+            .catch((err) => log('Error saving width:', err));
         } else if (name === 'framerate' && typeof value === 'number') {
           storedConfig.fps
             .setValue(value)
@@ -191,10 +194,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           state.videoDuration === 0 && payload.currentTime !== undefined
             ? toMilliseconds(payload.currentTime)
             : state.start,
-        height:
-          state.height === DEFAULT_HEIGHT
-            ? Math.round(state.width / payload.aspectRatio)
-            : state.height
+        height: Math.round(state.width / payload.aspectRatio)
       })),
 
     handleVideoSeeked: (_payload) => {
