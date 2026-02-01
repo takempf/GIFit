@@ -3,6 +3,7 @@ import { browser } from 'wxt/browser';
 import GifService from '@/features/generator/services/GifService';
 import { log } from '@/utils/logger';
 import { ExtensionMessage } from '@/types';
+import { findBestVideo } from '@/utils/videoDetection';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
@@ -15,53 +16,46 @@ export default defineContentScript({
 
     /**
      * securely gets the video element, ensuring it is connected to the DOM.
-     * Use this instead of accessing activeVideoElement directly.
+     * Uses findBestVideo to select the most prominent visible video.
      */
     const getVideoElement = (): HTMLVideoElement | null => {
-      // If we have a reference, check if it's still valid (connected to DOM)
-      if (activeVideoElement && activeVideoElement.isConnected) {
-        return activeVideoElement;
-      }
+      const allVideos = document.querySelectorAll('video');
+      const bestVideo = findBestVideo(allVideos);
 
-      // If not, try to find one
-      const video = document.querySelector('video');
-      if (video) {
-        if (activeVideoElement !== video) {
-          log('Found new video element via legacy search', video);
+      if (bestVideo) {
+        if (activeVideoElement !== bestVideo) {
+          log('Found new best video element', bestVideo);
         }
-        activeVideoElement = video;
+        activeVideoElement = bestVideo;
         return activeVideoElement;
       }
 
-      // No video found
-      log('No video element found in getVideoElement');
+      // Fallback: If no "best" (visible/prominent) video is found,
+      // determine if we should fallback to *any* video or `activeVideoElement`.
+      // For now, based on "Ensure its' visible", we return null if nothing matches logic.
+      // However, if we have a connected activeVideoElement, maybe we return it?
+      // Strict interpretation: "Ensure its' visible" -> return null if not.
+
+      log('No suitable video element found');
       return null;
     };
 
     // --- Mutation Observer ---
     // Watch for new video elements appearing in the DOM (e.g. SPA navigation)
+    // We mainly use this to log detection or hint, but getVideoElement is the authority.
     const observer = new MutationObserver((mutations) => {
       let foundNew = false;
-
-      // If current video is disconnected, we definitely need a new one
-      if (activeVideoElement && !activeVideoElement.isConnected) {
-        activeVideoElement = null;
-      }
 
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node instanceof HTMLVideoElement) {
-            activeVideoElement = node;
             foundNew = true;
             break;
           }
           if (node instanceof Element) {
-            // Check inside added subtrees
-            const video = node.querySelector('video');
-            if (video) {
-              activeVideoElement = video;
+            if (node.querySelector('video')) {
               foundNew = true;
-              break; // assume first video is main
+              break;
             }
           }
         }
@@ -69,14 +63,15 @@ export default defineContentScript({
       }
 
       if (foundNew) {
-        log('Video element detected via MutationObserver', activeVideoElement);
+        log('New video element detected in DOM via MutationObserver');
+        // We don't blindly set activeVideoElement anymore, we let getVideoElement find it when needed.
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
 
-    // Initial check
-    getVideoElement();
+    // Initial check - Removed to prefer on-demand checking when popup opens
+    // getVideoElement();
 
     // --- Service Event Listeners ---
     gifService.on(
@@ -142,6 +137,12 @@ export default defineContentScript({
                   sendResponse(null);
                   return;
                 }
+
+                log('Selected video element:', video);
+                log(
+                  `Video details: id="${video.id}", class="${video.className}", src="${video.currentSrc}"`
+                );
+
                 const metadata = {
                   duration: video.duration,
                   width: video.videoWidth,
