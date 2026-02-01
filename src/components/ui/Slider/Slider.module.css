@@ -71,6 +71,10 @@
   &:hover {
     background: rgba(255, 255, 255, 0.5);
   }
+
+  &[data-dragging] {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 .Thumb:focus-visible {

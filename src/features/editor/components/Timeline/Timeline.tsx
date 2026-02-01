@@ -63,7 +63,8 @@ export function Timeline({
     handleSelectionMouseDown,
     handleBackgroundMouseDown,
     startLeftDrag,
-    startRightDrag
+    startRightDrag,
+    draggingState
   } = useTimelineDrag({
     scrollRef,
     startTimeMs,
@@ -170,6 +171,7 @@ export function Timeline({
                 onMouseDown={handleSelectionMouseDown}
                 onLeftDrag={startLeftDrag}
                 onRightDrag={startRightDrag}
+                draggingState={draggingState}
               />
             </div>
           </ScrollArea.Content>

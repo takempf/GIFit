@@ -187,5 +187,37 @@ describe('Timeline', () => {
     // For handles, it's harder to test without complex event mocking because of the window listener.
     // But we verified the code logic in review.
     // Let's stick to checking the prop call we can easily trigger.
+    expect(props.onChange).toHaveBeenCalled();
+  });
+
+  it('applies data-dragging attribute when dragging selection', () => {
+    const props = { ...defaultProps, startTime: 0 };
+    const { getByTestId } = render(<Timeline {...props} />);
+
+    const selection = getByTestId('selection-rect');
+    const scrollContainer = getByTestId('scroll-container');
+
+    // Mock rect
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1000,
+      height: 100,
+      bottom: 100,
+      right: 1000,
+      x: 0,
+      y: 0,
+      toJSON: () => {}
+    });
+
+    // Start dragging selection
+    fireEvent.mouseDown(selection, { clientX: 0, button: 0 });
+
+    // Expect attribute to be 'move'
+    expect(selection).toHaveAttribute('data-dragging', 'move');
+
+    // End dragging
+    fireEvent.mouseUp(window);
+    expect(selection).not.toHaveAttribute('data-dragging');
   });
 });

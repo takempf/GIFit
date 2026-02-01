@@ -8,6 +8,7 @@ interface TimelineSelectionProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onLeftDrag: (e: React.MouseEvent) => void;
   onRightDrag: (e: React.MouseEvent) => void;
+  draggingState: 'left' | 'right' | 'move' | null;
 }
 
 export function TimelineSelection({
@@ -16,7 +17,8 @@ export function TimelineSelection({
   pixelsPerMs,
   onMouseDown,
   onLeftDrag,
-  onRightDrag
+  onRightDrag,
+  draggingState
 }: TimelineSelectionProps) {
   const selectionStyle = {
     left: `${startTimeMs * pixelsPerMs}px`,
@@ -28,7 +30,8 @@ export function TimelineSelection({
       className={styles.selection}
       style={selectionStyle}
       onMouseDown={onMouseDown}
-      data-testid="selection-rect">
+      data-testid="selection-rect"
+      data-dragging={draggingState || undefined}>
       {/* Handles */}
       <div
         className={`${styles.handle} ${styles.handleLeft}`}
