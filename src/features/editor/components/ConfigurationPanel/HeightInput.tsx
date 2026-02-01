@@ -10,11 +10,14 @@ export function HeightInput() {
     (state) => state.handleInputChange
   );
 
-  const maxHeight = Math.min(videoHeight, 1080);
+  const maxHeight = videoHeight;
 
   function handleHeightChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = parseFloat(event.target.value);
+    let value = parseFloat(event.target.value);
     if (!isNaN(value)) {
+      if (value > maxHeight) {
+        value = maxHeight;
+      }
       storeHandleInputChange({
         name: 'height',
         value: value

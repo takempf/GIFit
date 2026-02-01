@@ -10,11 +10,14 @@ export function WidthInput() {
     (state) => state.handleInputChange
   );
 
-  const maxWidth = Math.min(videoWidth, 1920);
+  const maxWidth = videoWidth;
 
   function handleWidthChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = parseFloat(event.target.value);
+    let value = parseFloat(event.target.value);
     if (!isNaN(value)) {
+      if (value > maxWidth) {
+        value = maxWidth;
+      }
       storeHandleInputChange({
         name: 'width',
         value: value
