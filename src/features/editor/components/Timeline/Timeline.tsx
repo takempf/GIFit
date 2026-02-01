@@ -106,6 +106,10 @@ export function Timeline({
     overscan: 2 // Render 2 extra items off-screen
   });
 
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [rowVirtualizer, pixelsPerSecond]);
+
   // Selection Indicator Calculation on Scrollbar
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;

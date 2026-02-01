@@ -19,7 +19,8 @@ vi.mock('@tanstack/react-virtual', () => {
           }
           return items;
         },
-        getTotalSize: () => count * 120
+        getTotalSize: () => count * 120,
+        measure: vi.fn()
       };
     }
   };
