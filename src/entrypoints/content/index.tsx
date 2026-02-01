@@ -123,11 +123,14 @@ export default defineContentScript({
               const video = getVideoElement();
               if (!video) {
                 log('No active video element found to start GIF');
+                sendResponse({ success: false, error: 'No video found' });
                 return;
               }
               gifService.createGif(message.config, video);
+              sendResponse({ success: true });
             } else if (message.type === 'STOP_GIF') {
               gifService.abort();
+              sendResponse({ success: true });
             } else if (message.type === 'GET_VIDEO_METADATA') {
               log('Handling GET_VIDEO_METADATA');
               const video = getVideoElement();

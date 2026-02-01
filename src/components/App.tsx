@@ -69,8 +69,8 @@ export function App() {
 
   const handleSubmit = useCallback(
     async function handleSubmit(formValues: FormValues) {
-      const start = formValues.start * 1000; // seconds to ms
-      const end = start + formValues.duration * 1000; // seconds to ms
+      const start = formValues.start; // ms
+      const end = start + formValues.duration; // ms
       const name = await getVideoTitle();
 
       createGif({
