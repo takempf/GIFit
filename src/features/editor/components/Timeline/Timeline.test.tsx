@@ -121,12 +121,6 @@ describe('Timeline', () => {
     // previewTime = 2s. 2 * 120 = 240px.
     // width = 1000/10fps * 0.12 = 100ms * 0.12 = 12px.
 
-    // Use container.querySelector to find by style or class if I knew the compiled class name,
-    // but better to search by style attribute partial match if possible or add data-testid in source first?
-    // I can't easily add data-testid now without another step.
-    // Let's rely on the structure. It is inside 'timeline-interior'.
-    // It's the div BEFORE the selection layer in my previous edit.
-
     // best approach: check if there represents a div with left: 240px and width: 12px that is NOT the selection.
     // We can iterate over the children of the interior.
     const interior = screen.getByTestId('timeline-interior');
@@ -134,6 +128,31 @@ describe('Timeline', () => {
       (el) => (el as HTMLElement).style.width === '12px'
     );
     expect(preview).toBeInTheDocument();
+  });
+
+  it('renders scrollbar preview highlight at correct position', () => {
+    const { container } = render(<Timeline {...defaultProps} />);
+    // Props: totalDuration 10, previewTime 2
+    // Expected percentage: (2 / 10) * 100 = 20%
+
+    // We need to find the element. It doesn't have a test ID, but it's the second child
+    // of the Scrollbar (after the Thumb).
+    // Or we can query by style.
+    // The previous implementation renders:
+    // <div className={styles.scrollbarPreviewHighlighter} style={{ left: '20%', width: '1px' }} />
+
+    // Using default query selector on style is tricky due to spacing.
+    // Let's inspect the scrollbar's children assuming structure.
+    // Structure: ScrollRoot -> Scrollbar -> [Thumb, SelectionIndicator, PreviewIndicator]
+
+    // Note: ScrollArea from base-ui renders a complex structure.
+    // We can try to find an element with style "width: 1px" inside the scrollbar area,
+    // but better is to look for the specific calculated left value.
+
+    const previewIndicator = container.querySelector(
+      'div[style*="left: 20%"][style*="width: 1px"]'
+    );
+    expect(previewIndicator).toBeInTheDocument();
   });
 
   it('calls onChange when dragging', () => {
@@ -166,27 +185,6 @@ describe('Timeline', () => {
     // However, I can trigger mouseDown on handles.
     const handleRight = getByTestId('handle-right');
     fireEvent.mouseDown(handleRight, { clientX: 0, button: 0 }); // starts drag
-
-    // Move mouse
-    // Initial right position: start(0) + duration(3) = 3s -> 360px.
-    // If we move it to 4s (480px) -> +120px.
-    // Mouse move event needs to be on window.
-    // Let's simluate a move.
-
-    // The component attaches listeners to window.
-    // We need to simulate that.
-
-    // Reset mock
-
-    // We are in 'right' drag mode now for the component (internal state).
-    // Move mouse to "expand" selection by 1 second.
-    // Initial click was at "0" (simplified in test context, implies relative movement).
-    // The codebase uses `lastMousePosRef` and diffs.
-
-    // Let's just test the "Background Click" (Move) fully as above.
-    // For handles, it's harder to test without complex event mocking because of the window listener.
-    // But we verified the code logic in review.
-    // Let's stick to checking the prop call we can easily trigger.
     expect(props.onChange).toHaveBeenCalled();
   });
 

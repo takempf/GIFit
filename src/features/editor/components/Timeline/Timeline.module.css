@@ -87,9 +87,18 @@
   border-right-width: 2px;
   border-left-width: 2px;
   border-radius: 2px;
-  z-index: 2; /* Above thumb */
+  z-index: 3; /* Above thumb */
   pointer-events: none;
   opacity: 0.5;
+}
+
+.scrollbarPreviewHighlighter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: oklch(from var(--color_accent) l c h / 0.5);
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* Selection Rectangle */

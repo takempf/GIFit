@@ -115,6 +115,8 @@ export function Timeline({
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
   const selectionIndicatorWidthPct = (durationMs / safeTotalDuration) * 100;
+  const previewIndicatorLeftPct =
+    (toMilliseconds(previewTime) / safeTotalDuration) * 100;
 
   return (
     <div
@@ -132,6 +134,14 @@ export function Timeline({
             style={{
               left: `${selectionIndicatorLeftPct}%`,
               width: `${selectionIndicatorWidthPct}%`
+            }}
+          />
+          {/* Preview Indicator on Scrollbar Track */}
+          <div
+            className={styles.scrollbarPreviewHighlighter}
+            style={{
+              left: `${previewIndicatorLeftPct}%`,
+              width: '1px'
             }}
           />
         </ScrollArea.Scrollbar>
