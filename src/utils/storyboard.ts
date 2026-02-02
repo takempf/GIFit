@@ -95,13 +95,6 @@ export function getStoryboardFrame(
   const separator = constructedUrl.includes('?') ? '&' : '?';
   const url = `${constructedUrl}${separator}sigh=${encodeURIComponent(level.signature)}`;
 
-  console.log('Storyboard URL construction:', {
-    template: spec.baseUrl,
-    levelIndex,
-    sheetIndex,
-    result: url
-  });
-
   return {
     url,
     levelName: level.name,

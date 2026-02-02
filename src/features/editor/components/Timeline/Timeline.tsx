@@ -50,7 +50,6 @@ export function Timeline({
     // Fetch storyboard spec
     const fetchStoryboard = async () => {
       try {
-        console.log('Timeline: Requesting storyboard spec...');
         const tabs = await browser.tabs.query({
           active: true,
           currentWindow: true
@@ -66,10 +65,8 @@ export function Timeline({
           type: 'GET_STORYBOARD'
         });
 
-        console.log('Timeline: Received storyboard response', response);
         if (response && response.spec) {
           const parsed = parseStoryboardSpec(response.spec);
-          console.log('Timeline: Parsed storyboard spec', parsed);
           setStoryboardSpec(parsed);
         } else {
           console.warn('Timeline: No spec in response');

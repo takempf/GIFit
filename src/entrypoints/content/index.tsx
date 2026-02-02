@@ -124,8 +124,6 @@ export default defineContentScript({
     });
 
     const getStoryboardSpecFromPage = (): Promise<string | null> => {
-      console.log('getStoryboardSpecFromPage called');
-
       return new Promise((resolve) => {
         let attempts = 0;
         const maxAttempts = 10;
@@ -138,7 +136,6 @@ export default defineContentScript({
           if (event.data?.type === 'GIFIT_GET_STORYBOARD') return;
 
           if (event.data?.type === 'GIFIT_STORYBOARD_DATA') {
-            console.log('Content: Received GIFIT_STORYBOARD_DATA', event.data);
             window.removeEventListener('message', handleResponse);
             clearInterval(intervalId);
 
@@ -169,14 +166,14 @@ export default defineContentScript({
         const injectAndPoll = async () => {
           try {
             await injectScript('/main-world.js', { keepInDom: true });
-            console.log('Content: Injected main-world.js');
+            log('Content: Injected main-world.js');
           } catch (e) {
             console.error('Content: Failed to inject main-world.js', e);
           }
 
           const sendRequest = () => {
             attempts++;
-            console.log(
+            log(
               `Content: Sending GIFIT_GET_STORYBOARD (Attempt ${attempts}/${maxAttempts})`
             );
             window.postMessage({ type: 'GIFIT_GET_STORYBOARD' }, '*');
