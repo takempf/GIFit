@@ -42,9 +42,7 @@ export function TimelineStoryboardLayer({
               left: `${virtualItem.start}px`, // calculated by virtualizer
               width: `${virtualItem.size}px`
             }}>
-            <div className={styles.stickyFrame}>
-              <StoryboardFrame frame={frame} />
-            </div>
+            <StoryboardFrame frame={frame} />
           </div>
         );
       })}

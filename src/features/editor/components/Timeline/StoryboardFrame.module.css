@@ -1,10 +1,5 @@
 .frame {
   height: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  overflow: hidden;
-  z-index: -1;
   filter: grayscale(50%) opacity(50%);
   aspect-ratio: var(--aspect-ratio);
   background-image: var(--bg-image);
