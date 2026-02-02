@@ -1,4 +1,4 @@
-import { defineContentScript, injectScript } from '#imports';
+import { defineContentScript } from '#imports';
 import { browser } from 'wxt/browser';
 import GifService from '@/features/generator/services/GifService';
 import { log } from '@/utils/logger';
@@ -165,8 +165,28 @@ export default defineContentScript({
 
         const injectAndPoll = async () => {
           try {
-            await injectScript('/main-world.js', { keepInDom: true });
-            log('Content: Injected main-world.js');
+            // For Firefox MV2, WXT's injectScript creates inline scripts
+            // which get blocked by YouTube's CSP. Instead, we manually
+            // inject a script tag with src pointing to the web-accessible resource.
+            const scriptUrl = browser.runtime.getURL('/main-world.js');
+            const existingScript = document.querySelector(
+              `script[src="${scriptUrl}"]`
+            );
+
+            if (!existingScript) {
+              const script = document.createElement('script');
+              script.src = scriptUrl;
+              script.onload = () => {
+                log('Content: main-world.js loaded successfully');
+              };
+              script.onerror = (e) => {
+                console.error('Content: Failed to load main-world.js', e);
+              };
+              (document.head || document.documentElement).appendChild(script);
+              log('Content: Injected main-world.js via script src');
+            } else {
+              log('Content: main-world.js already injected');
+            }
           } catch (e) {
             console.error('Content: Failed to inject main-world.js', e);
           }
@@ -198,124 +218,135 @@ export default defineContentScript({
     };
 
     // --- Message Listener ---
+    // Use sendResponse callback pattern which works for both Chrome and Firefox
+    // when using the browser polyfill from wxt/browser
     browser.runtime.onMessage.addListener(
-      (message: ExtensionMessage, _sender, sendResponse) => {
-        // Handle async message processing
-        const handleMessage = async () => {
-          try {
-            log('Content Script received message:', message.type);
+      (
+        message: ExtensionMessage,
+        _sender,
+        sendResponse: (response?: unknown) => void
+      ): true | undefined => {
+        log('Content Script received message:', message.type);
 
-            if (message.type === 'START_GIF') {
-              const video = getVideoElement();
-              if (!video) {
-                log('No active video element found to start GIF');
-                sendResponse({ success: false, error: 'No video found' });
-                return;
-              }
-              gifService.createGif(message.config, video);
-              sendResponse({ success: true });
-            } else if (message.type === 'STOP_GIF') {
-              gifService.abort();
-              sendResponse({ success: true });
-            } else if (message.type === 'GET_VIDEO_METADATA') {
-              log('Handling GET_VIDEO_METADATA');
-              const video = getVideoElement();
+        if (message.type === 'START_GIF') {
+          const video = getVideoElement();
+          if (!video) {
+            log('No active video element found to start GIF');
+            sendResponse({ success: false, error: 'No video found' });
+            return;
+          }
+          gifService.createGif(message.config, video);
+          sendResponse({ success: true });
+          return;
+        }
 
-              if (video) {
-                // Check if metadata is loaded
-                if (video.readyState < 1) {
-                  log('Video metadata not loaded yet (readyState < 1)');
-                  sendResponse(null);
-                  return;
-                }
+        if (message.type === 'STOP_GIF') {
+          gifService.abort();
+          sendResponse({ success: true });
+          return;
+        }
 
-                log('Selected video element:', video);
-                log(
-                  `Video details: id="${video.id}", class="${video.className}", src="${video.currentSrc}"`
-                );
+        if (message.type === 'GET_VIDEO_METADATA') {
+          log('Handling GET_VIDEO_METADATA');
+          const video = getVideoElement();
 
-                const metadata = {
-                  duration: video.duration,
-                  width: video.videoWidth,
-                  height: video.videoHeight,
-                  currentTime: video.currentTime
-                };
-                log('Returning video metadata:', metadata);
-                sendResponse(metadata);
-                return;
-              }
-              log('No video found for GET_VIDEO_METADATA');
+          if (video) {
+            // Check if metadata is loaded
+            if (video.readyState < 1) {
+              log('Video metadata not loaded yet (readyState < 1)');
               sendResponse(null);
-              return;
-            } else if (message.type === 'SEEK_VIDEO') {
-              const video = getVideoElement();
-
-              if (video) {
-                const seekPromise = new Promise<void>((resolve) => {
-                  const onSeeked = () => {
-                    video.removeEventListener('seeked', onSeeked);
-                    // Wait for the next frame to be painted
-                    requestAnimationFrame(() => {
-                      requestAnimationFrame(() => {
-                        resolve();
-                      });
-                    });
-                  };
-                  video.addEventListener('seeked', onSeeked, { once: true });
-                  // Safety timeout
-                  setTimeout(() => {
-                    video.removeEventListener('seeked', onSeeked);
-                    resolve();
-                  }, 2000);
-                });
-                video.currentTime = message.time;
-                await seekPromise;
-                sendResponse(true); // Acknowledgement
-                return;
-              }
-              sendResponse(false);
-              return;
-            } else if (message.type === 'PAUSE_VIDEO') {
-              const video = getVideoElement();
-              if (video) {
-                video.pause();
-                sendResponse(true); // Acknowledgement
-                return;
-              }
-              sendResponse(false);
-              return;
-            } else if (message.type === 'CAPTURE_VISIBLE_FRAME') {
-              const video = getVideoElement();
-              if (video) {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                if (ctx) {
-                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                  sendResponse(canvas.toDataURL());
-                  return;
-                }
-              }
-              sendResponse(null);
-              return;
-            } else if (message.type === 'GET_STORYBOARD') {
-              const spec = await getStoryboardSpecFromPage();
-              sendResponse({ spec });
               return;
             }
-          } catch (error) {
-            log('Error in message listener:', error);
-            if (error instanceof Error) {
-              sendResponse({ error: error.message });
-            } else {
-              sendResponse({ error: 'Unknown error' });
+
+            log('Selected video element:', video);
+            log(
+              `Video details: id="${video.id}", class="${video.className}", src="${video.currentSrc}"`
+            );
+
+            const metadata = {
+              duration: video.duration,
+              width: video.videoWidth,
+              height: video.videoHeight,
+              currentTime: video.currentTime
+            };
+            log('Returning video metadata:', metadata);
+            sendResponse(metadata);
+            return;
+          }
+          log('No video found for GET_VIDEO_METADATA');
+          sendResponse(null);
+          return;
+        }
+
+        if (message.type === 'SEEK_VIDEO') {
+          const video = getVideoElement();
+
+          if (video) {
+            const onSeeked = () => {
+              video.removeEventListener('seeked', onSeeked);
+              // Wait for the next frame to be painted
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  sendResponse(true);
+                });
+              });
+            };
+            video.addEventListener('seeked', onSeeked, { once: true });
+            // Safety timeout
+            setTimeout(() => {
+              video.removeEventListener('seeked', onSeeked);
+              sendResponse(true);
+            }, 2000);
+
+            video.currentTime = message.time;
+            return true; // Keep channel open for async response
+          }
+          sendResponse(false);
+          return;
+        }
+
+        if (message.type === 'PAUSE_VIDEO') {
+          const video = getVideoElement();
+          if (video) {
+            video.pause();
+            sendResponse(true);
+            return;
+          }
+          sendResponse(false);
+          return;
+        }
+
+        if (message.type === 'CAPTURE_VISIBLE_FRAME') {
+          const video = getVideoElement();
+          if (video) {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              sendResponse(canvas.toDataURL());
+              return;
             }
           }
-        };
+          sendResponse(null);
+          return;
+        }
 
-        handleMessage();
-        return true; // Keep the message channel open for async response
+        if (message.type === 'GET_STORYBOARD') {
+          getStoryboardSpecFromPage()
+            .then((spec) => {
+              sendResponse({ spec });
+            })
+            .catch((error) => {
+              log('Error fetching storyboard:', error);
+              sendResponse({ spec: null });
+            });
+          return true; // Keep channel open for async response
+        }
+
+        // Return undefined for messages we don't handle
+        return undefined;
       }
     );
 
