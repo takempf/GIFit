@@ -1,6 +1,7 @@
 import { memo, CSSProperties } from 'react';
 
 import { formatMilliseconds } from '@/utils/time';
+import { StoryboardFrame, StoryboardFrameData } from './StoryboardFrame';
 
 import css from './TimelineSegment.module.css';
 
@@ -11,6 +12,8 @@ interface TimelineSegmentProps {
   fps: number;
   totalDurationMs: number;
   style?: CSSProperties;
+  storyboardFrame?: StoryboardFrameData | null;
+  containerWidth?: number;
 }
 
 export const TimelineSegment = memo(function TimelineSegment({
@@ -19,7 +22,9 @@ export const TimelineSegment = memo(function TimelineSegment({
   durationMs,
   fps,
   totalDurationMs,
-  style
+  style,
+  storyboardFrame,
+  containerWidth
 }: TimelineSegmentProps) {
   const frameMarkers = [];
 
@@ -43,7 +48,15 @@ export const TimelineSegment = memo(function TimelineSegment({
   }
 
   return (
-    <div className={css.timelineSegment} style={style}>
+    <div
+      className={css.timelineSegment}
+      style={{ ...style, overflow: 'hidden' }}>
+      {storyboardFrame && containerWidth && (
+        <StoryboardFrame
+          frame={storyboardFrame}
+          containerWidth={containerWidth}
+        />
+      )}
       <div className={css.secondMarker}>{formatMilliseconds(startTimeMs)}</div>
       {frameMarkers}
     </div>

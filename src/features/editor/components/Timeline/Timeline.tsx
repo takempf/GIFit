@@ -3,6 +3,8 @@ import { useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import styles from './Timeline.module.css';
 import { toMilliseconds } from '@/utils/time';
+import { browser } from 'wxt/browser';
+import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import { TimelineSelection } from './TimelineSelection';
@@ -36,6 +38,48 @@ export function Timeline({
   const [containerWidth, setContainerWidth] = useState(0);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
   const [showRightGradient, setShowRightGradient] = useState(false);
+  const [storyboardSpec, setStoryboardSpec] = useState<{
+    baseUrl: string;
+    levels: StoryboardLevel[];
+  } | null>(null);
+
+  useEffect(() => {
+    // Reset storyboard when video changes
+    setStoryboardSpec(null);
+
+    // Fetch storyboard spec
+    const fetchStoryboard = async () => {
+      try {
+        console.log('Timeline: Requesting storyboard spec...');
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true
+        });
+        const activeTab = tabs[0];
+
+        if (!activeTab?.id) {
+          console.warn('Timeline: No active tab found');
+          return;
+        }
+
+        const response = await browser.tabs.sendMessage(activeTab.id, {
+          type: 'GET_STORYBOARD'
+        });
+
+        console.log('Timeline: Received storyboard response', response);
+        if (response && response.spec) {
+          const parsed = parseStoryboardSpec(response.spec);
+          console.log('Timeline: Parsed storyboard spec', parsed);
+          setStoryboardSpec(parsed);
+        } else {
+          console.warn('Timeline: No spec in response');
+        }
+      } catch (e) {
+        console.error('Failed to fetch storyboard spec', e);
+      }
+    };
+    fetchStoryboard();
+  }, [totalDuration]); // Refetch when video duration changes (indicates new video)
 
   const updateGradients = () => {
     if (!scrollRef.current) return;
@@ -183,12 +227,14 @@ export function Timeline({
                 className={styles.interior}
                 onMouseDown={handleBackgroundMouseDown}
                 data-testid="timeline-interior">
-                {/* Ticks Layer (Virtual Items) */}
+                {/* Content Layer (Ticks + Storyboard) */}
                 <TimelineSegments
                   virtualItems={rowVirtualizer.getVirtualItems()}
                   totalDuration={totalDuration}
                   totalDurationMs={totalDurationMs}
                   fps={fps}
+                  storyboardSpec={storyboardSpec}
+                  pixelsPerSecond={pixelsPerSecond}
                 />
 
                 {/* Preview Highlight */}

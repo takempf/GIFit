@@ -1,4 +1,4 @@
-import { defineContentScript } from '#imports';
+import { defineContentScript, injectScript } from '#imports';
 import { browser } from 'wxt/browser';
 import GifService from '@/features/generator/services/GifService';
 import { log } from '@/utils/logger';
@@ -106,6 +106,100 @@ export default defineContentScript({
         });
     });
 
+    // --- Storyboard Extraction ---
+    // We need to inject a script or use window.postMessage to get data from the page context
+    // because content scripts live in an isolated world and can't see window.ytInitialPlayerResponse directly.
+
+    // 1. Listen for messages from the page (the injected script response)
+    window.addEventListener('message', (event) => {
+      // Only accept messages from same frame
+      if (event.source !== window) return;
+
+      if (event.data.type === 'YOUTUBE_PLAYER_RESPONSE') {
+        log('Received player response from page', event.data.payload);
+        // We received the data, now we can forward it to the popup if needed
+        // But efficiently, we might store it or just send it when requested?
+        // Actually, the flow is: Popup (Component) -> MSG -> Content Script -> PostMessage -> Page -> PostMessage -> Content Script -> SendResponse
+      }
+    });
+
+    const getStoryboardSpecFromPage = (): Promise<string | null> => {
+      console.log('getStoryboardSpecFromPage called');
+
+      return new Promise((resolve) => {
+        let attempts = 0;
+        const maxAttempts = 10;
+        let intervalId: NodeJS.Timeout;
+
+        const handleResponse = (event: MessageEvent) => {
+          if (event.source !== window) return;
+
+          // Ignore our own request messages
+          if (event.data?.type === 'GIFIT_GET_STORYBOARD') return;
+
+          if (event.data?.type === 'GIFIT_STORYBOARD_DATA') {
+            console.log('Content: Received GIFIT_STORYBOARD_DATA', event.data);
+            window.removeEventListener('message', handleResponse);
+            clearInterval(intervalId);
+
+            const { spec, duration } = event.data;
+            const currentVideo = getVideoElement();
+
+            // Validate duration if available
+            if (duration && currentVideo) {
+              const videoDuration = Math.round(currentVideo.duration);
+              const storyboardDuration = parseInt(duration, 10);
+
+              // Allow small variance (e.g. 2 seconds)
+              if (Math.abs(videoDuration - storyboardDuration) > 2) {
+                console.warn(
+                  `Content: Duration mismatch. Video: ${videoDuration}s, Storyboard: ${storyboardDuration}s. Ignoring spec.`
+                );
+                resolve(null);
+                return;
+              }
+            }
+
+            resolve(spec || null);
+          }
+        };
+
+        window.addEventListener('message', handleResponse);
+
+        const injectAndPoll = async () => {
+          try {
+            await injectScript('/main-world.js', { keepInDom: true });
+            console.log('Content: Injected main-world.js');
+          } catch (e) {
+            console.error('Content: Failed to inject main-world.js', e);
+          }
+
+          const sendRequest = () => {
+            attempts++;
+            console.log(
+              `Content: Sending GIFIT_GET_STORYBOARD (Attempt ${attempts}/${maxAttempts})`
+            );
+            window.postMessage({ type: 'GIFIT_GET_STORYBOARD' }, '*');
+
+            if (attempts >= maxAttempts) {
+              clearInterval(intervalId);
+              window.removeEventListener('message', handleResponse);
+              console.warn(
+                'Content: Max attempts reached waiting for storyboard data'
+              );
+              resolve(null);
+            }
+          };
+
+          // Send immediately, then poll
+          sendRequest();
+          intervalId = setInterval(sendRequest, 500);
+        };
+
+        injectAndPoll();
+      });
+    };
+
     // --- Message Listener ---
     browser.runtime.onMessage.addListener(
       (message: ExtensionMessage, _sender, sendResponse) => {
@@ -207,6 +301,10 @@ export default defineContentScript({
                 }
               }
               sendResponse(null);
+              return;
+            } else if (message.type === 'GET_STORYBOARD') {
+              const spec = await getStoryboardSpecFromPage();
+              sendResponse({ spec });
               return;
             }
           } catch (error) {

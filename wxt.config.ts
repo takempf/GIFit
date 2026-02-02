@@ -12,7 +12,13 @@ export default defineConfig({
       url: 'https://kempf.dev'
     },
     permissions: ['storage'],
-    host_permissions: ['*://*.youtube.com/*']
+    host_permissions: ['*://*.youtube.com/*'],
+    web_accessible_resources: [
+      {
+        resources: ['main-world.js'],
+        matches: ['*://*.youtube.com/*']
+      }
+    ]
   },
   srcDir: 'src',
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
