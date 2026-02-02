@@ -1,21 +1,18 @@
 import type { VirtualItem } from '@tanstack/react-virtual';
 import { TimelineSegment } from './TimelineSegment';
-import { getStoryboardFrame, StoryboardLevel } from '@/utils/storyboard';
 
 interface TimelineSegmentsProps {
   virtualItems: VirtualItem[];
   totalDuration: number;
   totalDurationMs: number;
   fps: number;
-  storyboardSpec: { baseUrl: string; levels: StoryboardLevel[] } | null;
 }
 
 export function TimelineSegments({
   virtualItems,
   totalDuration,
   totalDurationMs,
-  fps,
-  storyboardSpec
+  fps
 }: TimelineSegmentsProps) {
   return (
     <>
@@ -28,11 +25,6 @@ export function TimelineSegments({
         // Determine duration of this segment. Usually 1000ms, but last one might be less.
         const remainingMs = totalDurationMs - segmentStartTimeMs;
         const segmentDurationMs = Math.min(1000, Math.max(0, remainingMs));
-
-        // Get storyboard frame for this segment
-        const frame = storyboardSpec
-          ? getStoryboardFrame(storyboardSpec, segmentStartTimeMs)
-          : null;
 
         return (
           <TimelineSegment
@@ -50,7 +42,6 @@ export function TimelineSegments({
             durationMs={segmentDurationMs}
             fps={fps}
             totalDurationMs={totalDurationMs}
-            storyboardFrame={frame}
           />
         );
       })}

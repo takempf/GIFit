@@ -9,6 +9,7 @@ import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import { TimelineSelection } from './TimelineSelection';
 import { TimelineSegments } from './TimelineSegments';
+import { TimelineStoryboardLayer } from './TimelineStoryboardLayer';
 
 interface TimelineProps {
   totalDuration: number;
@@ -165,6 +166,32 @@ export function Timeline({
     rowVirtualizer.measure();
   }, [rowVirtualizer, pixelsPerSecond]);
 
+  // Storyboard Virtualization
+  const storyboardInterval =
+    storyboardSpec?.levels[storyboardSpec.levels.length - 1]?.interval || 1000;
+
+  const storyboardCount = storyboardSpec
+    ? Math.ceil(totalDurationMs / storyboardInterval)
+    : 0;
+
+  const storyboardVirtualizer = useVirtualizer({
+    count: storyboardCount,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: (index) => {
+      const start = index * storyboardInterval;
+      // We clip the last segment to the total duration, similar to segments
+      const end = Math.min(totalDurationMs, start + storyboardInterval);
+      const duration = Math.max(0, end - start);
+      return duration * PIXELS_PER_MS;
+    },
+    horizontal: true,
+    overscan: 2
+  });
+
+  useEffect(() => {
+    storyboardVirtualizer.measure();
+  }, [storyboardVirtualizer, pixelsPerSecond, storyboardSpec]);
+
   // Selection Indicator Calculation on Scrollbar
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
@@ -225,13 +252,18 @@ export function Timeline({
                 onMouseDown={handleBackgroundMouseDown}
                 data-testid="timeline-interior">
                 {/* Content Layer (Ticks + Storyboard) */}
+                {storyboardSpec && (
+                  <TimelineStoryboardLayer
+                    virtualItems={storyboardVirtualizer.getVirtualItems()}
+                    storyboardSpec={storyboardSpec}
+                    totalDurationMs={totalDurationMs}
+                  />
+                )}
                 <TimelineSegments
                   virtualItems={rowVirtualizer.getVirtualItems()}
                   totalDuration={totalDuration}
                   totalDurationMs={totalDurationMs}
                   fps={fps}
-                  storyboardSpec={storyboardSpec}
-                  pixelsPerSecond={pixelsPerSecond}
                 />
 
                 {/* Preview Highlight */}
