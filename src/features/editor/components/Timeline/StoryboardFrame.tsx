@@ -13,27 +13,27 @@ export interface StoryboardFrameData {
 
 interface StoryboardFrameProps {
   frame: StoryboardFrameData;
-  containerWidth: number;
 }
 
 export const StoryboardFrame = memo(function StoryboardFrame({
-  frame,
-  containerWidth
+  frame
 }: StoryboardFrameProps) {
-  // Fit width: Scale image so frame width matches container width
-  const scale = containerWidth / frame.width;
-  const scaledSheetWidth = frame.sheetWidth * scale;
-  const scaledSheetHeight = frame.sheetHeight * scale;
+  const aspectRatio = frame.width / frame.height;
+  const bgImage = `url(${frame.url})`;
+  const bgPosition = `${(frame.x / (frame.sheetWidth - frame.width)) * 100}% ${(frame.y / (frame.sheetHeight - frame.height)) * 100}%`;
+  const bgSize = `${(frame.sheetWidth / frame.width) * 100}% ${(frame.sheetHeight / frame.height) * 100}%`;
 
   return (
     <div
       className={styles.frame}
-      style={{
-        backgroundImage: `url(${frame.url})`,
-        backgroundPosition: `-${frame.x * scale}px -${frame.y * scale}px`,
-        backgroundSize: `${scaledSheetWidth}px ${scaledSheetHeight}px`,
-        aspectRatio: `${frame.width} / ${frame.height}`
-      }}
+      style={
+        {
+          '--aspect-ratio': aspectRatio,
+          '--bg-image': bgImage,
+          '--bg-position': bgPosition,
+          '--bg-size': bgSize
+        } as React.CSSProperties
+      }
     />
   );
 });

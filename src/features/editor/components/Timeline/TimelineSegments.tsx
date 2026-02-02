@@ -8,7 +8,6 @@ interface TimelineSegmentsProps {
   totalDurationMs: number;
   fps: number;
   storyboardSpec: { baseUrl: string; levels: StoryboardLevel[] } | null;
-  pixelsPerSecond: number;
 }
 
 export function TimelineSegments({
@@ -16,8 +15,7 @@ export function TimelineSegments({
   totalDuration,
   totalDurationMs,
   fps,
-  storyboardSpec,
-  pixelsPerSecond
+  storyboardSpec
 }: TimelineSegmentsProps) {
   return (
     <>
@@ -53,7 +51,6 @@ export function TimelineSegments({
             fps={fps}
             totalDurationMs={totalDurationMs}
             storyboardFrame={frame}
-            containerWidth={pixelsPerSecond} // Use pixelsPerSecond for scaling logic base
           />
         );
       })}

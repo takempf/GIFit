@@ -13,7 +13,6 @@ interface TimelineSegmentProps {
   totalDurationMs: number;
   style?: CSSProperties;
   storyboardFrame?: StoryboardFrameData | null;
-  containerWidth?: number;
 }
 
 export const TimelineSegment = memo(function TimelineSegment({
@@ -23,8 +22,7 @@ export const TimelineSegment = memo(function TimelineSegment({
   fps,
   totalDurationMs,
   style,
-  storyboardFrame,
-  containerWidth
+  storyboardFrame
 }: TimelineSegmentProps) {
   const frameMarkers = [];
 
@@ -51,12 +49,7 @@ export const TimelineSegment = memo(function TimelineSegment({
     <div
       className={css.timelineSegment}
       style={{ ...style, overflow: 'hidden' }}>
-      {storyboardFrame && containerWidth && (
-        <StoryboardFrame
-          frame={storyboardFrame}
-          containerWidth={containerWidth}
-        />
-      )}
+      {storyboardFrame && <StoryboardFrame frame={storyboardFrame} />}
       <div className={css.secondMarker}>{formatMilliseconds(startTimeMs)}</div>
       {frameMarkers}
     </div>
