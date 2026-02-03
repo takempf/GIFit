@@ -36,6 +36,7 @@ export function Timeline({
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
   const [showRightGradient, setShowRightGradient] = useState(false);
@@ -140,15 +141,20 @@ export function Timeline({
 
   // Initial scroll to selection
   useEffect(() => {
-    if (hasInitialScrolled.current || !scrollRef.current) return;
+    const UI_INITIALIZATION_DELAY = 20;
 
-    // Only scroll if we have a valid start time or if it's explicitly 0
-    const targetTimeMs = Math.max(0, startTimeMs - 1000);
-    const targetScrollLeft = targetTimeMs * PIXELS_PER_MS;
+    setTimeout(() => {
+      if (hasInitialScrolled.current || !selectionRef.current) return;
 
-    scrollRef.current.scrollLeft = targetScrollLeft;
-    hasInitialScrolled.current = true;
-  }, [startTimeMs, PIXELS_PER_MS]);
+      selectionRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'start'
+      });
+
+      hasInitialScrolled.current = true;
+    }, UI_INITIALIZATION_DELAY);
+  }, []);
 
   const count = Math.floor(totalDuration) + 1; // Number of seconds to render
 
@@ -284,6 +290,7 @@ export function Timeline({
 
                 {/* Selection Layer */}
                 <TimelineSelection
+                  ref={selectionRef}
                   startTimeMs={startTimeMs}
                   durationMs={durationMs}
                   pixelsPerMs={PIXELS_PER_MS}

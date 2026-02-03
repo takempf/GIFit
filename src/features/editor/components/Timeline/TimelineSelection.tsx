@@ -11,38 +11,49 @@ interface TimelineSelectionProps {
   draggingState: 'left' | 'right' | 'move' | null;
 }
 
-export function TimelineSelection({
-  startTimeMs,
-  durationMs,
-  pixelsPerMs,
-  onMouseDown,
-  onLeftDrag,
-  onRightDrag,
-  draggingState
-}: TimelineSelectionProps) {
-  const selectionStyle = {
-    left: `${startTimeMs * pixelsPerMs}px`,
-    width: `${durationMs * pixelsPerMs}px`
-  };
+export const TimelineSelection = React.forwardRef<
+  HTMLDivElement,
+  TimelineSelectionProps
+>(
+  (
+    {
+      startTimeMs,
+      durationMs,
+      pixelsPerMs,
+      onMouseDown,
+      onLeftDrag,
+      onRightDrag,
+      draggingState
+    },
+    ref
+  ) => {
+    const selectionStyle = {
+      left: `${startTimeMs * pixelsPerMs}px`,
+      width: `${durationMs * pixelsPerMs}px`
+    };
 
-  return (
-    <div
-      className={styles.selection}
-      style={selectionStyle}
-      onMouseDown={onMouseDown}
-      data-testid="selection-rect"
-      data-dragging={draggingState || undefined}>
-      {/* Handles */}
+    return (
       <div
-        className={`${styles.handle} ${styles.handleLeft}`}
-        onMouseDown={onLeftDrag}
-        data-testid="handle-left"
-      />
-      <div
-        className={`${styles.handle} ${styles.handleRight}`}
-        onMouseDown={onRightDrag}
-        data-testid="handle-right"
-      />
-    </div>
-  );
-}
+        ref={ref}
+        className={styles.selection}
+        style={selectionStyle}
+        onMouseDown={onMouseDown}
+        data-testid="selection-rect"
+        data-dragging={draggingState || undefined}>
+        {/* Handles */}
+        <div
+          className={`${styles.handle} ${styles.handleLeft}`}
+          onMouseDown={onLeftDrag}
+          data-testid="handle-left"
+        />
+        <div
+          className={`${styles.handle} ${styles.handleRight}`}
+          onMouseDown={onRightDrag}
+          data-testid="handle-right"
+        />
+      </div>
+    );
+  }
+);
+
+TimelineSelection.displayName = 'TimelineSelection';

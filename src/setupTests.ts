@@ -9,6 +9,7 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 Element.prototype.getAnimations = () => [];
+Element.prototype.scrollIntoView = () => {};
 
 const mockRuntime = {
   id: 'test-id',

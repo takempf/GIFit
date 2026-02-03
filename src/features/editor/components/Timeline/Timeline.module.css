@@ -120,6 +120,7 @@
   cursor: move;
   backdrop-filter: blur(1px);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
+  scroll-margin-left: 100px;
   transition: background 160ms ease-out;
 
   &:hover {

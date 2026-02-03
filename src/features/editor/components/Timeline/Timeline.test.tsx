@@ -101,14 +101,24 @@ describe('Timeline', () => {
   });
 
   it('scrolls to selection on mount', () => {
-    // We want the scroll to be at startTime - 1s
-    // startTime = 2, so scroll target time = 1s
-    // 1s * 120px/s = 120px
-    const props = { ...defaultProps, startTime: 2 };
-    const { getByTestId } = render(<Timeline {...props} />);
+    vi.useFakeTimers();
+    // Verify scrollIntoView is called
+    const scrollIntoViewMock = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoViewMock;
 
-    const scrollContainer = getByTestId('scroll-container');
-    expect(scrollContainer.scrollLeft).toBe(120);
+    const props = { ...defaultProps, startTime: 2 };
+    render(<Timeline {...props} />);
+
+    // Advance timers by 20ms (UI_INITIALIZATION_DELAY)
+    vi.advanceTimersByTime(20);
+
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'start'
+    });
+
+    vi.useRealTimers();
   });
 
   it('renders preview highlight at correct position', () => {
