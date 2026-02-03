@@ -1,7 +1,7 @@
 import React from 'react';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 import { InputTime } from '@/components/ui/InputTime/InputTime';
-import css from './ConfigurationPanel.module.css';
+import css from './StartTimeInput.module.css';
 
 interface StartTimeInputProps {
   onPreviewRequest: (timeMs: number) => void;

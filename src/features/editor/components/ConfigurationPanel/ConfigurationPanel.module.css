@@ -23,12 +23,6 @@
 
 .preview,
 .timeline,
-.start,
-.duration,
-.width,
-.height,
-.fps,
-.quality,
 .submit {
   background: var(--color_panel_background);
 }
@@ -41,32 +35,6 @@
   justify-content: center;
   align-items: center;
   background-color: oklch(from var(--color_panel_background) 0.2 c h);
-}
-
-.start {
-  grid-area: start;
-}
-
-.duration {
-  grid-area: duration;
-}
-
-.width {
-  grid-area: width;
-}
-
-.height {
-  grid-area: height;
-}
-
-.fps {
-  grid-area: fps;
-}
-
-.quality {
-  grid-area: quality;
-  display: flex;
-  align-items: center;
 }
 
 .timeline {

@@ -1,0 +1,6 @@
+.quality {
+  grid-area: quality;
+  display: flex;
+  align-items: center;
+  background: var(--color_panel_background);
+}

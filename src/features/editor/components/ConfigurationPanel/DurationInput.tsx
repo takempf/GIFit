@@ -2,7 +2,7 @@ import React from 'react';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
 import { toSeconds, calculateLastFramePreview } from '@/utils/time';
-import css from './ConfigurationPanel.module.css';
+import css from './DurationInput.module.css';
 
 interface DurationInputProps {
   onPreviewRequest: (timeMs: number) => void;

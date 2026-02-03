@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Timeline.module.css';
+import styles from './TimelineSelection.module.css';
 
 interface TimelineSelectionProps {
   startTimeMs: number;

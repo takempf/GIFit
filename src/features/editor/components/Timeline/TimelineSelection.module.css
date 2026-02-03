@@ -1,0 +1,67 @@
+/* TimelineSelection.module.css */
+
+.selection {
+  position: absolute;
+  top: 25px;
+  bottom: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow:
+    inset 0 0.05em 0.1em 0.05em rgba(255, 255, 255, 0.75),
+    0 0.1em 0.1em rgba(0, 0, 0, 1);
+  backdrop-filter: blur(1px);
+  border-radius: 4px;
+  /* z-index to stay above ticks? or below? usually above. */
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  overflow: hidden; /* logic for children frames */
+  cursor: move;
+  backdrop-filter: blur(1px);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
+  scroll-margin-left: 100px;
+  transition: background 160ms ease-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.4);
+  }
+
+  &[data-dragging] {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.selectionFrame {
+  flex: 1; /* evenly distribute */
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  height: 100%;
+}
+
+/* Handles */
+.handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 10px;
+  background-color: var(--selection-color);
+  cursor: ew-resize;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.handleLeft {
+  left: -5px; /* Half width to center on edge */
+}
+
+.handleRight {
+  right: -5px;
+}
+
+.handle::after {
+  content: '';
+  width: 2px;
+  height: 12px;
+  background-color: white;
+  border-radius: 1px;
+}

@@ -1,0 +1,4 @@
+.duration {
+  grid-area: duration;
+  background: var(--color_panel_background);
+}

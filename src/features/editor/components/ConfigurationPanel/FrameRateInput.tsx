@@ -2,7 +2,7 @@ import React from 'react';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
 import { calculateLastFramePreview } from '@/utils/time';
-import css from './ConfigurationPanel.module.css';
+import css from './FrameRateInput.module.css';
 
 interface FrameRateInputProps {
   onPreviewRequest: (timeMs: number) => void;

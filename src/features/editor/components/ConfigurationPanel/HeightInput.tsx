@@ -1,7 +1,7 @@
 import React from 'react';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
-import css from './ConfigurationPanel.module.css';
+import css from './HeightInput.module.css';
 
 export function HeightInput() {
   const height = useConfigurationPanelStore((state) => state.height);

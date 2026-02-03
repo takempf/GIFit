@@ -1,0 +1,4 @@
+.start {
+  grid-area: start;
+  background: var(--color_panel_background);
+}

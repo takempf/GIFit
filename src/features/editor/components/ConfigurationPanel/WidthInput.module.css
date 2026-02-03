@@ -1,0 +1,4 @@
+.width {
+  grid-area: width;
+  background: var(--color_panel_background);
+}

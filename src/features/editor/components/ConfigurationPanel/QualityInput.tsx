@@ -1,7 +1,7 @@
 import React from 'react';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 import { Slider } from '@/components/ui/Slider/Slider';
-import css from './ConfigurationPanel.module.css';
+import css from './QualityInput.module.css';
 
 export function QualityInput() {
   const quality = useConfigurationPanelStore((state) => state.quality);
