@@ -28,13 +28,20 @@
 }
 
 .preview {
+  --bg-size: 50px;
   grid-area: preview;
   height: 300px;
   overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: oklch(from var(--color_panel_background) 0.2 c h);
+  background-image:
+    radial-gradient(rgb(255 255 255 / 7%) 1px, transparent 1px),
+    radial-gradient(rgb(255 255 255 / 5%) 1px, #111 1px);
+  background-size: var(--bg-size) var(--bg-size);
+  background-position:
+    0 0,
+    calc(var(--bg-size) / 2) calc(var(--bg-size) / 2);
 }
 
 .timeline {
