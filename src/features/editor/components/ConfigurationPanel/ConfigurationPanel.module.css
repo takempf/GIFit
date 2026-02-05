@@ -48,15 +48,14 @@
   grid-area: timeline;
 }
 
-.submit {
+.actions {
   grid-area: submit;
   display: flex;
-  align-items: stretch;
-  justify-content: stretch;
+  place-content: center;
 }
 
-.submitButton {
-  flex-grow: 1;
+.submit {
+  width: 33%;
 }
 
 .actions {

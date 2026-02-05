@@ -232,7 +232,7 @@ describe('ConfigurationPanel', () => {
     expect(mockConfigStoreActions.fetchVideoMetadata).toHaveBeenCalled();
   });
 
-  test('renders null if videoDuration is 0', () => {
+  test('renders interstitial when videoDuration is 0', () => {
     const state = {
       ...mockConfigStoreState,
       ...mockConfigStoreActions,
@@ -245,10 +245,40 @@ describe('ConfigurationPanel', () => {
           : state;
       }
     );
-    const { container } = render(
-      <ConfigurationPanel onSubmit={mockOnSubmit} />
+    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
+
+    expect(screen.getByText('No Video Detected')).toBeInTheDocument();
+    expect(
+      screen.getByText(/couldn't find a video on this page/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /retry video detection/i })
+    ).toBeInTheDocument();
+  });
+
+  test('calls fetchVideoMetadata when retry button is clicked', () => {
+    const state = {
+      ...mockConfigStoreState,
+      ...mockConfigStoreActions,
+      videoDuration: 0
+    };
+    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
+      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        return selector
+          ? selector(state as ConfigState & ConfigActions)
+          : state;
+      }
     );
-    expect(container.firstChild).toBeNull();
+    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
+
+    // Clear the initial mount call
+    vi.mocked(mockConfigStoreActions.fetchVideoMetadata!).mockClear();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /retry video detection/i })
+    );
+
+    expect(mockConfigStoreActions.fetchVideoMetadata).toHaveBeenCalledTimes(1);
   });
 
   test('duration input change seeks video to last frame of duration', () => {

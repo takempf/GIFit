@@ -1,0 +1,31 @@
+.interstitial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5em;
+  padding: 2em 2em 3em 2em;
+  text-align: center;
+  height: 100%;
+}
+
+.icon {
+  font-size: 2em;
+}
+
+.title {
+  margin: 0;
+  color: white;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.message {
+  margin: 0;
+  max-width: 40ch;
+  color: rgba(255, 255, 255, 0.7);
+}

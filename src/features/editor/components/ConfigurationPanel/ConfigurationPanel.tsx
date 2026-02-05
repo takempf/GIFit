@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/Button/Button';
 import { Timeline } from '../Timeline/Timeline';
 import { GifPreview } from '../GifPreview/GifPreview';
+import { NoVideoInterstitial } from './NoVideoInterstitial/NoVideoInterstitial';
 
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { StartTimeInput } from './StartTimeInput';
@@ -100,7 +101,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   // Early return MUST be after all hooks
   if (videoDuration === 0) {
-    return null;
+    return <NoVideoInterstitial onRetry={fetchVideoMetadata} />;
   }
 
   // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
@@ -208,8 +209,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
         <QualityInput />
 
-        <div className={css.submit}>
-          <Button id="gifit-submit" type="submit" className={css.submitButton}>
+        <div className={css.actions}>
+          <Button id="gifit-submit" type="submit" className={css.submit}>
             Create GIF
           </Button>
         </div>

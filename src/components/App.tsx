@@ -94,7 +94,7 @@ export function App() {
       <header>
         <AppLogo />
       </header>
-      <div className={css.container}>
+      <main className={css.main}>
         <section className={css.config}>
           <ConfigurationPanel onSubmit={handleSubmit} />
         </section>
@@ -104,7 +104,7 @@ export function App() {
             <Progress />
           </section>
         )}
-      </div>
+      </main>
       <footer className={css.footer}>
         <a
           className={css.credit}
