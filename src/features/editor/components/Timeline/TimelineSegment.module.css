@@ -6,7 +6,7 @@
 }
 
 .frameMarker {
-  height: 0.75em;
+  height: 0.25em;
   border-left: 1px solid rgba(255, 255, 255, 0.25);
   border-right: 1px solid rgba(0, 0, 0, 0.2);
   pointer-events: none;

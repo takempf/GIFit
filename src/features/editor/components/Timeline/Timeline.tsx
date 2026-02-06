@@ -22,6 +22,7 @@ interface TimelineProps {
     newDuration: number,
     context: 'start' | 'end'
   ) => void;
+  onHandleFocus: (handle: 'start' | 'end') => void;
   className?: string;
 }
 
@@ -32,6 +33,7 @@ export function Timeline({
   fps,
   previewTime,
   onChange,
+  onHandleFocus,
   className
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -283,7 +285,8 @@ export function Timeline({
                 <div
                   className={styles.previewHighlight}
                   style={{
-                    left: `${toMilliseconds(previewTime) * PIXELS_PER_MS}px`,
+                    left: 0,
+                    transform: `translateX(${toMilliseconds(previewTime) * PIXELS_PER_MS}px)`,
                     width: `${(1000 / fps) * PIXELS_PER_MS}px`
                   }}
                 />
@@ -298,6 +301,8 @@ export function Timeline({
                   onMouseDown={handleSelectionMouseDown}
                   onLeftDrag={startLeftDrag}
                   onRightDrag={startRightDrag}
+                  onLeftFocus={() => onHandleFocus('start')}
+                  onRightFocus={() => onHandleFocus('end')}
                   draggingState={draggingState}
                 />
               </div>

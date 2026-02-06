@@ -139,6 +139,19 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     }
   }
 
+  function handleTimelineHandleFocus(handle: 'start' | 'end') {
+    if (handle === 'start') {
+      handlePreviewRequest(start);
+    } else {
+      const previewTimeMs = calculateLastFramePreview(
+        start,
+        duration,
+        framerate
+      );
+      handlePreviewRequest(previewTimeMs);
+    }
+  }
+
   function handleKeyDown(event: React.KeyboardEvent<HTMLFormElement>) {
     event.stopPropagation();
   }
@@ -185,6 +198,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
             fps={framerate}
             previewTime={toSeconds(previewTime)}
             onChange={handleTimelineChange}
+            onHandleFocus={handleTimelineHandleFocus}
           />
         </div>
 

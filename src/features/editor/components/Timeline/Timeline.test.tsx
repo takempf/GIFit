@@ -2,6 +2,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Timeline } from './Timeline';
 import { vi, describe, it, expect } from 'vitest';
 
+vi.mock('wxt/browser', () => ({
+  browser: {
+    tabs: {
+      query: vi.fn().mockResolvedValue([]),
+      sendMessage: vi.fn().mockResolvedValue(null)
+    }
+  }
+}));
+
 vi.mock('@tanstack/react-virtual', () => {
   return {
     useVirtualizer: ({ count }: { count: number }) => {
@@ -33,7 +42,8 @@ describe('Timeline', () => {
     duration: 3,
     fps: 10,
     previewTime: 2,
-    onChange: vi.fn()
+    onChange: vi.fn(),
+    onHandleFocus: vi.fn()
   };
 
   it('renders correctly', () => {
@@ -47,9 +57,10 @@ describe('Timeline', () => {
     expect(selection).toBeInTheDocument();
 
     // Calculate expected styles
-    // 2s * 120px = 240px left
-    // 3s * 120px = 360px width
-    expect(selection).toHaveStyle('left: 240px');
+    // startTimeMs = 2000ms, pixelsPerMs = 120/1000 = 0.12
+    // transform = translateX(2000 * 0.12) = translateX(240px)
+    // durationMs = 3000ms, width = 3000 * 0.12 = 360px
+    expect(selection).toHaveStyle('transform: translateX(240px)');
     expect(selection).toHaveStyle('width: 360px');
   });
 

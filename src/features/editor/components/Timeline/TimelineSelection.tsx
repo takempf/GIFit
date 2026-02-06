@@ -1,5 +1,6 @@
 import React from 'react';
-import styles from './TimelineSelection.module.css';
+
+import css from './TimelineSelection.module.css';
 
 interface TimelineSelectionProps {
   startTimeMs: number;
@@ -9,6 +10,8 @@ interface TimelineSelectionProps {
   onMouseDown: (e: React.MouseEvent) => void;
   onLeftDrag: (e: React.MouseEvent) => void;
   onRightDrag: (e: React.MouseEvent) => void;
+  onLeftFocus: () => void;
+  onRightFocus: () => void;
   draggingState: 'left' | 'right' | 'move' | null;
 }
 
@@ -25,61 +28,53 @@ export const TimelineSelection = React.forwardRef<
       onMouseDown,
       onLeftDrag,
       onRightDrag,
+      onLeftFocus,
+      onRightFocus,
       draggingState
     },
     ref
   ) => {
     const frameDurationMs = 1000 / fps;
-    const GAP_PX = 1;
     const frameCount = Math.ceil(durationMs / frameDurationMs);
 
     const selectionStyle = {
-      left: `${startTimeMs * pixelsPerMs}px`,
+      left: 0,
+      transform: `translateX(${startTimeMs * pixelsPerMs}px)`,
       width: `${durationMs * pixelsPerMs}px`
     };
 
     return (
       <div
         ref={ref}
-        className={styles.selection}
+        className={css.selection}
         style={selectionStyle}
         onMouseDown={onMouseDown}
         data-testid="selection-rect"
         data-dragging={draggingState || undefined}>
         {/* Frames */}
-        <div className={styles.framesContainer}>
+        <div
+          className={css.framesContainer}
+          style={{
+            width: `${frameCount * frameDurationMs * pixelsPerMs}px`
+          }}>
           {Array.from({ length: frameCount }).map((_, i) => {
-            const isLast = i === frameCount - 1;
-            const fullFrameWidthPx = frameDurationMs * pixelsPerMs;
-            const frameStartMs = i * frameDurationMs;
-            const remainingMs = durationMs - frameStartMs;
-            const clippedWidthPx = isLast
-              ? Math.min(fullFrameWidthPx, remainingMs * pixelsPerMs)
-              : fullFrameWidthPx;
-            const widthWithGap = Math.max(0, clippedWidthPx - GAP_PX);
-
-            return (
-              <div
-                key={i}
-                className={styles.frame}
-                style={{
-                  width: `${widthWithGap}px`,
-                  marginRight: `${GAP_PX}px`
-                }}
-              />
-            );
+            return <div key={i} className={css.frame} style={{}} />;
           })}
         </div>
 
         {/* Handles */}
         <div
-          className={`${styles.handle} ${styles.handleLeft}`}
+          className={`${css.handle} ${css.handleLeft}`}
           onMouseDown={onLeftDrag}
+          onFocus={onLeftFocus}
+          tabIndex={0}
           data-testid="handle-left"
         />
         <div
-          className={`${styles.handle} ${styles.handleRight}`}
+          className={`${css.handle} ${css.handleRight}`}
           onMouseDown={onRightDrag}
+          onFocus={onRightFocus}
+          tabIndex={0}
           data-testid="handle-right"
         />
       </div>

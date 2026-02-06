@@ -16,6 +16,9 @@
 .framesContainer {
   display: flex;
   flex-direction: row;
+  gap: 1px;
+  flex-shrink: 0;
+  overflow: hidden;
   height: 75%;
 }
 
@@ -23,6 +26,7 @@
   height: 100%;
   background: rgba(255, 255, 255, 0.5);
   flex-shrink: 0;
+  flex-grow: 1;
   border-radius: 0.125em;
   transition: background 200ms ease-in-out;
 }
@@ -60,6 +64,12 @@
 
   &:hover {
     background: rgba(255, 255, 255, 0.5);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+    background: rgba(255, 255, 255, 0.75);
   }
 }
 
