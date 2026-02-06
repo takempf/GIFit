@@ -1,72 +1,76 @@
-import { Variants } from 'framer-motion';
+import { Variants, Transition } from 'framer-motion';
 
-const RESULT_SHOW_DELAY = 0.5; // seconds
+const SHAKE_DURATION = 0.4; // seconds
 
 /**
  * Transition settings for the individual frame chunks.
  */
-export const chunkTransition = {
+export const chunkTransition: Transition = {
   type: 'spring',
-  stiffness: 600,
-  damping: 40,
-  mass: 1
+  stiffness: 400,
+  damping: 30,
+  mass: 0.8
 };
 
 /**
- * Generates variants for the frame chunks, as their initial
- * position depends on the video element's dimensions.
- * @param videoElementWidth - The width of the source video element.
- * @param videoElementHeight - The height of the source video element.
+ * Generates variants for the frame chunks.
+ * Each chunk flies in from a random off-screen position toward the center.
+ * @param startX - Starting X offset from center.
+ * @param startY - Starting Y offset from center.
  * @returns The variants for the chunk elements.
  */
-export const getChunkVariants = (
-  videoElementWidth: number,
-  videoElementHeight: number
-): Variants => ({
+export const getChunkVariants = (startX: number, startY: number): Variants => ({
   initial: {
-    x: 210 + (-1 * videoElementWidth) / 2, // PROGRESS_FIXED_HORIZONTAL_CENTER
-    y: -120 + -1 * videoElementHeight * 0.25, // PROGRESS_FIXED_VERTICAL_CENTER
-    opacity: 0.1,
-    scale: 3,
-    borderRadius: '0.5em'
+    x: startX,
+    y: startY,
+    opacity: 0,
+    scale: 0.5
   },
   collated: {
     x: 0,
     y: 0,
-    opacity: 1,
-    scale: 0.9,
-    borderRadius: '0.2em'
+    opacity: [0, 1, 1, 0],
+    scale: 1,
+    transition: {
+      x: chunkTransition,
+      y: chunkTransition,
+      scale: chunkTransition,
+      opacity: {
+        duration: 0.8,
+        times: [0, 0.3, 0.7, 1],
+        ease: 'easeOut'
+      }
+    }
   },
   processed: {
     x: 0,
     y: 0,
     opacity: 0,
-    scale: 1,
-    borderRadius: '0em',
+    scale: 0.8,
     transition: {
-      delay: RESULT_SHOW_DELAY
+      duration: 0.2
     }
   }
 });
 
 /**
- * Variants for the main progress container.
+ * Transition for the circle growing phase.
  */
-export const progressContainerVariants: Variants = {
-  initial: { scale: 0.9 },
-  animate: { scale: 1 },
-  exit: { scale: 0.9, opacity: 0 }
+export const circleGrowingTransition: Transition = {
+  type: 'spring',
+  stiffness: 300,
+  damping: 25,
+  mass: 1
 };
 
 /**
- * Transition settings for the main progress container.
+ * Transition for the circle morph phase (to GIF aspect ratio).
  */
-export const progressContainerTransition = {
+export const circleMorphTransition: Transition = {
   type: 'spring',
-  stiffness: 450,
-  damping: 20,
-  mass: 1,
-  delay: RESULT_SHOW_DELAY
+  stiffness: 400,
+  damping: 30,
+  mass: 1
 };
 
 /**
@@ -74,26 +78,42 @@ export const progressContainerTransition = {
  */
 export const resultImageVariants: Variants = {
   initial: {
-    opacity: 0,
-    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+    opacity: 0
   },
   animate: {
-    opacity: 1,
-    boxShadow: 'rgba(0, 0, 0, 0.25) 0px 20px 8px -10px'
+    opacity: 1
   },
   exit: {
-    opacity: 0,
-    boxShadow: 'rgba(0, 0, 0, 0) 0px 0px 0px 0px'
+    opacity: 0
   }
 };
 
 /**
  * Transition settings for the resulting GIF image.
  */
-export const resultImageTransition = {
-  delay: RESULT_SHOW_DELAY,
-  type: 'spring',
-  stiffness: 500,
-  damping: 25,
-  mass: 1
+export const resultImageTransition: Transition = {
+  delay: SHAKE_DURATION + 0.1, // Wait for shake to finish, plus slight offset
+  duration: 0.5,
+  ease: 'easeOut'
 };
+
+/**
+ * Generates a deterministic off-screen starting position for a chunk.
+ * Uses the golden angle to distribute chunks evenly from all directions.
+ * @param index - The chunk index (used as seed for position).
+ * @param radius - The distance from center to spawn.
+ */
+export function getRandomOffScreenPosition(
+  index: number,
+  radius: number
+): { x: number; y: number } {
+  // Golden angle in radians for even distribution
+  const goldenAngle = 137.5 * (Math.PI / 180);
+  const angle = index * goldenAngle;
+  return {
+    x: Math.cos(angle) * radius,
+    y: Math.sin(angle) * radius
+  };
+}
+
+export const SHAKE_DURATION_MS = SHAKE_DURATION * 1000;

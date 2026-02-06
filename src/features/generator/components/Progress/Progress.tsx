@@ -1,40 +1,34 @@
 import css from './Progress.module.css';
 
-import { useEffect, useState, CSSProperties } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
-import { times } from '@/utils/times';
-import { getClosestGridDimensions } from '@/utils/getClosestGridDimensions';
-import { observeBoundingClientRect } from '@/utils/observeBoundingClientRect';
 
 import { Button } from '@/components/ui/Button/Button';
 import {
   getChunkVariants,
   chunkTransition,
-  progressContainerVariants,
-  progressContainerTransition,
+  circleGrowingTransition,
+  circleMorphTransition,
   resultImageVariants,
-  resultImageTransition
-} from './Progress.motion.ts'; // ✨ Import the variants
+  resultImageTransition,
+  getRandomOffScreenPosition,
+  SHAKE_DURATION_MS
+} from './Progress.motion.ts';
 
 import ArrowRightIcon from '@/assets/arrow-right.svg?react';
 import ArrowDownIcon from '@/assets/arrow-down.svg?react';
 
+const CIRCLE_BASE_SIZE = 40;
+const MAX_GIF_DISPLAY_SIZE = 300;
+const CHUNK_SPAWN_RADIUS = 300;
+
+type AnimationPhase = 'processing' | 'shaking' | 'morphing' | 'complete';
+
 export function Progress() {
-  const [videoElementWidth, setVideoElementWidth] = useState(0);
-  const [videoElementHeight, setVideoElementHeight] = useState(0);
-
   const setStatus = useAppStore((state) => state.setStatus);
-  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
-    null
-  );
-
-  useEffect(() => {
-    const el = document.querySelector('video');
-    setVideoElement(el);
-  }, []);
   const {
     result,
     processedFrameCount,
@@ -45,85 +39,150 @@ export function Progress() {
     name,
     reset
   } = useGifStore();
-  const [gridColumnsLength, getGridRowsLength] = getClosestGridDimensions(
-    width,
-    height,
-    frameCount
-  );
+
+  const [animationPhase, setAnimationPhase] =
+    useState<AnimationPhase>('processing');
 
   const imageUrl: string | undefined = result?.dataUrl;
-  const progressElementsStyle: CSSProperties | undefined = {
-    aspectRatio: `auto ${width} / ${height}`
-  };
   const downloadFilename = `${name}.gif`;
+  const progress = frameCount > 0 ? processedFrameCount / frameCount : 0;
+  const isComplete = processedFrameCount === frameCount && frameCount > 0;
+
+  // Calculate final GIF display dimensions (fit within max size while preserving aspect ratio)
+  const getFinalDimensions = () => {
+    if (!width || !height)
+      return { width: MAX_GIF_DISPLAY_SIZE, height: MAX_GIF_DISPLAY_SIZE };
+
+    const scale = Math.min(
+      MAX_GIF_DISPLAY_SIZE / width,
+      MAX_GIF_DISPLAY_SIZE / height
+    );
+    return {
+      width: width * scale,
+      height: height * scale
+    };
+  };
+
+  const finalDimensions = getFinalDimensions();
+  const circleTargetSize = (finalDimensions.width + finalDimensions.height) / 2;
+
+  // Calculate circle size based on progress
+  const circleSize =
+    CIRCLE_BASE_SIZE + (circleTargetSize - CIRCLE_BASE_SIZE) * progress;
+
+  // Memoize chunk positions so they don't change on re-render
+  const chunkPositions = useMemo(() => {
+    return Array.from({ length: frameCount }, (_, i) =>
+      getRandomOffScreenPosition(i, CHUNK_SPAWN_RADIUS)
+    );
+  }, [frameCount]);
+
+  // Handle animation phase transitions
+  // Processing -> Shaking transition
+  useEffect(() => {
+    if (isComplete && animationPhase === 'processing') {
+      setAnimationPhase('shaking');
+    }
+  }, [isComplete, animationPhase]);
+
+  // Shaking -> Morphing transition
+  useEffect(() => {
+    if (animationPhase === 'shaking') {
+      const shakeTimer = setTimeout(() => {
+        setAnimationPhase('morphing');
+      }, SHAKE_DURATION_MS);
+
+      return () => clearTimeout(shakeTimer);
+    }
+  }, [animationPhase]);
 
   useEffect(() => {
-    if (!videoElement) return;
+    if (imageUrl && animationPhase === 'morphing') {
+      setAnimationPhase('complete');
+    }
+  }, [imageUrl, animationPhase]);
 
-    const unobserve = observeBoundingClientRect(videoElement, (rect) => {
-      setVideoElementWidth(rect.width);
-      setVideoElementHeight(rect.height);
-    });
-
-    return () => unobserve();
-  }, [videoElement]);
+  // Reset animation phase when starting over
+  useEffect(() => {
+    if (processedFrameCount === 0) {
+      setAnimationPhase('processing');
+    }
+  }, [processedFrameCount]);
 
   function handleCloseClick() {
     setStatus('configuring');
     reset();
   }
 
-  // ✨ Get variants by calling the function with the component's state
-  const chunkVariants = getChunkVariants(videoElementWidth, videoElementHeight);
+  const isShaking = animationPhase === 'shaking';
+  const isMorphing =
+    animationPhase === 'morphing' || animationPhase === 'complete';
 
   return (
     <div className={css.gifitProgress} data-testid="progress">
-      <motion.div
-        className={css.elements}
-        style={progressElementsStyle}
-        variants={progressContainerVariants}
-        initial="initial"
-        animate={imageUrl ? 'animate' : 'initial'}
-        exit="exit"
-        transition={progressContainerTransition}>
-        <AnimatePresence>
-          <ul
-            key="chunks"
-            className={css.chunkGrid}
-            style={{
-              gridTemplateColumns: `repeat(${gridColumnsLength}, 1fr)`,
-              gridTemplateRows: `repeat(${getGridRowsLength}, 1fr)`
-            }}>
-            {times(processedFrameCount, (i) => (
-              <motion.li
-                key={i}
-                className={css.chunk}
-                variants={chunkVariants}
+      <div className={css.elements}>
+        {/* Central accumulating circle */}
+        <motion.div
+          className={`${css.circle} ${isShaking ? css.shake : ''} ${isMorphing ? css.morphing : ''}`}
+          initial={{ borderRadius: '50%' }}
+          animate={{
+            borderRadius: isMorphing ? '0%' : '50%',
+            scale: isMorphing ? 1 : progress
+          }}
+          style={{
+            width: finalDimensions.width,
+            height: finalDimensions.height
+          }}
+          transition={
+            isMorphing ? circleMorphTransition : circleGrowingTransition
+          }>
+          {/* Result GIF */}
+          <AnimatePresence>
+            {imageUrl && (
+              <motion.img
+                key="result"
+                className={css.result}
+                src={imageUrl}
+                alt="Generated GIF preview"
+                data-testid="result-image"
+                variants={resultImageVariants}
                 initial="initial"
-                animate={imageUrl ? 'processed' : 'collated'}
-                transition={chunkTransition}
-                style={{
-                  backgroundImage: `url(${frameData[i]})`
-                }}
+                animate="animate"
+                exit="exit"
+                transition={resultImageTransition}
               />
-            ))}
-          </ul>
-          {imageUrl && (
-            <motion.img
-              key="result"
-              className={css.result}
-              src={imageUrl}
-              alt="Generated GIF preview"
-              data-testid="result-image"
-              variants={resultImageVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={resultImageTransition}
-            />
-          )}
-        </AnimatePresence>
-      </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Flying chunks container */}
+        <div className={css.chunksContainer}>
+          <AnimatePresence>
+            {!isMorphing &&
+              Array.from({ length: processedFrameCount }, (_, i) => {
+                const pos = chunkPositions[i] ?? { x: 0, y: 0 };
+                const variants = getChunkVariants(pos.x, pos.y);
+
+                return (
+                  <motion.div
+                    key={i}
+                    className={css.chunk}
+                    variants={variants}
+                    initial="initial"
+                    animate="collated"
+                    exit="processed"
+                    transition={chunkTransition}
+                    style={{
+                      backgroundImage: frameData[i]
+                        ? `url(${frameData[i]})`
+                        : undefined
+                    }}
+                  />
+                );
+              })}
+          </AnimatePresence>
+        </div>
+      </div>
 
       <div className={css.actions}>
         <Button
@@ -158,4 +217,4 @@ export function Progress() {
   );
 }
 
-export default Progress;
+export { Progress as default };

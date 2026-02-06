@@ -12,46 +12,97 @@
   height: 1em;
 }
 
-.save {
+.elements {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-.elements {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
-  grid-template-areas: 'main';
-  max-width: 100%;
-  height: 100%;
+.circle {
+  position: relative;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0px 0px 2em 0.5em white;
+  overflow: hidden;
 
-  > * {
-    min-width: 0;
-    min-height: 0;
+  &.morphing {
+    box-shadow: 0px 0px 0px rgba(255, 255, 255, 0);
   }
 }
 
-.chunkGrid {
-  grid-area: main;
-  display: grid;
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  width: 100%;
-  background: oklch(0 0 0 / 0.05);
-  box-shadow: inset 1px 2px 4px oklch(0 0 0 / 0.1);
+.chunksContainer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
 }
 
 .chunk {
-  background: #000000;
-  margin: 0;
-  padding: 0;
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #333;
   background-size: cover;
+  background-position: center;
 }
 
 .result {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  grid-area: main;
-  z-index: 2;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  10% {
+    transform: translate(-3px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(3px, 2px) rotate(1deg);
+  }
+  30% {
+    transform: translate(-2px, 3px) rotate(-0.5deg);
+  }
+  40% {
+    transform: translate(2px, -3px) rotate(0.5deg);
+  }
+  50% {
+    transform: translate(-3px, 1px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(3px, -1px) rotate(1deg);
+  }
+  70% {
+    transform: translate(-1px, 3px) rotate(-0.5deg);
+  }
+  80% {
+    transform: translate(1px, -2px) rotate(0.5deg);
+  }
+  90% {
+    transform: translate(-2px, 1px) rotate(0deg);
+  }
+}
+
+.shake {
+  animation: shake 0.4s ease-in-out;
 }
 
 .actions {
