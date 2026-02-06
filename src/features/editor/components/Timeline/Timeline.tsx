@@ -294,6 +294,7 @@ export function Timeline({
                   startTimeMs={startTimeMs}
                   durationMs={durationMs}
                   pixelsPerMs={PIXELS_PER_MS}
+                  fps={fps}
                   onMouseDown={handleSelectionMouseDown}
                   onLeftDrag={startLeftDrag}
                   onRightDrag={startRightDrag}

@@ -4,36 +4,39 @@
   position: absolute;
   top: 25px;
   bottom: 12px;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow:
-    inset 0 0.05em 0.1em 0.05em rgba(255, 255, 255, 0.75),
-    0 0.1em 0.1em rgba(0, 0, 0, 1);
-  backdrop-filter: blur(1px);
-  border-radius: 4px;
   /* z-index to stay above ticks? or below? usually above. */
   z-index: 10;
   display: flex;
   flex-direction: row;
-  overflow: hidden; /* logic for children frames */
+  align-items: center;
   cursor: move;
-  backdrop-filter: blur(1px);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.75);
   scroll-margin-left: 100px;
-  transition: background 160ms ease-out;
+}
 
-  &:hover {
+.framesContainer {
+  display: flex;
+  flex-direction: row;
+  height: 75%;
+}
+
+.frame {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  flex-shrink: 0;
+  border-radius: 0.125em;
+  transition: background 200ms ease-in-out;
+}
+
+.selection:hover {
+  .frame {
     background: rgba(255, 255, 255, 0.4);
-  }
-
-  &[data-dragging] {
-    background: rgba(255, 255, 255, 0.25);
   }
 }
 
-.selectionFrame {
-  flex: 1; /* evenly distribute */
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  height: 100%;
+.selection[data-dragging] {
+  .frame {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 /* Handles */
@@ -42,26 +45,42 @@
   top: 0;
   bottom: 0;
   width: 10px;
-  background-color: var(--selection-color);
+  background: rgba(255, 255, 255, 1);
+  box-shadow:
+    inset 0 0.05em 0.1em 0.05em rgba(255, 255, 255, 0.75),
+    0 0.1em 0.1em rgba(0, 0, 0, 1);
+  backdrop-filter: blur(1px);
+  border-radius: 0.5em;
   cursor: ew-resize;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 250ms;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+}
+
+.selection[data-dragging='left'] {
+  .handleLeft {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.selection[data-dragging='right'] {
+  .handleRight {
+    background: rgba(255, 255, 255, 0.25);
+  }
 }
 
 .handleLeft {
-  left: -5px; /* Half width to center on edge */
+  left: 0;
+  transform: translate(-50%, 0%);
 }
 
 .handleRight {
-  right: -5px;
-}
-
-.handle::after {
-  content: '';
-  width: 2px;
-  height: 12px;
-  background-color: white;
-  border-radius: 1px;
+  right: 0;
+  transform: translate(50%, 0%);
 }
