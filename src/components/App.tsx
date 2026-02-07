@@ -9,7 +9,7 @@ import { Progress } from '../features/generator/components/Progress/Progress';
 
 import { useAppStore } from '@/stores/appStore';
 import {
-  useConfigurationPanelStore,
+  // useConfigurationPanelStore,
   ConfigState
 } from '@/features/editor/stores/configurationPanelStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
@@ -37,11 +37,26 @@ export function App() {
   const updateProgress = useGifStore((state) => state.updateProgress);
   const complete = useGifStore((state) => state.complete);
   const setError = useGifStore((state) => state.setError);
-  const pauseVideo = useConfigurationPanelStore((state) => state.pauseVideo);
+  // const pauseVideo = useConfigurationPanelStore((state) => state.pauseVideo);
 
   useEffect(() => {
-    pauseVideo();
-  }, [pauseVideo]);
+    // Establish a long-lived connection to the content script
+    // This signals that the popup is open, and the content script can
+    // enforce the video pause state.
+    const port = browser.tabs
+      .query({ active: true, currentWindow: true })
+      .then((tabs) => {
+        if (tabs[0]?.id) {
+          return browser.tabs.connect(tabs[0].id, {
+            name: 'GIFIT_POPUP_CONTEXT'
+          });
+        }
+      });
+
+    return () => {
+      port.then((p) => p?.disconnect());
+    };
+  }, []);
 
   // Listen for messages from content script
   useEffect(() => {

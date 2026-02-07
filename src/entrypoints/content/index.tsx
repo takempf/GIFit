@@ -350,6 +350,35 @@ export default defineContentScript({
       }
     );
 
+    // --- Port Listener (Popup Lifecycle) ---
+    browser.runtime.onConnect.addListener((port) => {
+      if (port.name === 'GIFIT_POPUP_CONTEXT') {
+        log('Popup connected, enforcing video pause');
+        const video = getVideoElement();
+        if (!video) return;
+
+        const enforcePause = () => {
+          if (!video.paused) {
+            log('Video tried to play while popup is open, pausing again');
+            video.pause();
+          }
+        };
+
+        // Initial pause
+        video.pause();
+
+        // Enforce pause if the user/site tries to play
+        video.addEventListener('play', enforcePause);
+        video.addEventListener('playing', enforcePause);
+
+        port.onDisconnect.addListener(() => {
+          log('Popup disconnected, releasing video control');
+          video.removeEventListener('play', enforcePause);
+          video.removeEventListener('playing', enforcePause);
+        });
+      }
+    });
+
     // --- Video Detection matches ---
     // We can rely on MutationObserver mostly, but location change is a good fallback hint
     const updateVideoElement = () => {
