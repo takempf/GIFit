@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-type Status = 'configuring' | 'generating';
+type Status = 'configuring' | 'generating' | 'generated';
 
 interface AppState {
   videoId: string | null;

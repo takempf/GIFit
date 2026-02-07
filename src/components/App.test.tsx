@@ -5,6 +5,12 @@ import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 
+// Define hoisted mocks to be shared between factory and tests
+const { addListenerMock, removeListenerMock } = vi.hoisted(() => ({
+  addListenerMock: vi.fn(),
+  removeListenerMock: vi.fn()
+}));
+
 // Mock wxt/browser
 vi.mock('wxt/browser', () => ({
   browser: {
@@ -13,8 +19,8 @@ vi.mock('wxt/browser', () => ({
     },
     runtime: {
       onMessage: {
-        addListener: vi.fn(),
-        removeListener: vi.fn()
+        addListener: addListenerMock,
+        removeListener: removeListenerMock
       }
     }
   }
@@ -63,7 +69,6 @@ describe('App Integration', () => {
   const mockCreateGif = vi.fn();
   const mockSetName = vi.fn();
   const mockSetStatus = vi.fn();
-  const mockPauseVideo = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,7 +77,7 @@ describe('App Integration', () => {
     (useAppStore as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (selector: (state: unknown) => unknown) => {
         return selector({
-          status: 'idle',
+          status: 'configuring',
           setStatus: mockSetStatus
         });
       }
@@ -97,16 +102,16 @@ describe('App Integration', () => {
       useConfigurationPanelStore as unknown as ReturnType<typeof vi.fn>
     ).mockImplementation((selector: (state: unknown) => unknown) => {
       return selector({
-        pauseVideo: mockPauseVideo
+        // Add necessary state for rendering
+        width: 320,
+        height: 240,
+        previewImage: null
       });
     });
   });
 
   test('submits form data correctly to createGif without extra unit conversion', async () => {
     render(<App />);
-
-    // confirm pauseVideo is called on mount
-    expect(mockPauseVideo).toHaveBeenCalled();
 
     const submitBtn = screen.getByTestId('mock-submit-btn');
     fireEvent.click(submitBtn);
@@ -130,5 +135,30 @@ describe('App Integration', () => {
     // Check side effects
     expect(mockSetName).toHaveBeenCalledWith('Test Video');
     expect(mockSetStatus).toHaveBeenCalledWith('generating');
+  });
+
+  test('transitions to "generated" status when GIF_COMPLETE message is received', () => {
+    render(<App />);
+
+    // Get the registered callback
+    // Ensure addListener was called
+    expect(addListenerMock).toHaveBeenCalled();
+    const handleMessage = addListenerMock.mock.calls[0][0];
+
+    // Simulate GIF_COMPLETE message
+    const completeData = {
+      blob: new Blob(),
+      dataUrl: 'data:image/gif;base64,...',
+      width: 320,
+      height: 240,
+      size: 1024
+    };
+
+    handleMessage({
+      type: 'GIF_COMPLETE',
+      data: completeData
+    });
+
+    expect(mockSetStatus).toHaveBeenCalledWith('generated');
   });
 });

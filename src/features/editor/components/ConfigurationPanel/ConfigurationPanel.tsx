@@ -9,19 +9,17 @@ import {
   toSeconds,
   calculateLastFramePreview
 } from '@/utils/time';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 import { Button } from '@/components/ui/Button/Button';
 import { Timeline } from '../Timeline/Timeline';
-import { GifPreview } from '../GifPreview/GifPreview';
 import { NoVideoInterstitial } from './NoVideoInterstitial/NoVideoInterstitial';
 
-import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { StartTimeInput } from './StartTimeInput';
 import { DurationInput } from './DurationInput';
 import { FrameRateInput } from './FrameRateInput';
 import { WidthInput } from './WidthInput';
 import { HeightInput } from './HeightInput';
-
 import { QualityInput } from './QualityInput';
 
 interface ConfigurationPanelProps {
@@ -36,9 +34,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const framerate = useConfigurationPanelStore((state) => state.framerate);
   const videoDuration = useConfigurationPanelStore(
     (state) => state.videoDuration
-  );
-  const previewImage = useConfigurationPanelStore(
-    (state) => state.previewImage
   );
 
   const storeHandleInputChange = useConfigurationPanelStore(
@@ -182,14 +177,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
         onSubmit={handleSubmit}
         onKeyDown={handleKeyDown}
         noValidate>
-        <div className={css.preview}>
-          <GifPreview
-            previewImage={previewImage}
-            width={width}
-            height={height}
-          />
-        </div>
-
         <div className={css.timeline}>
           <Timeline
             totalDuration={toSeconds(videoDuration)}

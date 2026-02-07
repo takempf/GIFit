@@ -2,8 +2,8 @@
 
 .selection {
   position: absolute;
-  top: 25px;
-  bottom: 12px;
+  top: 20px;
+  bottom: 10px;
   /* z-index to stay above ticks? or below? usually above. */
   z-index: 10;
   display: flex;

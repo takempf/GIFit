@@ -74,21 +74,18 @@ export default defineContentScript({
     // getVideoElement();
 
     // --- Service Event Listeners ---
-    gifService.on(
-      'FRAMES_PROGRESS',
-      (progress, frameCount, thumbnailDataUrl) => {
-        browser.runtime
-          .sendMessage({
-            type: 'GIF_PROGRESS',
-            progress,
-            frameCount,
-            thumbnailDataUrl
-          })
-          .catch((error) => {
-            log('Failed to send GIF_PROGRESS message:', error);
-          });
-      }
-    );
+    gifService.on('FRAMES_PROGRESS', (progress, frameCount, frameDataUrl) => {
+      browser.runtime
+        .sendMessage({
+          type: 'GIF_PROGRESS',
+          progress,
+          frameCount,
+          frameDataUrl
+        })
+        .catch((error) => {
+          log('Failed to send GIF_PROGRESS message:', error);
+        });
+    });
 
     gifService.on('COMPLETE', (data) => {
       browser.runtime

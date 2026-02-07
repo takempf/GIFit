@@ -232,75 +232,7 @@ class GifService extends EventEmitter {
 
     this.canvasEl = null; // Help GC
     this.context = null; // Help GC
-    this.thumbnailCanvasEl = null; // Help GC
-    this.thumbnailContext = null; // Help GC
-    this.tempFrameCanvas = null; // Help GC
-    this.tempFrameContext = null; // Help GC
     log('GifService destroyed');
-  }
-
-  private generateFrameThumbnail(
-    imageData: ImageData,
-    targetWidth: number = 8,
-    targetHeight: number = 8
-  ): string {
-    if (
-      !this.thumbnailCanvasEl ||
-      !this.thumbnailContext ||
-      !this.tempFrameCanvas ||
-      !this.tempFrameContext
-    ) {
-      log(
-        'Thumbnail or temporary canvas/context not available, skipping thumbnail.'
-      );
-      return '';
-    }
-
-    const { width: originalWidth, height: originalHeight } = imageData;
-
-    // Calculate aspect ratio to fit within 8x8
-    let newWidth = targetWidth;
-    let newHeight = targetHeight;
-    const aspectRatio = originalWidth / originalHeight;
-
-    if (originalWidth > originalHeight) {
-      newHeight = Math.round(targetWidth / aspectRatio);
-      newHeight = Math.max(1, newHeight); // Ensure at least 1px height
-    } else {
-      newWidth = Math.round(targetHeight * aspectRatio);
-      newWidth = Math.max(1, newWidth); // Ensure at least 1px width
-    }
-
-    this.thumbnailCanvasEl.width = newWidth;
-    this.thumbnailCanvasEl.height = newHeight;
-
-    // Use the pre-existing temporary canvas
-    this.tempFrameCanvas.width = originalWidth;
-    this.tempFrameCanvas.height = originalHeight;
-    this.tempFrameContext.putImageData(imageData, 0, 0);
-
-    // Clear previous thumbnail frame
-    this.thumbnailContext.clearRect(
-      0,
-      0,
-      this.thumbnailCanvasEl.width,
-      this.thumbnailCanvasEl.height
-    );
-
-    // Draw scaled image
-    this.thumbnailContext.drawImage(
-      this.tempFrameCanvas, // Source: the temporary canvas with the full frame
-      0,
-      0,
-      originalWidth,
-      originalHeight, // Source dimensions
-      0,
-      0,
-      newWidth,
-      newHeight // Destination dimensions
-    );
-
-    return this.thumbnailCanvasEl.toDataURL('image/png'); // Using PNG for thumbnails
   }
 
   private seek(video: HTMLVideoElement, time: number): void {
@@ -441,15 +373,10 @@ class GifService extends EventEmitter {
           ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
           : 1;
 
-      // Generate thumbnail for the current frame
-      const thumbnailDataUrl = this.generateFrameThumbnail(imageData);
+      // Generate data URL for the current frame
+      const frameDataUrl = this.canvasEl.toDataURL();
 
-      this.emit(
-        'FRAMES_PROGRESS',
-        progress,
-        this.framesComplete,
-        thumbnailDataUrl
-      );
+      this.emit('FRAMES_PROGRESS', progress, this.framesComplete, frameDataUrl);
 
       // Seek to next frame start
       const nextFrameTimeMs = videoElement.currentTime * 1000 + frameIntervalMs;

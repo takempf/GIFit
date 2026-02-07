@@ -61,7 +61,6 @@ export interface ConfigActions {
   loadInitialConfig: () => Promise<void>;
   fetchVideoMetadata: () => Promise<void>;
   syncStartToVideoTime: () => Promise<void>;
-  pauseVideo: () => Promise<void>;
   captureFrame: () => Promise<void>;
 }
 
@@ -234,10 +233,6 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
           currentTime: metadata.currentTime // Seconds
         });
       }
-    },
-
-    pauseVideo: async () => {
-      await videoController.pause();
     },
 
     captureFrame: async () => {

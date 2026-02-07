@@ -42,7 +42,7 @@ export interface MsgGifProgress {
   type: 'GIF_PROGRESS';
   progress: number;
   frameCount: number;
-  thumbnailDataUrl: string;
+  frameDataUrl: string;
 }
 
 export interface MsgGifComplete {

@@ -287,14 +287,6 @@ describe('useConfigurationPanelStore', () => {
     expect(result.current.videoDuration).toBe(30000); // 30s in ms
   });
 
-  it('pauseVideo should call videoController.pause', async () => {
-    const { result } = renderHook(() => useConfigurationPanelStore());
-    await act(async () => {
-      await result.current.pauseVideo();
-    });
-    expect(videoController.pause).toHaveBeenCalled();
-  });
-
   it('captureFrame should call videoController.captureFrame and update previewImage', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
     const mockUrl = 'data:image/png;base64,...';

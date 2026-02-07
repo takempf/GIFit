@@ -5,7 +5,9 @@ import { browser } from 'wxt/browser';
 
 import { AppLogo } from './AppLogo/AppLogo';
 import { ConfigurationPanel } from '../features/editor/components/ConfigurationPanel/ConfigurationPanel';
-import { Progress } from '../features/generator/components/Progress/Progress';
+import { GifPreview } from '@/features/editor/components/GifPreview/GifPreview';
+import { ProcessingPanel } from '@/features/editor/components/ProcessingPanel/ProcessingPanel';
+import { ResultPanel } from '@/features/editor/components/ResultPanel/ResultPanel';
 
 import { useAppStore } from '@/stores/appStore';
 import {
@@ -13,6 +15,7 @@ import {
   ConfigState
 } from '@/features/editor/stores/configurationPanelStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
+import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 
 import TKLogo from '@/assets/tk.svg';
 
@@ -37,7 +40,11 @@ export function App() {
   const updateProgress = useGifStore((state) => state.updateProgress);
   const complete = useGifStore((state) => state.complete);
   const setError = useGifStore((state) => state.setError);
-  // const pauseVideo = useConfigurationPanelStore((state) => state.pauseVideo);
+  const previewImage = useConfigurationPanelStore(
+    (state) => state.previewImage
+  );
+  const width = useConfigurationPanelStore((state) => state.width);
+  const height = useConfigurationPanelStore((state) => state.height);
 
   useEffect(() => {
     // Establish a long-lived connection to the content script
@@ -65,10 +72,11 @@ export function App() {
         updateProgress(
           message.progress,
           message.frameCount,
-          message.thumbnailDataUrl
+          message.frameDataUrl
         );
       } else if (message.type === 'GIF_COMPLETE') {
         complete(message.data);
+        setStatus('generated');
       } else if (message.type === 'GIF_ERROR') {
         setError(message.error);
       }
@@ -78,7 +86,7 @@ export function App() {
     return () => {
       browser.runtime.onMessage.removeListener(handleMessage);
     };
-  }, [updateProgress, complete, setError]);
+  }, [updateProgress, complete, setError, setStatus]);
 
   const handleSubmit = useCallback(
     async function handleSubmit(config: ConfigState) {
@@ -102,21 +110,46 @@ export function App() {
     [createGif, setName, setStatus]
   );
 
+  const currentFrame = useGifStore((state) => state.currentFrame);
+  const result = useGifStore((state) => state.result);
+
+  let currentPreviewImage = previewImage;
+  if (status === 'generating') {
+    currentPreviewImage = currentFrame ?? previewImage;
+  } else if (status === 'generated') {
+    currentPreviewImage = result?.dataUrl ?? previewImage;
+  }
+
   return (
     <div className={css.app} data-status={status}>
       <header>
         <AppLogo />
       </header>
       <main className={css.main}>
-        <section className={css.config}>
-          <ConfigurationPanel onSubmit={handleSubmit} />
+        <section className={css.preview}>
+          <GifPreview
+            previewImage={currentPreviewImage}
+            width={width}
+            height={height}
+          />
         </section>
-
-        {status === 'generating' && (
-          <section className={css.generation}>
-            <Progress />
-          </section>
-        )}
+        <section className={css.panel}>
+          {status === 'configuring' && (
+            <div className={css.configuring}>
+              <ConfigurationPanel onSubmit={handleSubmit} />
+            </div>
+          )}
+          {status === 'generating' && (
+            <div className={css.processing}>
+              <ProcessingPanel />
+            </div>
+          )}
+          {status === 'generated' && (
+            <div className={css.generated}>
+              <ResultPanel />
+            </div>
+          )}
+        </section>
       </main>
       <footer className={css.footer}>
         <a

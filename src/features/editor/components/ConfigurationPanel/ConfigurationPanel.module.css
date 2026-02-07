@@ -10,7 +10,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-areas:
-    'preview preview preview'
     'timeline timeline timeline'
     'start duration fps'
     'width height quality'
@@ -21,27 +20,10 @@
   background: var(--color_panel_border);
 }
 
-.preview,
 .timeline,
-.submit {
+.submit,
+.actions {
   background: var(--color_panel_background);
-}
-
-.preview {
-  --bg-size: 50px;
-  grid-area: preview;
-  height: 300px;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-image:
-    radial-gradient(rgb(255 255 255 / 7%) 1px, transparent 1px),
-    radial-gradient(rgb(255 255 255 / 5%) 1px, #111 1px);
-  background-size: var(--bg-size) var(--bg-size);
-  background-position:
-    0 0,
-    calc(var(--bg-size) / 2) calc(var(--bg-size) / 2);
 }
 
 .timeline {
@@ -52,16 +34,11 @@
   grid-area: submit;
   display: flex;
   place-content: center;
+  padding: 0.25em;
+  gap: 0.25em;
 }
 
 .submit {
   width: 33%;
-}
-
-.actions {
-  display: flex;
-
-  > * {
-    flex-grow: 1;
-  }
+  flex-grow: 0;
 }

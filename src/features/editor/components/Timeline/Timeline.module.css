@@ -16,7 +16,7 @@
 
 .scrollViewport {
   width: 100%;
-  height: 70px;
+  height: 60px;
   overflow-x: scroll; /* Base UI requires native scroll behavior on viewport */
   overflow-y: hidden;
   position: relative;

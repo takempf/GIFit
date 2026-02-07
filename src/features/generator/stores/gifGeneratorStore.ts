@@ -26,7 +26,7 @@ interface GifState {
   error: string | null;
   result: GifCompleteData | null;
   generationId: string | null;
-  frameData: string[]; // Array of data URLs for frame thumbnails
+  currentFrame: string | null;
 }
 
 interface GifActions {
@@ -35,11 +35,7 @@ interface GifActions {
   reset: () => void;
   setName: (name: string) => void;
   // Actions called by message listeners
-  updateProgress: (
-    progress: number,
-    frameCount: number,
-    thumbnail: string
-  ) => void;
+  updateProgress: (progress: number, frameCount: number, frame: string) => void;
   complete: (data: GifCompleteData) => void;
   setError: (error: string) => void;
 }
@@ -57,7 +53,7 @@ const initialState: GifState = {
   error: null,
   result: null,
   generationId: null,
-  frameData: []
+  currentFrame: null
 };
 
 export const useGifStore = create<GifStore>((set) => ({
@@ -126,13 +122,13 @@ export const useGifStore = create<GifStore>((set) => ({
     set({ name });
   },
 
-  updateProgress(progress, frameCount, thumbnail) {
-    set((state) => ({
+  updateProgress(progress, frameCount, frame) {
+    set({
       status: 'processing',
       progress,
       processedFrameCount: frameCount,
-      frameData: [...state.frameData, thumbnail]
-    }));
+      currentFrame: frame
+    });
   },
 
   complete(data) {
