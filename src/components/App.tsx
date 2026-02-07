@@ -8,22 +8,20 @@ import { ConfigurationPanel } from '../features/editor/components/ConfigurationP
 import { Progress } from '../features/generator/components/Progress/Progress';
 
 import { useAppStore } from '@/stores/appStore';
-import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import {
+  useConfigurationPanelStore,
+  ConfigState
+} from '@/features/editor/stores/configurationPanelStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 
 import TKLogo from '@/assets/tk.svg';
 
 import { ExtensionMessage } from '@/types';
 
-interface FormValues {
-  start: number;
-  duration: number;
-  width: number;
-  height: number;
-  linkDimensions: boolean;
-  framerate: number;
-  quality: number;
-}
+// We can just use ConfigState directly or Pick what we need.
+// handleSubmit uses: start, duration, width, height, framerate (from fps alias?), quality.
+// ConfigState has: start, duration, width, height, framerate, quality...
+// Let's use ConfigState for the handler.
 
 async function getVideoTitle() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
@@ -68,19 +66,19 @@ export function App() {
   }, [updateProgress, complete, setError]);
 
   const handleSubmit = useCallback(
-    async function handleSubmit(formValues: FormValues) {
-      const start = formValues.start; // ms
-      const end = start + formValues.duration; // ms
+    async function handleSubmit(config: ConfigState) {
+      const start = config.start; // ms
+      const end = start + config.duration; // ms
       const name = await getVideoTitle();
 
       createGif({
         name,
-        quality: formValues.quality,
-        width: formValues.width,
-        height: formValues.height,
+        quality: config.quality,
+        width: config.width,
+        height: config.height,
         start,
         end,
-        fps: formValues.framerate
+        fps: config.framerate
       });
 
       setName(name);

@@ -59,8 +59,11 @@ export default defineUnlistedScript(() => {
       }
 
       if (response) {
-        const spec = response.storyboards?.playerStoryboardSpecRenderer?.spec;
-        const duration = response.videoDetails?.lengthSeconds; // Extract duration
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const castResponse = response as any;
+        const spec =
+          castResponse.storyboards?.playerStoryboardSpecRenderer?.spec;
+        const duration = castResponse.videoDetails?.lengthSeconds; // Extract duration
 
         console.log('GIFit! Main: Found spec in player response', {
           spec,

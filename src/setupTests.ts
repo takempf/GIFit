@@ -27,6 +27,8 @@ global.browser = mockBrowser;
 
 // Extend Window interface to include chrome and browser
 declare global {
+  var chrome: unknown;
+  var browser: unknown;
   interface Window {
     chrome: unknown;
     browser: unknown;
