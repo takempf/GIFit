@@ -53,7 +53,6 @@ export function Timeline({
 
     // Fetch storyboard spec
     const fetchStoryboard = async () => {
-      console.log('TIMELINE: fetching stoyboard spec');
       try {
         const tabs = await browser.tabs.query({
           active: true,
@@ -61,20 +60,14 @@ export function Timeline({
         });
         const activeTab = tabs[0];
 
-        console.log('TIMELINE: active tab', activeTab);
-
         if (!activeTab?.id) {
           console.warn('Timeline: No active tab found');
           return;
         }
 
-        console.log('TIMELINE: sending message to active tab');
-
         const response = await browser.tabs.sendMessage(activeTab.id, {
           type: 'GET_STORYBOARD'
         });
-
-        console.log('TIMELINE: received response', response);
 
         if (response && response.spec) {
           const parsed = parseStoryboardSpec(response.spec);

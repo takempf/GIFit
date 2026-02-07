@@ -49,8 +49,6 @@ export function parseStoryboardSpec(spec: string) {
 
   if (!baseUrl || levels.length === 0) return null;
 
-  console.log('Parsed Storyboard Spec:', { baseUrl, levels: levels[0] }); // Log first level
-
   return {
     baseUrl,
     levels
