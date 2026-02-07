@@ -89,3 +89,10 @@ a {
   text-decoration-color: var(--color_primary);
   text-decoration-thickness: 0.1em;
 }
+
+/* View Transitions for GIF Preview */
+::view-transition-old(gif-preview),
+::view-transition-new(gif-preview) {
+  animation-duration: 300ms;
+  animation-timing-function: var(--ease_out_expo);
+}

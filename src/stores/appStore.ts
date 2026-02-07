@@ -24,7 +24,13 @@ const initialState: AppState = {
 export const useAppStore = create<AppStore>((set) => {
   const actions: AppActions = {
     setVideoId: (id: string | null) => set({ videoId: id }),
-    setStatus: (status: Status) => set({ status }),
+    setStatus: (status: Status) => {
+      if (document.startViewTransition) {
+        document.startViewTransition(() => set({ status }));
+      } else {
+        set({ status });
+      }
+    },
     reset: (resetState?: Partial<AppState>) =>
       set({ ...initialState, ...(resetState ?? {}) })
   };

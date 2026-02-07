@@ -83,6 +83,7 @@
 }
 
 .panel {
+  view-transition-name: app-panel;
   background: var(--color_panel_background);
   border-radius: 0.5em;
 
