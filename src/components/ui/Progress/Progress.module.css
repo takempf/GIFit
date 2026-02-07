@@ -1,0 +1,32 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: currentColor;
+}
+
+.value {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.track {
+  height: 0.5rem;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.indicator {
+  height: 100%;
+  background-color: oklch(0.5882 0.2615 29.23);
+  border-radius: inherit;
+  transition: width 200ms ease-out;
+}
