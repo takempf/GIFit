@@ -21,7 +21,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix"
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "validate": "npm run lint && npm run compile"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",

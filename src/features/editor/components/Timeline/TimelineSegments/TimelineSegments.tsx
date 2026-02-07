@@ -1,5 +1,6 @@
 import type { VirtualItem } from '@tanstack/react-virtual';
-import { TimelineSegment } from './TimelineSegment';
+
+import { TimelineSegment } from '../TimelineSegment/TimelineSegment';
 
 interface TimelineSegmentsProps {
   virtualItems: VirtualItem[];

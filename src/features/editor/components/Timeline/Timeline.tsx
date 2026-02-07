@@ -7,9 +7,9 @@ import { browser } from 'wxt/browser';
 import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
-import { TimelineSelection } from './TimelineSelection';
-import { TimelineSegments } from './TimelineSegments';
-import { TimelineStoryboardLayer } from './TimelineStoryboardLayer';
+import { TimelineSelection } from './TimelineSelection/TimelineSelection';
+import { TimelineSegments } from './TimelineSegments/TimelineSegments';
+import { TimelineStoryboard } from './TimelineStoryboard/TimelineStoryboard';
 
 interface TimelineProps {
   totalDuration: number;
@@ -268,7 +268,7 @@ export function Timeline({
                 data-testid="timeline-interior">
                 {/* Content Layer (Ticks + Storyboard) */}
                 {storyboardSpec && (
-                  <TimelineStoryboardLayer
+                  <TimelineStoryboard
                     virtualItems={storyboardVirtualizer.getVirtualItems()}
                     storyboardSpec={storyboardSpec}
                     totalDurationMs={totalDurationMs}

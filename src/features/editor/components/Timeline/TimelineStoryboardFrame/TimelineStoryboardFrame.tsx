@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import styles from './StoryboardFrame.module.css';
+import styles from './TimelineStoryboardFrame.module.css';
 
 export interface StoryboardFrameData {
   url: string;

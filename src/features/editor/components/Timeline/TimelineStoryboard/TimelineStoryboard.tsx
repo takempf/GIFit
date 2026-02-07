@@ -1,21 +1,22 @@
 import type { VirtualItem } from '@tanstack/react-virtual';
 import { getStoryboardFrame, StoryboardLevel } from '@/utils/storyboard';
-import { StoryboardFrame } from './StoryboardFrame';
-import styles from './TimelineStoryboardLayer.module.css';
+import { StoryboardFrame } from '../TimelineStoryboardFrame/TimelineStoryboardFrame';
 
-interface TimelineStoryboardLayerProps {
+import css from './TimelineStoryboard.module.css';
+
+interface TimelineStoryboardProps {
   virtualItems: VirtualItem[];
   storyboardSpec: { baseUrl: string; levels: StoryboardLevel[] };
   totalDurationMs: number;
 }
 
-export function TimelineStoryboardLayer({
+export function TimelineStoryboard({
   virtualItems,
   storyboardSpec,
   totalDurationMs
-}: TimelineStoryboardLayerProps) {
+}: TimelineStoryboardProps) {
   return (
-    <div className={styles.layer}>
+    <div className={css.layer}>
       {virtualItems.map((virtualItem) => {
         const i = virtualItem.index;
 
@@ -37,7 +38,7 @@ export function TimelineStoryboardLayer({
         return (
           <div
             key={virtualItem.key}
-            className={styles.segment}
+            className={css.segment}
             style={{
               left: `${virtualItem.start}px`, // calculated by virtualizer
               width: `${virtualItem.size}px`

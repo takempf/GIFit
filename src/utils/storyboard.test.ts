@@ -1,4 +1,5 @@
 import { parseStoryboardSpec, getStoryboardFrame } from './storyboard';
+import { describe, it, expect } from 'vitest';
 
 describe('storyboard utils', () => {
   // Increased count to 200 to allow testing second sheet
