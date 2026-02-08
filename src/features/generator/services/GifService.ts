@@ -299,6 +299,76 @@ class GifService extends EventEmitter {
     return imageData;
   }
 
+  private downsampleFrame(
+    videoElement: HTMLVideoElement,
+    width: number,
+    height: number
+  ): ImageData {
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+    if (!ctx) {
+      throw new Error('Failed to get context for downsampling');
+    }
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(videoElement, 0, 0, width, height);
+    return ctx.getImageData(0, 0, width, height);
+  }
+
+  private async sampleFrames(
+    config: GifConfig,
+    videoElement: HTMLVideoElement,
+    count: number = 10
+  ): Promise<ImageData[]> {
+    const duration = config.end - config.start;
+    const interval = duration / (count - 1);
+    const samples: ImageData[] = [];
+
+    // Use a smaller dimension for palette generation to speed it up
+    // 1/4 of the size or max 256px, whichever is smaller
+    const scale = Math.min(1, 256 / Math.max(config.width, config.height));
+    const sampleWidth = Math.max(1, Math.floor(config.width * scale));
+    const sampleHeight = Math.max(1, Math.floor(config.height * scale));
+
+    for (let i = 0; i < count; i++) {
+      const time = config.start + interval * i;
+      await this.asyncSeek(videoElement, time / 1000);
+      samples.push(
+        this.downsampleFrame(videoElement, sampleWidth, sampleHeight)
+      );
+    }
+
+    return samples;
+  }
+
+  private async generateGlobalPalette(
+    config: GifConfig,
+    videoElement: HTMLVideoElement,
+    maxColors: number
+  ): Promise<number[][]> {
+    log('Generating global palette...');
+    const samples = await this.sampleFrames(config, videoElement, 10); // Sample 10 frames
+
+    // Combine all samples into one giant buffer for quantization
+    const totalPixels = samples.reduce(
+      (acc, sample) => acc + sample.data.length,
+      0
+    );
+    const combinedData = new Uint8ClampedArray(totalPixels);
+    let offset = 0;
+    for (const sample of samples) {
+      combinedData.set(sample.data, offset);
+      offset += sample.data.length;
+    }
+
+    const palette = quantize(combinedData, maxColors);
+    log('Global palette generated');
+    return palette;
+  }
+
   private indexImageData(
     imageData: ImageData,
     { palette, noDither = false, width, height }: IndexingOptions
@@ -336,15 +406,24 @@ class GifService extends EventEmitter {
     const gifDurationMs = config.end - config.start;
     const trueGifDuration = gifDurationMs - (gifDurationMs % frameIntervalMs);
 
+    // Generate global palette once
+    const globalPalette = await this.generateGlobalPalette(
+      config,
+      videoElement,
+      actualMaxColors
+    );
+
+    // Reset video position to start after palette sampling
+    await this.asyncSeek(videoElement, config.start / 1000);
+
     // Deduplication state
     let pendingFrame: { data: ImageData; duration: number } | null = null;
 
     // Helper to write a frame after processing
     const writeFrame = (frame: { data: ImageData; duration: number }) => {
-      // Use a color palette
-      const palette = quantize(frame.data.data, actualMaxColors);
+      // Use the global palette
       const indexedData = this.indexImageData(frame.data, {
-        palette: palette as Palette,
+        palette: globalPalette as Palette,
         noDither: config.noDither,
         width: config.width,
         height: config.height
@@ -353,7 +432,7 @@ class GifService extends EventEmitter {
       if (!this.encoder) return;
 
       this.encoder.writeFrame(indexedData, config.width, config.height, {
-        palette: palette as Palette,
+        palette: globalPalette as Palette,
         delay: frame.duration
       });
     };
