@@ -158,7 +158,8 @@ class GifService extends EventEmitter {
       const gifData = {
         dataUrl,
         width: config.width,
-        height: config.height
+        height: config.height,
+        size: blob.size
       };
 
       // Frame collection complete, finish up

@@ -41,7 +41,7 @@ export function ResultPanel() {
     <div className={css.resultPanel} data-testid="result">
       <span className={cx(css.frames, css.stat)}>{frameCount} frames</span>
       <span className={cx(css.size, css.stat)}>
-        {result?.dataUrl.length ? formatFileSize(result.dataUrl.length) : '—'}
+        {result?.size ? formatFileSize(result.size) : '—'}
       </span>
       <span className={cx(css.dimensions, css.stat)}>
         {result?.width}x{result?.height}

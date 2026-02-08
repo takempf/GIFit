@@ -14,6 +14,7 @@ export interface GifCompleteData {
   dataUrl: string;
   width: number;
   height: number;
+  size: number; // Actual byte size of the GIF
 }
 
 export type GifStatus =
