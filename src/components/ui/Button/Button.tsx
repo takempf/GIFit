@@ -19,13 +19,14 @@ type ButtonOwnProps<E extends React.ElementType = 'button'> = {
 
 export type ButtonProps<E extends React.ElementType = 'button'> =
   ButtonOwnProps<E> &
-    Omit<React.ComponentPropsWithoutRef<E>, keyof ButtonOwnProps<E>>;
+    Omit<React.ComponentPropsWithRef<E>, keyof ButtonOwnProps<E>>;
 
 export function Button<E extends React.ElementType = 'button'>({
   as,
   children,
   append,
   prepend,
+  type = 'button',
   variant = 'primary',
   size = 'medium',
   rounded = false,
@@ -33,6 +34,7 @@ export function Button<E extends React.ElementType = 'button'>({
   disabled = false,
   padding = 'medium',
   evenPadding = false,
+  ref,
   ...rest
 }: ButtonProps<E>): React.ReactElement {
   const Component = as ?? 'button';
@@ -54,6 +56,8 @@ export function Button<E extends React.ElementType = 'button'>({
     className: buttonClasses,
     disabled: Component === 'button' ? disabled : undefined,
     'aria-disabled': Component !== 'button' && disabled ? true : undefined,
+    type,
+    ref,
     ...rest
   };
 

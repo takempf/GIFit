@@ -133,7 +133,7 @@ export function App() {
             height={height}
           />
         </section>
-        <section className={css.panel}>
+        <section className={css.panel} aria-live="polite">
           {status === 'configuring' && (
             <div className={css.configuring}>
               <ConfigurationPanel onSubmit={handleSubmit} />
