@@ -10,6 +10,47 @@ const MAX_QUALITY = 10;
 
 import { GifConfig, GifCompleteData } from '@/types';
 
+/**
+ * Compares two ImageData objects to check if they are visually similar within a threshold.
+ * Uses Mean Squared Error (MSE) to determine similarity.
+ * @param frame1 First frame
+ * @param frame2 Second frame
+ * @param threshold MSE threshold. 0 means exact match. Higher values are more tolerant.
+ *                  Good starting point: 10-20.
+ */
+export function areFramesEqual(
+  frame1: ImageData,
+  frame2: ImageData,
+  threshold: number = 15
+): boolean {
+  if (frame1.width !== frame2.width || frame1.height !== frame2.height) {
+    return false;
+  }
+
+  const data1 = frame1.data;
+  const data2 = frame2.data;
+  const len = data1.length;
+  let sumSquaredDiff = 0;
+
+  // Optimization: check exact match first
+  // if (threshold === 0) ... loop through and check exact equality
+
+  for (let i = 0; i < len; i += 4) {
+    // RGB only, ignore Alpha for now as it's usually 255 in video
+    const rDiff = data1[i] - data2[i];
+    const gDiff = data1[i + 1] - data2[i + 1];
+    const bDiff = data1[i + 2] - data2[i + 2];
+
+    sumSquaredDiff += rDiff * rDiff + gDiff * gDiff + bDiff * bDiff;
+  }
+
+  // Calculate MSE per channel
+  // Total pixels = len / 4. Total channels considered = 3.
+  const mse = sumSquaredDiff / ((len / 4) * 3);
+
+  return mse <= threshold;
+}
+
 export interface IndexingOptions {
   noDither?: boolean;
   palette: number[][];
@@ -295,6 +336,28 @@ class GifService extends EventEmitter {
     const gifDurationMs = config.end - config.start;
     const trueGifDuration = gifDurationMs - (gifDurationMs % frameIntervalMs);
 
+    // Deduplication state
+    let pendingFrame: { data: ImageData; duration: number } | null = null;
+
+    // Helper to write a frame after processing
+    const writeFrame = (frame: { data: ImageData; duration: number }) => {
+      // Use a color palette
+      const palette = quantize(frame.data.data, actualMaxColors);
+      const indexedData = this.indexImageData(frame.data, {
+        palette: palette as Palette,
+        noDither: config.noDither,
+        width: config.width,
+        height: config.height
+      });
+
+      if (!this.encoder) return;
+
+      this.encoder.writeFrame(indexedData, config.width, config.height, {
+        palette: palette as Palette,
+        delay: frame.duration
+      });
+    };
+
     // Loop until the video's current time passes the desired end time or is aborted.
     while (videoElement.currentTime * 1000 < config.end && !this.aborted) {
       if (!this.encoder || !this.context || !this.canvasEl) {
@@ -310,20 +373,18 @@ class GifService extends EventEmitter {
         config.height
       );
 
-      // Use a color palette
-      const palette = quantize(imageData.data, actualMaxColors);
-      const indexedData = this.indexImageData(imageData, {
-        palette: palette as Palette,
-        noDither: config.noDither,
-        width: config.width,
-        height: config.height
-      });
-
-      // Actually write frame data
-      this.encoder.writeFrame(indexedData, config.width, config.height, {
-        palette: palette as Palette,
-        delay: frameIntervalMs
-      });
+      // Check for deduplication
+      if (pendingFrame && areFramesEqual(pendingFrame.data, imageData)) {
+        // Frames are equal, just extend the duration of the pending frame
+        pendingFrame.duration += frameIntervalMs;
+      } else {
+        // Frames differ (or first frame), flush pending if exists
+        if (pendingFrame) {
+          writeFrame(pendingFrame);
+        }
+        // Set new pending frame
+        pendingFrame = { data: imageData, duration: frameIntervalMs };
+      }
 
       // Progress reporting
       this.framesComplete++;
@@ -350,6 +411,11 @@ class GifService extends EventEmitter {
       }
 
       await this.asyncSeek(videoElement, nextFrameTimeMs / 1000);
+    }
+
+    // Flush any remaining pending frame
+    if (pendingFrame && !this.aborted) {
+      writeFrame(pendingFrame);
     }
   }
 
