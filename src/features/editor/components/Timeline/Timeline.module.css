@@ -29,7 +29,7 @@
   outline: transparent 2px solid;
   transition: outline 200ms;
 
-  &:focus {
+  &:focus-visible {
     outline: red 2px solid !important;
     outline-offset: -3px;
   }
