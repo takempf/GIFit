@@ -171,51 +171,53 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   }
 
   return (
-    <div className={css.gifitConfiguration}>
-      <form
-        className={css.form}
-        onSubmit={handleSubmit}
-        onKeyDown={handleKeyDown}
-        noValidate>
-        <div className={css.timeline}>
-          <Timeline
-            totalDuration={toSeconds(videoDuration)}
-            startTime={toSeconds(start)}
-            duration={toSeconds(duration)}
-            fps={framerate}
-            previewTime={toSeconds(previewTime)}
-            onChange={handleTimelineChange}
-            onHandleFocus={handleTimelineHandleFocus}
-          />
-        </div>
-
-        <StartTimeInput
-          onPreviewRequest={handlePreviewRequest}
-          maxStart={maxStart}
+    <form
+      className={css.form}
+      onSubmit={handleSubmit}
+      onKeyDown={handleKeyDown}
+      noValidate>
+      <div className={css.timeline}>
+        <Timeline
+          totalDuration={toSeconds(videoDuration)}
+          startTime={toSeconds(start)}
+          duration={toSeconds(duration)}
+          fps={framerate}
+          previewTime={toSeconds(previewTime)}
+          onChange={handleTimelineChange}
+          onHandleFocus={handleTimelineHandleFocus}
         />
+      </div>
 
-        <DurationInput
-          onPreviewRequest={handlePreviewRequest}
-          maxDuration={maxDuration}
-        />
+      <StartTimeInput
+        onPreviewRequest={handlePreviewRequest}
+        maxStart={maxStart}
+      />
 
-        <FrameRateInput
-          onPreviewRequest={handlePreviewRequest}
-          previewTime={previewTime}
-        />
+      <DurationInput
+        onPreviewRequest={handlePreviewRequest}
+        maxDuration={maxDuration}
+      />
 
-        <WidthInput />
+      <FrameRateInput
+        onPreviewRequest={handlePreviewRequest}
+        previewTime={previewTime}
+      />
 
-        <HeightInput />
+      <WidthInput />
 
-        <QualityInput />
+      <HeightInput />
 
-        <div className={css.actions}>
-          <Button id="gifit-submit" type="submit" className={css.submit}>
-            Create GIF
-          </Button>
-        </div>
-      </form>
-    </div>
+      <QualityInput />
+
+      <div className={css.actions}>
+        <Button
+          id="gifit-submit"
+          rounded={true}
+          type="submit"
+          className={css.submit}>
+          Create GIF
+        </Button>
+      </div>
+    </form>
   );
 }

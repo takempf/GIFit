@@ -1,5 +1,7 @@
 import css from './ResultPanel.module.css';
 
+import cx from 'classnames';
+
 import { useAppStore } from '@/stores/appStore';
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 
@@ -7,10 +9,21 @@ import { Button } from '@/components/ui/Button/Button';
 
 import ArrowRightIcon from '@/assets/arrow-right.svg?react';
 import ArrowDownIcon from '@/assets/arrow-down.svg?react';
+import { Input } from '@/components/ui/Input/Input';
+
+function formatFileSize(bytes: number): string {
+  if (bytes >= 1_000_000) {
+    return `${(bytes / 1_000_000).toFixed(1)} MB`;
+  }
+  if (bytes >= 1_000) {
+    return `${(bytes / 1_000).toFixed(1)} KB`;
+  }
+  return `${bytes} bytes`;
+}
 
 export function ResultPanel() {
   const setStatus = useAppStore((state) => state.setStatus);
-  const { result, name, reset } = useGifStore();
+  const { result, name, reset, setName, frameCount } = useGifStore();
 
   const imageUrl: string | undefined = result?.dataUrl;
   const downloadFilename = `${name}.gif`;
@@ -20,37 +33,52 @@ export function ResultPanel() {
     reset();
   }
 
+  function handleNameChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setName(e.target.value);
+  }
+
   return (
     <div className={css.resultPanel} data-testid="result">
-      <div className={css.actions}>
-        <Button
-          className={css.close}
-          size="small"
-          variant="secondary"
-          rounded={true}
-          onClick={handleCloseClick}
-          data-testid="back-to-config-button"
-          prepend={
-            <ArrowRightIcon className={css.icon} style={{ rotate: '180deg' }} />
-          }>
-          Back
-        </Button>
-        <a
-          className={css.save}
-          href={imageUrl}
-          download={downloadFilename}
-          onClick={(e) => !imageUrl && e.preventDefault()}
-          aria-disabled={!imageUrl}>
-          <Button
-            size="small"
-            rounded={true}
-            disabled={!imageUrl}
-            data-testid="download-gif-button"
-            append={<ArrowDownIcon className={css.icon} />}>
-            Download GIF
-          </Button>
-        </a>
-      </div>
+      <span className={cx(css.frames, css.stat)}>{frameCount} frames</span>
+      <span className={cx(css.size, css.stat)}>
+        {result?.dataUrl.length ? formatFileSize(result.dataUrl.length) : '—'}
+      </span>
+      <span className={cx(css.dimensions, css.stat)}>
+        {result?.width}x{result?.height}
+      </span>
+      <span className={css.name}>
+        <Input
+          name="name"
+          type="text"
+          value={name}
+          onChange={handleNameChange}
+          append=".gif"
+        />
+      </span>
+
+      <Button
+        className={css.reset}
+        variant="secondary"
+        rounded={true}
+        onClick={handleCloseClick}
+        data-testid="back-to-config-button"
+        prepend={
+          <ArrowRightIcon className={css.icon} style={{ rotate: '180deg' }} />
+        }>
+        Reset
+      </Button>
+      <Button
+        as="a"
+        className={css.download}
+        href={imageUrl}
+        download={downloadFilename}
+        onClick={(e: React.MouseEvent) => !imageUrl && e.preventDefault()}
+        rounded
+        disabled={!imageUrl}
+        data-testid="download-gif-button"
+        append={<ArrowDownIcon className={css.icon} />}>
+        Download GIF
+      </Button>
     </div>
   );
 }

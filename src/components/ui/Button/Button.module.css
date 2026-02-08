@@ -4,7 +4,6 @@
   --color: oklch(50 0.2 300);
   --background-color: var(--color);
   --text-color: oklch(100 0 0);
-  --outline-color: oklch(70 0.2 300);
 
   background-color: var(--background-color);
   color: var(--text-color);
@@ -16,17 +15,22 @@
   justify-content: center;
   gap: 0.25em;
   border: none;
+  outline: transparent 2px solid;
   border-radius: var(--border-radius);
+  corner-shape: squircle;
+  padding: var(--padding) calc(var(--padding) * 2);
+
   font-family: inherit;
   font-weight: 600;
-  cursor: pointer;
+  line-height: 1.25;
   text-align: center;
   text-decoration: none;
-  padding: var(--padding) calc(var(--padding) * 2);
+
+  cursor: pointer;
 
   transition:
     background-color 200ms ease-in-out,
-    border-color 200ms ease-in-out,
+    outline 200ms ease-in-out,
     color 200ms ease-in-out,
     box-shadow 100ms ease-in-out,
     translate 100ms ease-in-out;
@@ -48,12 +52,11 @@
   &:disabled {
     --background-color: oklch(from var(--color) l calc(c * 0.5) h);
   }
-}
 
-/* Focus state for accessibility */
-.button:focus-visible {
-  outline: 2px solid var(--outline-color);
-  outline-offset: 2px;
+  &:focus {
+    outline: var(--color_focus_border) 2px solid;
+    outline-offset: 1px;
+  }
 }
 
 /* --- Padding Variants --- */

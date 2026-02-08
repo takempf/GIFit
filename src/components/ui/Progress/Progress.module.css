@@ -1,22 +1,31 @@
 .root {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-areas:
+    'label value'
+    'track track';
+  grid-template-columns: auto 1fr;
   gap: 0.5rem;
   width: 100%;
 }
 
 .label {
+  grid-area: label;
   font-size: 0.875rem;
   font-weight: 500;
   color: currentColor;
 }
 
 .value {
+  grid-area: value;
+  justify-self: end;
+  align-self: center;
   font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
   color: rgba(255, 255, 255, 0.7);
 }
 
 .track {
+  grid-area: track;
   height: 0.5rem;
   width: 100%;
   background-color: rgba(255, 255, 255, 0.15);

@@ -1,43 +1,49 @@
 .resultPanel {
-  display: flex;
-  flex-direction: column;
+  display: grid;
   align-items: center;
-  gap: var(--spacing-4);
+  justify-items: center;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-areas:
+    'frames size dimensions name name name'
+    'reset reset reset download download download';
+  padding: 0.5em;
+  gap: 0.75em 1em;
   width: 100%;
   height: 100%;
 }
 
-.result {
-  width: 100%;
-  height: auto;
-  max-height: 200px;
-  object-fit: contain;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-background-subtle);
+.stat {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75em;
 }
 
-.actions {
-  display: flex;
-  gap: var(--spacing-2);
-  width: 100%;
-  justify-content: space-between;
+.frames {
+  grid-area: frames;
 }
 
-.close {
-  flex: 1;
+.size {
+  grid-area: size;
 }
 
-.save {
-  flex: 1;
-  text-decoration: none;
+.dimensions {
+  grid-area: dimensions;
 }
 
-.save button {
-  width: 100%;
+.name {
+  grid-area: name;
+  justify-self: stretch;
+}
+
+.reset {
+  grid-area: reset;
+  justify-self: stretch;
+}
+
+.download {
+  grid-area: download;
+  justify-self: stretch;
 }
 
 .icon {
-  width: 16px;
-  height: 16px;
+  font-size: 1.25em;
 }

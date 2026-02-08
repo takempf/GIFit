@@ -13,8 +13,14 @@ export function ProcessingPanel() {
 
   return (
     <div className={css.processingPanel}>
-      <Progress value={progress * 100} />
+      <Progress
+        label="Generating GIF"
+        showValue={true}
+        value={progress * 100}
+      />
       <Button
+        className={css.cancelButton}
+        rounded={true}
         variant="secondary"
         onClick={() => {
           abortGif();

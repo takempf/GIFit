@@ -2,8 +2,8 @@
 
 .selection {
   position: absolute;
-  top: 20px;
-  bottom: 10px;
+  top: 7px;
+  bottom: 23px;
   /* z-index to stay above ticks? or below? usually above. */
   z-index: 10;
   display: flex;
@@ -55,20 +55,23 @@
     0 0.1em 0.1em rgba(0, 0, 0, 1);
   backdrop-filter: blur(1px);
   border-radius: 0.5em;
+  outline: 2px solid transparent;
   cursor: ew-resize;
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 250ms;
+  transition:
+    background 200ms,
+    outline 200ms;
 
   &:hover {
     background: rgba(255, 255, 255, 0.5);
   }
 
-  &:focus-visible {
-    outline: 2px solid rgba(255, 255, 255, 0.8);
-    outline-offset: 2px;
+  &:focus {
+    outline: var(--color_focus_border) 2px solid;
+    outline-offset: 1px;
     background: rgba(255, 255, 255, 0.75);
   }
 }

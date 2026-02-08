@@ -10,7 +10,7 @@ export interface InputProps
   prepend?: React.ReactNode;
   append?: React.ReactNode;
   name: string;
-  label: React.ReactNode;
+  label?: React.ReactNode;
   // We use the same interface for 'ref' as the original component
   // which expects a RefObject, although React 19 / Base UI might handle refs differently.
   // We'll pass it to BaseInput.
@@ -30,8 +30,8 @@ export function Input({
   ...restProps
 }: InputProps) {
   return (
-    <Field.Root className={cx(css.root, className)}>
-      <Field.Label className={css.label}>{label}</Field.Label>
+    <Field.Root className={cx(css.root, className)} data-has-label={!!label}>
+      {label && <Field.Label className={css.label}>{label}</Field.Label>}
       <div className={css.inputWrapper}>
         {prepend && <div className={css.prepend}>{prepend}</div>}
         <BaseInput

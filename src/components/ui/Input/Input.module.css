@@ -1,13 +1,15 @@
 .root {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 0.5em 0.55em;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0.5em;
   width: 100%;
-  font-family: 'Geist', sans-serif;
-  --input-transition-duration: 225ms; /* inherited from existing logic */
+  font-family: inherit;
+
+  &[data-has-label='false'] {
+    grid-template-columns: 1fr;
+  }
 }
 
 .label {
@@ -29,14 +31,16 @@
   padding: 4px 8px;
   flex-grow: 1;
   min-width: 0;
+  outline: transparent 2px solid;
   transition:
-    border-color 200ms,
-    background-color 200ms;
+    background-color 200ms,
+    outline 200ms;
 }
 
 .inputWrapper:focus-within {
-  border-color: rgba(255, 255, 255, 0.3);
   background-color: rgba(255, 255, 255, 0.1);
+  outline: var(--color_focus_border) 2px solid;
+  outline-offset: 1px;
 }
 
 .input {
@@ -44,7 +48,7 @@
   background: transparent;
   border: none;
   color: inherit;
-  font-size: 0.9em;
+  font-size: 1em;
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   width: 100%;

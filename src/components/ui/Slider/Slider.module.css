@@ -1,7 +1,6 @@
 .root {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  padding: 0.5em 0.55em;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -29,6 +28,13 @@
   flex-grow: 1;
   min-width: 0;
   height: auto; /* Allow height to fit content */
+  outline: transparent 2px solid;
+  transition: outline 200ms ease-in-out;
+
+  &:focus-within {
+    outline: var(--color_focus_border) 2px solid;
+    outline-offset: 1px;
+  }
 }
 
 .Control {

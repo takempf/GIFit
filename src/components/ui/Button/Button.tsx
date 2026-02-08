@@ -1,40 +1,42 @@
-import css from './Button.module.css'; // Import CSS Module
+import css from './Button.module.css';
 
 import React from 'react';
 import cx from 'classnames';
 
-// Define the props interface
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode; // Content inside the button
+type ButtonOwnProps<E extends React.ElementType = 'button'> = {
+  as?: E;
+  children: React.ReactNode;
   prepend?: React.ReactNode;
   append?: React.ReactNode;
-  className?: string; // Allow passing custom classes
-  variant?: 'primary' | 'secondary' | 'ghost' | 'input' | 'outline'; // Style variant
-  size?: 'x-small' | 'small' | 'medium' | 'large'; // Size variant
-  padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large'; // Padding variant
+  className?: string;
+  variant?: 'primary' | 'secondary' | 'ghost' | 'input' | 'outline';
+  size?: 'x-small' | 'small' | 'medium' | 'large';
+  padding?: 'none' | 'x-small' | 'small' | 'medium' | 'large';
   evenPadding?: boolean;
   rounded?: boolean;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>; // Click handler
-  // Allow any other standard button attributes like 'type', 'disabled', 'aria-label', etc.
-}
+  disabled?: boolean;
+};
 
-export function Button({
+export type ButtonProps<E extends React.ElementType = 'button'> =
+  ButtonOwnProps<E> &
+    Omit<React.ComponentPropsWithoutRef<E>, keyof ButtonOwnProps<E>>;
+
+export function Button<E extends React.ElementType = 'button'>({
+  as,
   children,
   append,
   prepend,
-  variant = 'primary', // Default variant
-  size = 'medium', // Default size
+  variant = 'primary',
+  size = 'medium',
   rounded = false,
-  className, // Allow passing custom classes
+  className,
   disabled = false,
   padding = 'medium',
   evenPadding = false,
-  type = 'button', // Default type
-  onClick,
-  ...rest // Capture remaining props
-}: ButtonProps) {
-  // Combine CSS module classes based on props
+  ...rest
+}: ButtonProps<E>): React.ReactElement {
+  const Component = as ?? 'button';
+
   const buttonClasses = cx(
     css.button,
     css[variant],
@@ -48,17 +50,18 @@ export function Button({
     className
   );
 
+  const elementProps = {
+    className: buttonClasses,
+    disabled: Component === 'button' ? disabled : undefined,
+    'aria-disabled': Component !== 'button' && disabled ? true : undefined,
+    ...rest
+  };
+
   return (
-    <button
-      className={buttonClasses}
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      {...rest} // Spread remaining props (important for accessibility attributes like aria-label)
-    >
+    <Component {...elementProps}>
       {prepend}
       {children}
       {append}
-    </button>
+    </Component>
   );
 }

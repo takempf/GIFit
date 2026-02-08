@@ -18,6 +18,8 @@
 
   --color_primary: rgb(219, 7, 7);
 
+  --color_focus_border: oklch(from var(--color_primary) calc(l * 1.25) c h / 1);
+
   --color_popup_background: rgb(15, 15, 15);
   --color_panel_border: rgb(65, 65, 65);
   --color_panel_background: rgb(35, 35, 35);
@@ -63,6 +65,11 @@ body {
 
 #root {
   width: 100%;
+}
+
+::selection {
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
 }
 
 input {
