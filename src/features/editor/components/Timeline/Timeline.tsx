@@ -2,12 +2,15 @@ import { ScrollArea } from '@base-ui/react/scroll-area';
 import { useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import styles from './Timeline.module.css';
-import { toMilliseconds } from '@/utils/time';
+import { toMilliseconds, toSeconds } from '@/utils/time';
 import { browser } from 'wxt/browser';
 import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
-import { TimelineSelection } from './TimelineSelection/TimelineSelection';
+import {
+  TimelineSelection,
+  TimelineSelectionHandle
+} from './TimelineSelection/TimelineSelection';
 import { TimelineSegments } from './TimelineSegments/TimelineSegments';
 import { TimelineStoryboard } from './TimelineStoryboard/TimelineStoryboard';
 
@@ -38,7 +41,7 @@ export function Timeline({
 }: TimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const selectionRef = useRef<HTMLDivElement>(null);
+  const selectionRef = useRef<TimelineSelectionHandle>(null);
   const [containerWidth, setContainerWidth] = useState(0);
   const [showLeftGradient, setShowLeftGradient] = useState(false);
   const [showRightGradient, setShowRightGradient] = useState(false);
@@ -131,6 +134,51 @@ export function Timeline({
     pixelsPerSecond,
     onChange
   });
+
+  // Keyboard navigation for handles
+  const frameDurationMs = 1000 / fps;
+  const MIN_DURATION_MS = frameDurationMs; // Minimum 1 frame
+
+  function handleLeftKeyDown(e: React.KeyboardEvent): void {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+
+    const frameMultiplier = e.shiftKey ? 5 : 1;
+    const delta =
+      (e.key === 'ArrowRight' ? frameDurationMs : -frameDurationMs) *
+      frameMultiplier;
+    const newStartMs = Math.max(
+      0,
+      Math.min(startTimeMs + delta, totalDurationMs - MIN_DURATION_MS)
+    );
+    const newDurationMs = durationMs - (newStartMs - startTimeMs);
+
+    if (newDurationMs >= MIN_DURATION_MS) {
+      onChange(toSeconds(newStartMs), toSeconds(newDurationMs), 'start');
+      selectionRef.current?.scrollLeftIntoView();
+    }
+  }
+
+  function handleRightKeyDown(e: React.KeyboardEvent): void {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+
+    const frameMultiplier = e.shiftKey ? 5 : 1;
+    const delta =
+      (e.key === 'ArrowRight' ? frameDurationMs : -frameDurationMs) *
+      frameMultiplier;
+    const endTimeMs = startTimeMs + durationMs;
+    const newEndMs = Math.max(
+      startTimeMs + MIN_DURATION_MS,
+      Math.min(endTimeMs + delta, totalDurationMs)
+    );
+    const newDurationMs = newEndMs - startTimeMs;
+
+    if (newDurationMs >= MIN_DURATION_MS) {
+      onChange(toSeconds(startTimeMs), toSeconds(newDurationMs), 'end');
+      selectionRef.current?.scrollRightIntoView();
+    }
+  }
 
   const hasInitialScrolled = useRef(false);
 
@@ -296,6 +344,8 @@ export function Timeline({
                   onRightDrag={startRightDrag}
                   onLeftFocus={() => onHandleFocus('start')}
                   onRightFocus={() => onHandleFocus('end')}
+                  onLeftKeyDown={handleLeftKeyDown}
+                  onRightKeyDown={handleRightKeyDown}
                   draggingState={draggingState}
                 />
               </div>

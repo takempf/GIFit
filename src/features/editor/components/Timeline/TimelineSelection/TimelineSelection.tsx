@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useImperativeHandle } from 'react';
 
 import css from './TimelineSelection.module.css';
 
@@ -12,11 +12,19 @@ interface TimelineSelectionProps {
   onRightDrag: (e: React.MouseEvent) => void;
   onLeftFocus: () => void;
   onRightFocus: () => void;
+  onLeftKeyDown: (e: React.KeyboardEvent) => void;
+  onRightKeyDown: (e: React.KeyboardEvent) => void;
   draggingState: 'left' | 'right' | 'move' | null;
 }
 
+export interface TimelineSelectionHandle {
+  scrollLeftIntoView: () => void;
+  scrollRightIntoView: () => void;
+  scrollIntoView: (options?: ScrollIntoViewOptions) => void;
+}
+
 export const TimelineSelection = React.forwardRef<
-  HTMLDivElement,
+  TimelineSelectionHandle,
   TimelineSelectionProps
 >(
   (
@@ -30,10 +38,55 @@ export const TimelineSelection = React.forwardRef<
       onRightDrag,
       onLeftFocus,
       onRightFocus,
+      onLeftKeyDown,
+      onRightKeyDown,
       draggingState
     },
     ref
   ) => {
+    const selectionContainerRef = useRef<HTMLDivElement>(null);
+    const leftHandleRef = useRef<HTMLDivElement>(null);
+    const rightHandleRef = useRef<HTMLDivElement>(null);
+
+    const SCROLL_MARGIN = 100;
+
+    const isInViewport = (el: HTMLElement, edge: 'left' | 'right'): boolean => {
+      const scrollContainer = el.closest('[data-testid="scroll-container"]');
+      if (!scrollContainer) return true;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+
+      if (edge === 'left') {
+        return elRect.left >= containerRect.left + SCROLL_MARGIN;
+      }
+      return elRect.right <= containerRect.right - SCROLL_MARGIN;
+    };
+
+    useImperativeHandle(ref, () => ({
+      scrollLeftIntoView: () => {
+        const el = leftHandleRef.current;
+        if (!el || isInViewport(el, 'left')) return;
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'start'
+        });
+      },
+      scrollRightIntoView: () => {
+        const el = rightHandleRef.current;
+        if (!el || isInViewport(el, 'right')) return;
+        el.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'end'
+        });
+      },
+      scrollIntoView: (options?: ScrollIntoViewOptions) => {
+        selectionContainerRef.current?.scrollIntoView(options);
+      }
+    }));
+
     const frameDurationMs = 1000 / fps;
     const frameCount = Math.ceil(durationMs / frameDurationMs);
 
@@ -45,7 +98,7 @@ export const TimelineSelection = React.forwardRef<
 
     return (
       <div
-        ref={ref}
+        ref={selectionContainerRef}
         className={css.selection}
         style={selectionStyle}
         onMouseDown={onMouseDown}
@@ -64,18 +117,27 @@ export const TimelineSelection = React.forwardRef<
 
         {/* Handles */}
         <div
+          ref={leftHandleRef}
           className={`${css.handle} ${css.handleLeft}`}
           onMouseDown={onLeftDrag}
           onFocus={onLeftFocus}
+          onKeyDown={onLeftKeyDown}
           tabIndex={0}
           data-testid="handle-left"
+          role="slider"
+          aria-label="Selection start"
+          aria-valuemin={0}
         />
         <div
+          ref={rightHandleRef}
           className={`${css.handle} ${css.handleRight}`}
           onMouseDown={onRightDrag}
           onFocus={onRightFocus}
+          onKeyDown={onRightKeyDown}
           tabIndex={0}
           data-testid="handle-right"
+          role="slider"
+          aria-label="Selection end"
         />
       </div>
     );

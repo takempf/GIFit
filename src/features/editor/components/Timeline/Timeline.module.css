@@ -10,7 +10,6 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   border-radius: 0.5em;
   background-color: rgb(25, 25, 25);
   box-shadow:
@@ -27,6 +26,13 @@
   position: relative;
   scrollbar-width: none; /* Hide native scrollbar */
   -ms-overflow-style: none;
+  outline: transparent 2px solid;
+  transition: outline 200ms;
+
+  &:focus {
+    outline: red 2px solid !important;
+    outline-offset: -3px;
+  }
 }
 
 .scrollViewport::-webkit-scrollbar {

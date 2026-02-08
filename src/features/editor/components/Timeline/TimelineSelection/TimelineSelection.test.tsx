@@ -13,6 +13,8 @@ describe('TimelineSelection', () => {
     onRightDrag: vi.fn(),
     onLeftFocus: vi.fn(),
     onRightFocus: vi.fn(),
+    onLeftKeyDown: vi.fn(),
+    onRightKeyDown: vi.fn(),
     draggingState: null as 'left' | 'right' | 'move' | null
   };
 

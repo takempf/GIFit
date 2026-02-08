@@ -11,6 +11,7 @@
   align-items: center;
   cursor: move;
   scroll-margin-left: 100px;
+  scroll-margin-right: 100px;
 }
 
 .framesContainer {
@@ -91,9 +92,11 @@
 .handleLeft {
   left: 0;
   transform: translate(-50%, 0%);
+  scroll-margin-left: 100px;
 }
 
 .handleRight {
   right: 0;
   transform: translate(50%, 0%);
+  scroll-margin-right: 100px;
 }
