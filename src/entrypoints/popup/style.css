@@ -97,9 +97,17 @@ a {
   text-decoration-thickness: 0.1em;
 }
 
-/* View Transitions for GIF Preview */
-::view-transition-old(gif-preview),
-::view-transition-new(gif-preview) {
-  animation-duration: 300ms;
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 350ms;
   animation-timing-function: var(--ease_out_expo);
+}
+
+::view-transition-old(app-panel),
+::view-transition-new(app-panel) {
+  /* Prevent content distortion during panel resize */
+  height: calc-size(auto);
+  object-fit: none;
+  object-position: bottom;
 }

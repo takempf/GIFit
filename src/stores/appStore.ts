@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { create } from 'zustand';
 
 type Status = 'configuring' | 'generating' | 'generated';
@@ -26,7 +27,9 @@ export const useAppStore = create<AppStore>((set) => {
     setVideoId: (id: string | null) => set({ videoId: id }),
     setStatus: (status: Status) => {
       if (document.startViewTransition) {
-        document.startViewTransition(() => set({ status }));
+        document.startViewTransition(() => {
+          flushSync(() => set({ status }));
+        });
       } else {
         set({ status });
       }

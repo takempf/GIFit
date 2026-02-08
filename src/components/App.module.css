@@ -84,6 +84,7 @@
 
 .panel {
   view-transition-name: app-panel;
+
   border: var(--color_panel_border) 1px solid;
   background: var(--color_panel_background);
   border-radius: 0.5em;
