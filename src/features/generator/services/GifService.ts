@@ -333,8 +333,12 @@ class GifService extends EventEmitter {
           ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
           : 1;
 
-      // Generate data URL for the current frame
-      const frameDataUrl = this.canvasEl.toDataURL();
+      // Sample frame preview - only generate data URL every 5 frames to reduce overhead
+      // Use JPEG with low quality for faster encoding and smaller transfer size
+      const frameDataUrl =
+        this.framesComplete % 5 === 1
+          ? this.canvasEl.toDataURL('image/jpeg', 0.5)
+          : undefined;
 
       this.emit('FRAMES_PROGRESS', progress, this.framesComplete, frameDataUrl);
 

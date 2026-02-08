@@ -35,7 +35,11 @@ interface GifActions {
   reset: () => void;
   setName: (name: string) => void;
   // Actions called by message listeners
-  updateProgress: (progress: number, frameCount: number, frame: string) => void;
+  updateProgress: (
+    progress: number,
+    frameCount: number,
+    frame?: string
+  ) => void;
   complete: (data: GifCompleteData) => void;
   setError: (error: string) => void;
 }
@@ -123,12 +127,13 @@ export const useGifStore = create<GifStore>((set) => ({
   },
 
   updateProgress(progress, frameCount, frame) {
-    set({
+    set((state) => ({
       status: 'processing',
       progress,
       processedFrameCount: frameCount,
-      currentFrame: frame
-    });
+      // Only update currentFrame when a new frame is provided
+      currentFrame: frame ?? state.currentFrame
+    }));
   },
 
   complete(data) {
