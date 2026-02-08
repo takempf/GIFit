@@ -1,75 +1,49 @@
 import EventEmitter from 'eventemitter3';
-import { GIFEncoder, quantize, applyPalette } from 'gifenc';
+import encode, { init as initGifski } from 'gifski-wasm';
+import { browser } from 'wxt/browser';
 import { log } from '@/utils/logger';
-import floydSteinberg from '@/utils/dither';
-
-type Palette = [number, number, number][];
-
-// TODO centralize this
-const MAX_QUALITY = 10;
 
 import { GifConfig, GifCompleteData } from '@/types';
 
+// Quality mapping: GifConfig uses 1-10, gifski-wasm uses 1-100 - we map to 85-100
+// Below 85, we start seeing "ghosting" artifacts with gifski on some content
+const MAX_QUALITY = 10;
+const MIN_GIFSKI_QUALITY = 85;
+const mapQuality = (quality: number): number => {
+  const normalized = (quality - 1) / (MAX_QUALITY - 1);
+  return Math.round(
+    MIN_GIFSKI_QUALITY + normalized * (100 - MIN_GIFSKI_QUALITY)
+  );
+};
+
+// Track if WASM module has been initialized
+let wasmInitialized = false;
+
 /**
- * Compares two ImageData objects to check if they are visually similar within a threshold.
- * Uses Mean Squared Error (MSE) to determine similarity.
- * @param frame1 First frame
- * @param frame2 Second frame
- * @param threshold MSE threshold. 0 means exact match. Higher values are more tolerant.
- *                  Good starting point: 10-20.
+ * Initialize the gifski WASM module from extension's web-accessible resource.
  */
-export function areFramesEqual(
-  frame1: ImageData,
-  frame2: ImageData,
-  threshold: number = 15
-): boolean {
-  if (frame1.width !== frame2.width || frame1.height !== frame2.height) {
-    return false;
-  }
+async function ensureWasmInitialized(): Promise<void> {
+  if (wasmInitialized) return;
 
-  const data1 = frame1.data;
-  const data2 = frame2.data;
-  const len = data1.length;
-  let sumSquaredDiff = 0;
+  const wasmUrl = browser.runtime.getURL('/gifski_wasm_bg.wasm');
+  log('Initializing gifski-wasm from:', wasmUrl);
 
-  // Optimization: check exact match first
-  // if (threshold === 0) ... loop through and check exact equality
-
-  for (let i = 0; i < len; i += 4) {
-    // RGB only, ignore Alpha for now as it's usually 255 in video
-    const rDiff = data1[i] - data2[i];
-    const gDiff = data1[i + 1] - data2[i + 1];
-    const bDiff = data1[i + 2] - data2[i + 2];
-
-    sumSquaredDiff += rDiff * rDiff + gDiff * gDiff + bDiff * bDiff;
-  }
-
-  // Calculate MSE per channel
-  // Total pixels = len / 4. Total channels considered = 3.
-  const mse = sumSquaredDiff / ((len / 4) * 3);
-
-  return mse <= threshold;
-}
-
-export interface IndexingOptions {
-  noDither?: boolean;
-  palette: number[][];
-  width: number;
-  height: number;
+  await initGifski(wasmUrl);
+  wasmInitialized = true;
+  log('gifski-wasm initialized successfully');
 }
 
 /**
- * Service for creating GIFs from HTMLVideoElement frames using gifenc.
+ * Service for creating GIFs from HTMLVideoElement frames using gifski-wasm.
  *
  * Emits:
  * - 'COMPLETE' (data: GifCompleteData)
- * - 'FRAMES_PROGRESS' (ratio: number, frameCount: number)
+ * - 'FRAMES_PROGRESS' (ratio: number, frameCount: number, frameDataUrl?: string)
  * - 'FRAMES_COMPLETE'
  * - 'ABORT'
  * - 'ERROR' (error: Error)
  */
 class GifService extends EventEmitter {
-  private encoder: GIFEncoder | null = null;
   private aborted: boolean = false;
   private framesComplete: number = 0;
   private canvasEl: HTMLCanvasElement | null;
@@ -80,20 +54,19 @@ class GifService extends EventEmitter {
 
     this.canvasEl = document.createElement('canvas');
     const context = this.canvasEl.getContext('2d', {
-      willReadFrequently: true // Perf: Optimize for frequent getImageData
+      willReadFrequently: true
     });
 
     if (!context) {
-      this.canvasEl = null; // Cleanup on context failure
+      this.canvasEl = null;
       throw new Error('Failed to get 2D rendering context from canvas.');
     }
     this.context = context;
-    this.context.imageSmoothingEnabled = false; // Prefer crisp pixels
+    this.context.imageSmoothingEnabled = true;
   }
 
   /**
-   * Creates a GIF from a video element. This method awaits the
-   * full frame processing and returns the final GIF data.
+   * Creates a GIF from a video element.
    * @param config - GIF creation parameters.
    * @param videoElement - The HTMLVideoElement source.
    * @returns A promise that resolves with the GIF data, or void if an error occurs.
@@ -115,22 +88,8 @@ class GifService extends EventEmitter {
       throw error;
     }
 
-    const maxColors = this.getMaxColors(config);
-
     this.canvasEl.width = config.width;
     this.canvasEl.height = config.height;
-    this.canvasEl.style.width = `${config.width}px`;
-    this.canvasEl.style.height = `${config.height}px`;
-
-    try {
-      this.encoder = GIFEncoder();
-    } catch (error: unknown) {
-      const initError = new Error(
-        `Failed to initialize GIFEncoder: ${(error as Error)?.message || error}`
-      );
-      this.emit('ERROR', initError);
-      throw initError;
-    }
 
     try {
       this.emit('processing');
@@ -138,16 +97,29 @@ class GifService extends EventEmitter {
       // Perform initial seek before starting the loop
       await this.asyncSeek(videoElement, config.start / 1000);
 
-      // Loop through and process all the frames
-      await this.processFrames(config, videoElement, maxColors);
+      // Collect all frames
+      const frames = await this.collectFrames(config, videoElement);
 
-      // Check if the loop was exited due to an abort action.
+      // Check if the collection was aborted
       if (this.aborted) {
         throw new Error('GIF generation was aborted by the user.');
       }
 
-      // Finalize GIF
-      const blob = this.finalizeGif();
+      this.emit('FRAMES_COMPLETE');
+
+      // Encode all frames at once using gifski-wasm
+      await ensureWasmInitialized();
+      log('Encoding GIF with gifski-wasm...');
+      const quality = mapQuality(config.quality);
+      const gifBuffer = await encode({
+        frames,
+        width: config.width,
+        height: config.height,
+        fps: config.fps,
+        quality
+      });
+
+      const blob = new Blob([gifBuffer as BlobPart], { type: 'image/gif' });
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => resolve(reader.result as string);
@@ -155,14 +127,13 @@ class GifService extends EventEmitter {
         reader.readAsDataURL(blob);
       });
 
-      const gifData = {
+      const gifData: GifCompleteData = {
         dataUrl,
         width: config.width,
         height: config.height,
         size: blob.size
       };
 
-      // Frame collection complete, finish up
       log('GIF processing complete.');
       this.emit('COMPLETE', gifData);
 
@@ -177,49 +148,19 @@ class GifService extends EventEmitter {
           )
         );
       }
-      this.abort(); // Ensure cleanup on failure
+      this.abort();
     } finally {
-      this.encoder = null; // Clean up encoder regardless of outcome
-
-      // Return to original video timecode and clean up
+      // Return to original video timecode
       this.seek(videoElement, config.start / 1000);
     }
   }
 
-  getMaxColors(config: GifConfig): number {
-    let finalMaxColors: number;
-    if (config.maxColors !== undefined) {
-      if (config.maxColors < 2 || config.maxColors > 256) {
-        this.emit(
-          'ERROR',
-          new Error(
-            `config.maxColors must be 2-256. Received: ${config.maxColors}`
-          )
-        );
-        return 256;
-      }
-      finalMaxColors = config.maxColors;
-    } else {
-      const quality = Number(config.quality);
-      finalMaxColors =
-        quality <= 0 || MAX_QUALITY <= 0
-          ? 256
-          : Math.floor((quality / MAX_QUALITY) * 256);
-      finalMaxColors = Math.max(2, Math.min(256, finalMaxColors)); // Clamp
-    }
-
-    return finalMaxColors;
-  }
-
   abort(): void {
     if (this.aborted) {
-      return; // Nothing to abort
+      return;
     }
     log('Aborting GIF creation');
     this.aborted = true;
-
-    // The async loop in processFrames will check this.aborted and stop.
-    this.encoder = null; // Allow GC, stops further frame writes
 
     if (this.listenerCount('ABORT') > 0) {
       this.emit('ABORT');
@@ -229,26 +170,24 @@ class GifService extends EventEmitter {
 
   destroy(): void {
     log('Destroying GifService');
-    this.abort(); // Stop any ongoing process
+    this.abort();
     this.removeAllListeners();
 
-    this.canvasEl = null; // Help GC
-    this.context = null; // Help GC
+    this.canvasEl = null;
+    this.context = null;
     log('GifService destroyed');
   }
 
   private seek(video: HTMLVideoElement, time: number): void {
     video.currentTime = time;
-    video.pause(); // ensure we don't accidentally play
+    video.pause();
   }
 
-  // Seeks video to a time, resolving on 'seeked' event.
   private asyncSeek(video: HTMLVideoElement, time: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const doneSeeking = () => {
         video.removeEventListener('seeked', doneSeeking);
         video.removeEventListener('error', onError);
-        // Use rAF to wait for the browser to paint the frame
         requestAnimationFrame(() => resolve());
       };
       const onError = (event: Event) => {
@@ -280,8 +219,6 @@ class GifService extends EventEmitter {
       throw new Error('Canvas context or canvas element not found.');
     }
 
-    // We can't access image data directly from the video
-    // So we copy image data from video to canvas
     this.context.drawImage(
       videoElement,
       0,
@@ -294,188 +231,40 @@ class GifService extends EventEmitter {
       height
     );
 
-    // We can access the image data directly from the canvas
-    const imageData = this.context.getImageData(0, 0, width, height);
-
-    return imageData;
-  }
-
-  private downsampleFrame(
-    videoElement: HTMLVideoElement,
-    width: number,
-    height: number
-  ): ImageData {
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-    if (!ctx) {
-      throw new Error('Failed to get context for downsampling');
-    }
-
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(videoElement, 0, 0, width, height);
-    return ctx.getImageData(0, 0, width, height);
-  }
-
-  private async sampleFrames(
-    config: GifConfig,
-    videoElement: HTMLVideoElement,
-    count: number = 10
-  ): Promise<ImageData[]> {
-    const duration = config.end - config.start;
-    const interval = duration / (count - 1);
-    const samples: ImageData[] = [];
-
-    // Use a smaller dimension for palette generation to speed it up
-    // 1/4 of the size or max 256px, whichever is smaller
-    const scale = Math.min(1, 256 / Math.max(config.width, config.height));
-    const sampleWidth = Math.max(1, Math.floor(config.width * scale));
-    const sampleHeight = Math.max(1, Math.floor(config.height * scale));
-
-    for (let i = 0; i < count; i++) {
-      const time = config.start + interval * i;
-      await this.asyncSeek(videoElement, time / 1000);
-      samples.push(
-        this.downsampleFrame(videoElement, sampleWidth, sampleHeight)
-      );
-    }
-
-    return samples;
-  }
-
-  private async generateGlobalPalette(
-    config: GifConfig,
-    videoElement: HTMLVideoElement,
-    maxColors: number
-  ): Promise<number[][]> {
-    log('Generating global palette...');
-    const samples = await this.sampleFrames(config, videoElement, 10); // Sample 10 frames
-
-    // Combine all samples into one giant buffer for quantization
-    const totalPixels = samples.reduce(
-      (acc, sample) => acc + sample.data.length,
-      0
-    );
-    const combinedData = new Uint8ClampedArray(totalPixels);
-    let offset = 0;
-    for (const sample of samples) {
-      combinedData.set(sample.data, offset);
-      offset += sample.data.length;
-    }
-
-    const palette = quantize(combinedData, maxColors);
-    log('Global palette generated');
-    return palette;
-  }
-
-  private indexImageData(
-    imageData: ImageData,
-    { palette, noDither = false, width, height }: IndexingOptions
-  ): Uint8Array {
-    let indexedData: Uint8Array;
-
-    if (noDither) {
-      indexedData = applyPalette(imageData.data, palette, { format: 'rgb565' });
-    } else {
-      const ditheredRgbaData = floydSteinberg(
-        new Uint8ClampedArray(imageData.data),
-        width,
-        height,
-        palette as Palette
-      );
-      indexedData = applyPalette(ditheredRgbaData, palette as Palette, {
-        format: 'rgb565'
-      });
-    }
-
-    return indexedData;
+    return this.context.getImageData(0, 0, width, height);
   }
 
   /**
-   * Asynchronously loops through video frames, processes them, and
-   * finalizes the GIF.
-   * This method is designed to be awaited.
+   * Collects all frames from video for batch encoding.
    */
-  private async processFrames(
+  private async collectFrames(
     config: GifConfig,
-    videoElement: HTMLVideoElement,
-    actualMaxColors: number
-  ): Promise<void> {
+    videoElement: HTMLVideoElement
+  ): Promise<ImageData[]> {
     const frameIntervalMs = 1000 / config.fps;
     const gifDurationMs = config.end - config.start;
-    const trueGifDuration = gifDurationMs - (gifDurationMs % frameIntervalMs);
+    const totalFrames = Math.floor(gifDurationMs / frameIntervalMs);
+    const frames: ImageData[] = [];
 
-    // Generate global palette once
-    const globalPalette = await this.generateGlobalPalette(
-      config,
-      videoElement,
-      actualMaxColors
-    );
-
-    // Reset video position to start after palette sampling
-    await this.asyncSeek(videoElement, config.start / 1000);
-
-    // Deduplication state
-    let pendingFrame: { data: ImageData; duration: number } | null = null;
-
-    // Helper to write a frame after processing
-    const writeFrame = (frame: { data: ImageData; duration: number }) => {
-      // Use the global palette
-      const indexedData = this.indexImageData(frame.data, {
-        palette: globalPalette as Palette,
-        noDither: config.noDither,
-        width: config.width,
-        height: config.height
-      });
-
-      if (!this.encoder) return;
-
-      this.encoder.writeFrame(indexedData, config.width, config.height, {
-        palette: globalPalette as Palette,
-        delay: frame.duration
-      });
-    };
-
-    // Loop until the video's current time passes the desired end time or is aborted.
     while (videoElement.currentTime * 1000 < config.end && !this.aborted) {
-      if (!this.encoder || !this.context || !this.canvasEl) {
-        throw new Error(
-          'GIF Encoder or Canvas context lost during processing.'
-        );
+      if (!this.context || !this.canvasEl) {
+        throw new Error('Canvas context lost during processing.');
       }
 
-      // Get image data
       const imageData = this.getFrameImageData(
         videoElement,
         config.width,
         config.height
       );
+      frames.push(imageData);
 
-      // Check for deduplication
-      if (pendingFrame && areFramesEqual(pendingFrame.data, imageData)) {
-        // Frames are equal, just extend the duration of the pending frame
-        pendingFrame.duration += frameIntervalMs;
-      } else {
-        // Frames differ (or first frame), flush pending if exists
-        if (pendingFrame) {
-          writeFrame(pendingFrame);
-        }
-        // Set new pending frame
-        pendingFrame = { data: imageData, duration: frameIntervalMs };
-      }
-
-      // Progress reporting
       this.framesComplete++;
-      const elapsed = videoElement.currentTime * 1000 - config.start;
-      const progress =
-        trueGifDuration > 0
-          ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
-          : 1;
+      const progress = Math.min(
+        1,
+        Math.max(0, this.framesComplete / totalFrames)
+      );
 
-      // Sample frame preview - only generate data URL every 5 frames to reduce overhead
-      // Use JPEG with low quality for faster encoding and smaller transfer size
+      // Preview every 5 frames to reduce overhead
       const frameDataUrl =
         this.framesComplete % 5 === 1
           ? this.canvasEl.toDataURL('image/jpeg', 0.5)
@@ -483,37 +272,15 @@ class GifService extends EventEmitter {
 
       this.emit('FRAMES_PROGRESS', progress, this.framesComplete, frameDataUrl);
 
-      // Seek to next frame start
       const nextFrameTimeMs = videoElement.currentTime * 1000 + frameIntervalMs;
-      // Ensure we don't seek past the end time.
       if (nextFrameTimeMs >= config.end) {
-        break; // Exit the loop to finalize the GIF
+        break;
       }
 
       await this.asyncSeek(videoElement, nextFrameTimeMs / 1000);
     }
 
-    // Flush any remaining pending frame
-    if (pendingFrame && !this.aborted) {
-      writeFrame(pendingFrame);
-    }
-  }
-
-  private finalizeGif(): Blob {
-    // Finalize the GIF
-    this.emit('FRAMES_COMPLETE');
-
-    if (!this.encoder) {
-      throw new Error('Encoder was not available for finalization.');
-    }
-
-    this.encoder.finish();
-    const buffer = this.encoder.bytesView();
-    const imageBlob = new Blob([buffer as unknown as BlobPart], {
-      type: 'image/gif'
-    });
-
-    return imageBlob;
+    return frames;
   }
 }
 

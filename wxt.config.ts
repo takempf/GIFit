@@ -15,7 +15,7 @@ export default defineConfig({
     host_permissions: ['*://*.youtube.com/*'],
     web_accessible_resources: [
       {
-        resources: ['main-world.js'],
+        resources: ['main-world.js', 'gifski_wasm_bg.wasm'],
         matches: ['*://*.youtube.com/*']
       }
     ]
@@ -29,6 +29,9 @@ export default defineConfig({
       alias: {
         '@': path.resolve(__dirname, './src')
       }
+    },
+    optimizeDeps: {
+      exclude: ['gifski-wasm']
     }
   }),
   autoIcons: {
