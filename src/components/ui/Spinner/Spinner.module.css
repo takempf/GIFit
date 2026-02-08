@@ -1,0 +1,28 @@
+.spinner {
+  --size: 1em;
+  display: inline-block;
+  width: var(--size);
+  height: var(--size);
+  border: 0.15em solid var(--color_primary);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+
+  &[data-size='small'] {
+    --size: 0.75em;
+  }
+
+  &[data-size='medium'] {
+    --size: 1em;
+  }
+
+  &[data-size='large'] {
+    --size: 1.5em;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

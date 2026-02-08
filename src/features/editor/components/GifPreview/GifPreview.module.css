@@ -14,4 +14,23 @@
   outline: 1px solid rgba(0, 0, 0, 0.5);
   outline-offset: 1px;
   view-transition-name: gif-preview;
+  transition: outline 200ms ease;
+}
+
+.image[data-status='generating'] {
+  --glow-color: oklch(from var(--color_primary) l c h / 0.6);
+  --glow-color-bright: oklch(from var(--color_primary) calc(l * 1.3) c h / 0.8);
+  outline: 2px solid var(--color_primary);
+  outline-offset: 2px;
+  animation: generating-glow 2.5s ease infinite;
+}
+
+@keyframes generating-glow {
+  0%,
+  100% {
+    outline-color: var(--glow-color);
+  }
+  50% {
+    outline-color: var(--glow-color-bright);
+  }
 }

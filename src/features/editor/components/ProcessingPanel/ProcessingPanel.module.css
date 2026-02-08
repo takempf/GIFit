@@ -9,3 +9,9 @@
 .cancelButton {
   width: 50%;
 }
+
+.progressLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.75ch;
+}

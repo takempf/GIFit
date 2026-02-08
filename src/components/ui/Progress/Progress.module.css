@@ -35,7 +35,7 @@
 
 .indicator {
   height: 100%;
-  background-color: oklch(0.5882 0.2615 29.23);
+  background-color: var(--color_primary);
   border-radius: inherit;
   transition: width 200ms ease-out;
 }

@@ -90,7 +90,7 @@
 
 /* Primary Variant */
 .primary {
-  --color: oklch(0.5882 0.2615 29.23);
+  --color: var(--color_primary);
 }
 
 /* Secondary Variant */

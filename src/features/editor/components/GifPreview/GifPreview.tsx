@@ -1,12 +1,20 @@
 import css from './GifPreview.module.css';
 
+type PreviewStatus = 'configuring' | 'generating' | 'generated';
+
 interface GifPreviewProps {
   previewImage: string | null;
   width: number;
   height: number;
+  status?: PreviewStatus;
 }
 
-export function GifPreview({ previewImage, width, height }: GifPreviewProps) {
+export function GifPreview({
+  previewImage,
+  width,
+  height,
+  status
+}: GifPreviewProps) {
   if (!previewImage) {
     return null;
   }
@@ -16,6 +24,7 @@ export function GifPreview({ previewImage, width, height }: GifPreviewProps) {
       <img
         src={previewImage}
         className={css.image}
+        data-status={status}
         style={{
           width: 'auto',
           height: 'auto',

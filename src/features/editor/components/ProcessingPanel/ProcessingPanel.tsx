@@ -2,6 +2,7 @@ import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 
 import { Button } from '@/components/ui/Button/Button';
 import { Progress } from '@/components/ui/Progress/Progress';
+import { Spinner } from '@/components/ui/Spinner/Spinner';
 
 import XIcon from '@/assets/x.svg?react';
 
@@ -16,7 +17,11 @@ export function ProcessingPanel() {
   return (
     <div className={css.processingPanel}>
       <Progress
-        label="Generating GIF"
+        label={
+          <span className={css.progressLabel}>
+            <Spinner /> Generating GIF
+          </span>
+        }
         showValue={true}
         value={progress * 100}
       />

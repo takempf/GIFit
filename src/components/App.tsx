@@ -131,6 +131,7 @@ export function App() {
             previewImage={currentPreviewImage}
             width={width}
             height={height}
+            status={status}
           />
         </section>
         <section className={css.panel} aria-live="polite">

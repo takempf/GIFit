@@ -4,7 +4,7 @@ import css from './Progress.module.css';
 
 export interface ProgressProps {
   value: number;
-  label?: string;
+  label?: React.ReactNode;
   showValue?: boolean;
 }
 
