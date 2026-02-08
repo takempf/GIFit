@@ -372,6 +372,7 @@ export default defineContentScript({
           log('Popup disconnected, releasing video control');
           video.removeEventListener('play', enforcePause);
           video.removeEventListener('playing', enforcePause);
+          gifService.abort(); // Cancel any in-progress generation
         });
       }
     });
