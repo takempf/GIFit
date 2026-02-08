@@ -67,7 +67,7 @@ export const useGifStore = create<GifStore>((set) => ({
     // Reset state for a new creation process
     set({
       ...initialState,
-      frameCount: (config.fps * (config.end - config.start)) / 1000,
+      frameCount: Math.floor((config.fps * (config.end - config.start)) / 1000),
       name: config.name,
       width: config.width,
       height: config.height,
