@@ -3,6 +3,8 @@ import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 import { Button } from '@/components/ui/Button/Button';
 import { Progress } from '@/components/ui/Progress/Progress';
 
+import XIcon from '@/assets/x.svg?react';
+
 import css from './ProcessingPanel.module.css';
 
 import { useAppStore } from '@/stores/appStore';
@@ -25,7 +27,8 @@ export function ProcessingPanel() {
         onClick={() => {
           abortGif();
           setStatus('configuring');
-        }}>
+        }}
+        append={<XIcon />}>
         Cancel
       </Button>
     </div>
