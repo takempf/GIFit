@@ -1,18 +1,14 @@
 import EventEmitter from 'eventemitter3';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
 import { log } from '@/utils/logger';
-import floydSteinberg from '@/utils/dither'; // Assumed to return dithered RGBA data
+import floydSteinberg from '@/utils/dither';
 
 type Palette = [number, number, number][];
 
 // TODO centralize this
 const MAX_QUALITY = 10;
 
-// --- Configuration and Event Data Interfaces ---
-
 import { GifConfig, GifCompleteData } from '@/types';
-
-// --- Configuration and Event Data Interfaces ---
 
 export interface IndexingOptions {
   noDither?: boolean;
@@ -20,8 +16,6 @@ export interface IndexingOptions {
   width: number;
   height: number;
 }
-
-// --- Service Implementation ---
 
 /**
  * Service for creating GIFs from HTMLVideoElement frames using gifenc.
@@ -39,10 +33,6 @@ class GifService extends EventEmitter {
   private framesComplete: number = 0;
   private canvasEl: HTMLCanvasElement | null;
   private context: CanvasRenderingContext2D | null;
-  private thumbnailCanvasEl: HTMLCanvasElement | null;
-  private thumbnailContext: CanvasRenderingContext2D | null;
-  private tempFrameCanvas: HTMLCanvasElement | null; // For generateFrameThumbnail
-  private tempFrameContext: CanvasRenderingContext2D | null; // For generateFrameThumbnail
 
   constructor() {
     super();
@@ -58,35 +48,6 @@ class GifService extends EventEmitter {
     }
     this.context = context;
     this.context.imageSmoothingEnabled = false; // Prefer crisp pixels
-
-    // Thumbnail canvas setup
-    this.thumbnailCanvasEl = document.createElement('canvas');
-    this.thumbnailContext = this.thumbnailCanvasEl.getContext('2d', {
-      alpha: false // Assuming opaque thumbnails are fine
-    });
-
-    if (!this.thumbnailContext) {
-      this.thumbnailCanvasEl = null; // Cleanup
-      throw new Error(
-        'Failed to get 2D rendering context for thumbnail canvas.'
-      );
-    }
-    // Set initial thumbnail canvas size, will be adjusted in generateFrameThumbnail
-    this.thumbnailCanvasEl.width = 8;
-    this.thumbnailCanvasEl.height = 8;
-    this.thumbnailContext.imageSmoothingEnabled = true; // Use smoothing for downscaling
-    this.thumbnailContext.imageSmoothingQuality = 'medium'; // Balance quality and perf
-
-    // Temporary canvas for frame processing in generateFrameThumbnail
-    this.tempFrameCanvas = document.createElement('canvas');
-    this.tempFrameContext = this.tempFrameCanvas.getContext('2d');
-
-    if (!this.tempFrameContext) {
-      this.tempFrameCanvas = null; // Cleanup
-      throw new Error(
-        'Failed to get 2D rendering context for temporary frame canvas.'
-      );
-    }
   }
 
   /**
@@ -144,7 +105,6 @@ class GifService extends EventEmitter {
         throw new Error('GIF generation was aborted by the user.');
       }
 
-      // Finalize GIF
       // Finalize GIF
       const blob = this.finalizeGif();
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -240,14 +200,14 @@ class GifService extends EventEmitter {
     video.pause(); // ensure we don't accidentally play
   }
 
-  // Seeks video to a time, resolving on 'seeked' event. (Unchanged)
+  // Seeks video to a time, resolving on 'seeked' event.
   private asyncSeek(video: HTMLVideoElement, time: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const doneSeeking = () => {
         video.removeEventListener('seeked', doneSeeking);
         video.removeEventListener('error', onError);
-        // Delay ensures frame is painted post-seek. Adjust if needed.
-        setTimeout(resolve, 50);
+        // Use rAF to wait for the browser to paint the frame
+        requestAnimationFrame(() => resolve());
       };
       const onError = (event: Event) => {
         video.removeEventListener('seeked', doneSeeking);
