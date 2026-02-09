@@ -116,9 +116,15 @@ describe('TimelineSelection', () => {
   });
 
   it('supports ref forwarding', () => {
-    const ref = vi.fn();
+    const ref = { current: null };
     render(<TimelineSelection {...defaultProps} ref={ref} />);
 
-    expect(ref).toHaveBeenCalledWith(expect.any(HTMLDivElement));
+    expect(ref.current).toEqual(
+      expect.objectContaining({
+        scrollIntoView: expect.any(Function),
+        scrollLeftIntoView: expect.any(Function),
+        scrollRightIntoView: expect.any(Function)
+      })
+    );
   });
 });

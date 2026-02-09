@@ -49,11 +49,15 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const [previewTime, setPreviewTime] = useState(start);
 
-  const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
-    setPreviewTime(time);
-    await seekVideo(time);
-    captureFrame();
-  }, 100);
+  const debouncedSeekVideo = useDebouncedCallback(
+    async (time: number) => {
+      setPreviewTime(time);
+      await seekVideo(time);
+      captureFrame();
+    },
+    100,
+    { maxWait: 500 }
+  );
 
   // Separate preview update logic
   const handlePreviewRequest = useCallback(
