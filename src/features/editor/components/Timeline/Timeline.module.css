@@ -120,7 +120,6 @@
   pointer-events: none;
   border-left: oklch(from var(--color_accent) l c h / 0.75) 1px solid;
   transition: transform 250ms ease;
-  transition-delay: 250ms;
 }
 
 /* Container for Viewport and Gradients */
