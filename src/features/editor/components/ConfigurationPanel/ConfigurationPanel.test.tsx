@@ -21,6 +21,18 @@ type MockStore = Mock<
 >;
 
 vi.mock('@/features/editor/stores/configurationPanelStore');
+vi.mock('wxt/browser', () => ({
+  browser: {
+    tabs: {
+      query: vi.fn().mockResolvedValue([]),
+      sendMessage: vi.fn(),
+      get: vi.fn()
+    },
+    runtime: {
+      onMessage: { addListener: vi.fn() }
+    }
+  }
+}));
 vi.mock('@/utils/logger', () => ({ log: vi.fn() }));
 // Mock Input components to avoid complexity
 vi.mock('@/components/ui/Input/Input', () => ({
@@ -137,31 +149,36 @@ describe('ConfigurationPanel', () => {
       aspectRatio: 1280 / 720,
       videoDuration: 100000,
       videoWidth: 1280,
-      videoHeight: 720
+      videoHeight: 720,
+      previewImage: null,
+      previewTime: 0
     };
     mockConfigStoreActions = {
       handleInputChange: vi.fn(),
       handleVideoLoadedData: vi.fn(),
       handleSetStartToCurrentTime: vi.fn(), // Removed from component usage, but kept in store interface
-      seekVideo: vi.fn(),
+      seekVideo: vi.fn().mockResolvedValue(undefined),
       resetState: vi.fn(),
       fetchVideoMetadata: vi.fn().mockResolvedValue(undefined),
       syncStartToVideoTime: vi.fn().mockResolvedValue(undefined),
-      captureFrame: vi.fn()
-    };
-
-    // Update mock to support atomic selectors
-    const fullState = {
-      ...mockConfigStoreState,
-      ...mockConfigStoreActions
+      captureFrame: vi.fn((timeMs?: number) => {
+        if (timeMs !== undefined) {
+          mockConfigStoreState.previewTime = timeMs;
+        }
+        return Promise.resolve();
+      })
     };
 
     (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
       (selector?: (state: ConfigState & ConfigActions) => unknown) => {
+        const currentFullState = {
+          ...mockConfigStoreState,
+          ...mockConfigStoreActions
+        };
         if (selector) {
-          return selector(fullState as ConfigState & ConfigActions);
+          return selector(currentFullState as ConfigState & ConfigActions);
         }
-        return fullState;
+        return currentFullState;
       }
     );
 
@@ -405,7 +422,7 @@ describe('ConfigurationPanel', () => {
     vi.useRealTimers();
   });
 
-  test('updates preview to new last frame when FPS changes if currently at last frame', () => {
+  test('updates preview to new last frame when FPS changes if currently at last frame', async () => {
     vi.useFakeTimers();
     const startMs = 0;
     const durationMs = 1000;
@@ -413,22 +430,12 @@ describe('ConfigurationPanel', () => {
     // Last frame for 10 FPS, 1s duration:
     // Frame count = 10. Last index = 9. Time = 9/10 * 1000 = 900ms.
 
-    const state = {
-      ...mockConfigStoreState,
-      ...mockConfigStoreActions,
-      start: startMs,
-      duration: durationMs,
-      framerate: oldFps
-    };
-    (useConfigurationPanelStore as unknown as MockStore).mockImplementation(
-      (selector?: (state: ConfigState & ConfigActions) => unknown) => {
-        return selector
-          ? selector(state as ConfigState & ConfigActions)
-          : state;
-      }
-    );
+    // Update mockConfigStoreState directly so the global mock picks up changes from captureFrame
+    mockConfigStoreState.start = startMs;
+    mockConfigStoreState.duration = durationMs;
+    mockConfigStoreState.framerate = oldFps;
 
-    render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
+    const { rerender } = render(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
     // 1. Position preview at the calculated last frame manually
     // We can't easily set state directly, but we can trigger it via handleTimelineChange 'end' logic
@@ -496,9 +503,14 @@ describe('ConfigurationPanel', () => {
     act(() => {
       vi.runAllTimers();
     });
+    // Ensure async operations complete
+    await Promise.resolve();
 
     // Now previewTime should be 900ms (for 10FPS).
     expect(mockConfigStoreActions.seekVideo).toHaveBeenLastCalledWith(900);
+
+    // Force re-render to pick up the updated previewTime from the mocked store
+    rerender(<ConfigurationPanel onSubmit={mockOnSubmit} />);
 
     // 2. Change FPS to 20.
     // New last frame for 1000ms @ 20fps:

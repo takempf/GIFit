@@ -1,5 +1,5 @@
 import css from './ConfigurationPanel.module.css';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback } from 'react';
 import {
   useConfigurationPanelStore,
   type ConfigState
@@ -47,13 +47,12 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     (state) => state.captureFrame
   );
 
-  const [previewTime, setPreviewTime] = useState(start);
+  const previewTime = useConfigurationPanelStore((state) => state.previewTime);
 
   const debouncedSeekVideo = useDebouncedCallback(
     async (time: number) => {
-      setPreviewTime(time);
       await seekVideo(time);
-      captureFrame();
+      captureFrame(time);
     },
     100,
     { maxWait: 500 }
@@ -69,7 +68,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   useEffect(() => {
     fetchVideoMetadata().then(() => {
-      captureFrame();
+      // Capture frame at start time initially
+      captureFrame(useConfigurationPanelStore.getState().start);
     });
 
     // Poll for video metadata if missing (race condition handling)
@@ -78,7 +78,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       if (state.videoDuration === 0) {
         fetchVideoMetadata().then(() => {
           if (useConfigurationPanelStore.getState().videoDuration > 0) {
-            captureFrame();
+            captureFrame(useConfigurationPanelStore.getState().start);
           }
         });
       } else {
@@ -163,14 +163,14 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       duration, // MS
       width,
       height,
-
       framerate,
       quality: currentConfigState.quality,
       aspectRatio: currentConfigState.aspectRatio,
       videoDuration: currentConfigState.videoDuration,
       videoWidth: currentConfigState.videoWidth,
       videoHeight: currentConfigState.videoHeight,
-      previewImage: currentConfigState.previewImage
+      previewImage: currentConfigState.previewImage,
+      previewTime: currentConfigState.previewTime
     });
   }
 

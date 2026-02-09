@@ -261,28 +261,6 @@ export function Timeline({
       ref={containerRef}
       data-testid="timeline-container">
       <ScrollArea.Root className={styles.scrollRoot}>
-        <ScrollArea.Scrollbar
-          className={styles.scrollbar}
-          orientation="horizontal">
-          <ScrollArea.Thumb className={styles.scrollbarThumb} />
-          {/* Selection Indicator on Scrollbar Track */}
-          <div
-            className={styles.scrollbarSelectionIndicator}
-            style={{
-              left: `${selectionIndicatorLeftPct}%`,
-              width: `${selectionIndicatorWidthPct}%`
-            }}
-          />
-          {/* Preview Indicator on Scrollbar Track */}
-          <div
-            className={styles.scrollbarPreviewHighlighter}
-            style={{
-              left: `${previewIndicatorLeftPct}%`,
-              width: '1px'
-            }}
-          />
-        </ScrollArea.Scrollbar>
-
         <div className={styles.viewportContainer}>
           <div
             className={`${styles.gradient} ${styles.gradientLeft}`}
@@ -352,6 +330,28 @@ export function Timeline({
             </ScrollArea.Content>
           </ScrollArea.Viewport>
         </div>
+
+        <ScrollArea.Scrollbar
+          className={styles.scrollbar}
+          orientation="horizontal">
+          <ScrollArea.Thumb className={styles.scrollbarThumb} />
+          {/* Selection Indicator on Scrollbar Track */}
+          <div
+            className={styles.scrollbarSelectionIndicator}
+            style={{
+              left: `${selectionIndicatorLeftPct}%`,
+              width: `${selectionIndicatorWidthPct}%`
+            }}
+          />
+          {/* Preview Indicator on Scrollbar Track */}
+          <div
+            className={styles.scrollbarPreviewHighlighter}
+            style={{
+              left: `${previewIndicatorLeftPct}%`,
+              width: '1px'
+            }}
+          />
+        </ScrollArea.Scrollbar>
       </ScrollArea.Root>
     </div>
   );

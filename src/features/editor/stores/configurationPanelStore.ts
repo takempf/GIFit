@@ -21,6 +21,7 @@ export interface ConfigState {
   videoWidth: number;
   videoHeight: number;
   previewImage: string | null;
+  previewTime: number; // Milliseconds
 }
 
 // Action payloads
@@ -61,7 +62,7 @@ export interface ConfigActions {
   loadInitialConfig: () => Promise<void>;
   fetchVideoMetadata: () => Promise<void>;
   syncStartToVideoTime: () => Promise<void>;
-  captureFrame: () => Promise<void>;
+  captureFrame: (timeMs?: number) => Promise<void>;
 }
 
 type ConfigurationPanelStore = ConfigState & ConfigActions;
@@ -115,7 +116,10 @@ const getInitialState = (
     videoDuration: metadata?.duration ? toMilliseconds(metadata.duration) : 0,
     videoWidth: metadata?.width ?? 0,
     videoHeight: metadata?.height ?? 0,
-    previewImage: null
+    previewImage: null,
+    previewTime: metadata?.currentTime
+      ? toMilliseconds(metadata.currentTime)
+      : 0
   };
 };
 
@@ -235,10 +239,13 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
       }
     },
 
-    captureFrame: async () => {
+    captureFrame: async (timeMs?: number) => {
       const dataUrl = await videoController.captureFrame();
       if (dataUrl) {
-        set({ previewImage: dataUrl });
+        set((state) => ({
+          previewImage: dataUrl,
+          previewTime: timeMs !== undefined ? timeMs : state.previewTime
+        }));
       }
     }
   })
