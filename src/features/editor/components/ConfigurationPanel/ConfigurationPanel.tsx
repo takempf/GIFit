@@ -15,12 +15,12 @@ import { Button } from '@/components/ui/Button/Button';
 import { Timeline } from '../Timeline/Timeline';
 import { NoVideoInterstitial } from './NoVideoInterstitial/NoVideoInterstitial';
 
-import { StartTimeInput } from './StartTimeInput';
-import { DurationInput } from './DurationInput';
-import { FrameRateInput } from './FrameRateInput';
-import { WidthInput } from './WidthInput';
-import { HeightInput } from './HeightInput';
-import { QualityInput } from './QualityInput';
+import { StartTimeInput } from './StartTimeInput/StartTimeInput';
+import { DurationInput } from './DurationInput/DurationInput';
+import { FrameRateInput } from './FrameRateInput/FrameRateInput';
+import { WidthInput } from './WidthInput/WidthInput';
+import { HeightInput } from './HeightInput/HeightInput';
+import { QualityInput } from './QualityInput/QualityInput';
 
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;
