@@ -50,6 +50,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const [previewTime, setPreviewTime] = useState(start);
 
   const debouncedSeekVideo = useDebouncedCallback(async (time: number) => {
+    setPreviewTime(time);
     await seekVideo(time);
     captureFrame();
   }, 100);
@@ -57,7 +58,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   // Separate preview update logic
   const handlePreviewRequest = useCallback(
     (time: number) => {
-      setPreviewTime(time);
       debouncedSeekVideo(time);
     },
     [debouncedSeekVideo]
@@ -118,7 +118,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       name: 'duration',
       value: newDurationMs
     });
-
+    console.log('handle timeline change', newStartMs, context);
     // Explicit Preview Logic based on context from Timeline
     if (context === 'start') {
       handlePreviewRequest(newStartMs);
