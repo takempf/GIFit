@@ -3,11 +3,12 @@ import { describe, it, expect } from 'vitest';
 import { GifPreview } from './GifPreview';
 
 describe('GifPreview', () => {
-  it('renders nothing when previewImage is null', () => {
-    const { container } = render(
-      <GifPreview previewImage={null} width={1920} height={1080} />
-    );
-    expect(container).toBeEmptyDOMElement();
+  it('renders placeholder when previewImage is null', () => {
+    render(<GifPreview previewImage={null} width={1920} height={1080} />);
+    expect(
+      screen.getByRole('status', { name: /loading/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByAltText('Video Preview')).not.toBeInTheDocument();
   });
 
   it('renders image with correct src and dimensions', () => {
