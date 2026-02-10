@@ -17,7 +17,8 @@ import {
 import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 
-import TKLogo from '@/assets/tk.svg';
+import TKLogo from '@/assets/tk.svg?react';
+import BugIcon from '@/assets/bug.svg?react';
 
 import { ExtensionMessage } from '@/types';
 
@@ -159,8 +160,17 @@ export function App() {
           href="https://kempf.dev/#gifit"
           target="_blank"
           rel="noreferrer">
-          Crafted by <img className={css.tkLogo} src={TKLogo} />
+          Crafted by <TKLogo className={css.tkLogo} />
         </a>
+        <span className={css.support}>
+          <BugIcon className={css.bugIcon} /> Please report issues on{' '}
+          <a
+            href="https://github.com/takempf/gifit/issues"
+            target="_blank"
+            rel="noreferrer">
+            GitHub
+          </a>
+        </span>
         <span className={css.version}>v3.0.0</span>
       </footer>
     </div>

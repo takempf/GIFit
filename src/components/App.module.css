@@ -54,16 +54,12 @@
 .main {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5em;
+  align-items: stretch;
+  justify-content: center;
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;
   align-self: stretch;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
 }
 
 .preview {
@@ -73,6 +69,7 @@
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;
+  padding: 0.25em 0.5em 0.75em 0.5em;
 }
 
 .panel {
@@ -99,16 +96,18 @@
 }
 
 .footer {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: 'main';
   width: 100%;
   padding: 0 0.5em;
   font-size: 12px;
 }
 
 .credit {
+  grid-area: main;
+  justify-self: start;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -118,4 +117,25 @@
 .tkLogo {
   height: 1em;
   vertical-align: middle;
+}
+
+.support {
+  grid-area: main;
+  justify-self: center;
+  font-family: serif;
+  font-style: italic;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.bugIcon {
+  color: var(--color_primary);
+}
+
+.version {
+  grid-area: main;
+  justify-self: end;
+  letter-spacing: 0.075em;
+  font-variant-numeric: tabular-nums;
 }
