@@ -3,6 +3,7 @@
   flex-direction: row;
   justify-content: space-evenly;
   align-items: end;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .frameMarker {
@@ -19,7 +20,6 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  border-left: 1px solid rgba(255, 255, 255, 0.25);
   font-size: 12px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;

@@ -1,9 +1,9 @@
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import { useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import styles from './Timeline.module.css';
-import { toMilliseconds, toSeconds } from '@/utils/time';
 import { browser } from 'wxt/browser';
+
+import { toMilliseconds, toSeconds } from '@/utils/time';
 import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
@@ -13,6 +13,8 @@ import {
 } from './TimelineSelection/TimelineSelection';
 import { TimelineSegments } from './TimelineSegments/TimelineSegments';
 import { TimelineStoryboard } from './TimelineStoryboard/TimelineStoryboard';
+
+import css from './Timeline.module.css';
 
 interface TimelineProps {
   totalDuration: number;
@@ -43,8 +45,6 @@ export function Timeline({
   const scrollRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<TimelineSelectionHandle>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [showLeftGradient, setShowLeftGradient] = useState(false);
-  const [showRightGradient, setShowRightGradient] = useState(false);
   const [storyboardSpec, setStoryboardSpec] = useState<{
     baseUrl: string;
     levels: StoryboardLevel[];
@@ -85,13 +85,6 @@ export function Timeline({
     fetchStoryboard();
   }, [totalDuration]); // Refetch when video duration changes (indicates new video)
 
-  const updateGradients = () => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setShowLeftGradient(scrollLeft > 0);
-    setShowRightGradient(scrollLeft + clientWidth < scrollWidth - 1);
-  };
-
   useEffect(() => {
     if (!containerRef.current) return;
     const resizeObserver = new ResizeObserver((entries) => {
@@ -103,10 +96,6 @@ export function Timeline({
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
-
-  useEffect(() => {
-    updateGradients();
-  }, [containerWidth, totalDuration]);
 
   // Show ~7 seconds in the viewport
   const VISIBLE_DURATION_SECONDS = 7;
@@ -257,32 +246,23 @@ export function Timeline({
 
   return (
     <div
-      className={`${styles.timeline} ${className || ''}`}
+      className={`${css.timeline} ${className || ''}`}
       ref={containerRef}
       data-testid="timeline-container">
-      <ScrollArea.Root className={styles.scrollRoot}>
-        <div className={styles.viewportContainer}>
-          <div
-            className={`${styles.gradient} ${styles.gradientLeft}`}
-            style={{ opacity: showLeftGradient ? 1 : 0 }}
-            data-testid="gradient-left"
-          />
-          <div
-            className={`${styles.gradient} ${styles.gradientRight}`}
-            style={{ opacity: showRightGradient ? 1 : 0 }}
-            data-testid="gradient-right"
-          />
+      <ScrollArea.Root className={css.scrollRoot}>
+        <div className={css.viewportContainer}>
+          <div className={`${css.gradient} ${css.gradientLeft}`} />
+          <div className={`${css.gradient} ${css.gradientRight}`} />
 
           <ScrollArea.Viewport
-            className={styles.scrollViewport}
+            className={css.scrollViewport}
             ref={scrollRef}
-            data-testid="scroll-container"
-            onScroll={updateGradients}>
+            data-testid="scroll-container">
             <ScrollArea.Content
-              className={styles.scrollContent}
+              className={css.scrollContent}
               style={{ width: `${rowVirtualizer.getTotalSize()}px` }}>
               <div
-                className={styles.interior}
+                className={css.interior}
                 onMouseDown={handleBackgroundMouseDown}
                 data-testid="timeline-interior">
                 {/* Content Layer (Ticks + Storyboard) */}
@@ -302,7 +282,7 @@ export function Timeline({
 
                 {/* Preview Highlight */}
                 <div
-                  className={styles.previewHighlight}
+                  className={css.previewHighlight}
                   style={{
                     left: 0,
                     transform: `translateX(${toMilliseconds(previewTime) * PIXELS_PER_MS}px)`,
@@ -332,12 +312,12 @@ export function Timeline({
         </div>
 
         <ScrollArea.Scrollbar
-          className={styles.scrollbar}
+          className={css.scrollbar}
           orientation="horizontal">
-          <ScrollArea.Thumb className={styles.scrollbarThumb} />
+          <ScrollArea.Thumb className={css.scrollbarThumb} />
           {/* Selection Indicator on Scrollbar Track */}
           <div
-            className={styles.scrollbarSelectionIndicator}
+            className={css.scrollbarSelectionIndicator}
             style={{
               left: `${selectionIndicatorLeftPct}%`,
               width: `${selectionIndicatorWidthPct}%`
@@ -345,7 +325,7 @@ export function Timeline({
           />
           {/* Preview Indicator on Scrollbar Track */}
           <div
-            className={styles.scrollbarPreviewHighlighter}
+            className={css.scrollbarPreviewHighlighter}
             style={{
               left: `${previewIndicatorLeftPct}%`,
               width: '1px'

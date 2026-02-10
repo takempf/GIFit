@@ -1,5 +1,6 @@
 .timeline {
   --selection-color: white;
+  --timeline-background-color: rgb(25, 25, 25);
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -11,7 +12,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 0.5em;
-  background-color: rgb(25, 25, 25);
+  background-color: var(--timeline-background-color);
   box-shadow:
     inset rgba(0, 0, 0, 0.25) 0 0.125em 0.5em,
     0 1px 1px rgba(255, 255, 255, 0.1);
@@ -30,7 +31,7 @@
   transition: outline 200ms;
 
   &:focus-visible {
-    outline: red 2px solid !important;
+    outline: var(--color_focus_border) 2px solid !important;
     outline-offset: -3px;
   }
 }
@@ -60,6 +61,7 @@
   transition: background 160ms ease-out;
   position: relative !important; /* In flow, below the viewport */
   width: 100%;
+  padding: 1px 2px;
   z-index: 1;
   background-color: rgba(0, 0, 0, 0.25);
 }
@@ -140,6 +142,7 @@
   width: 1.5em;
   z-index: 20; /* Above selection (10) and ticks */
   pointer-events: none;
+  opacity: 0; /* hidden by default */
   transition: opacity 160ms ease-out;
 }
 
@@ -147,18 +150,28 @@
   left: 0;
   background: linear-gradient(
     to right,
-    rgba(0, 0, 0, 0.35),
-    rgba(0, 0, 0, 0.1),
+    var(--timeline-background-color),
     transparent
   );
+}
+
+.scrollRoot[data-overflow-x-start] {
+  .gradientLeft {
+    opacity: 1;
+  }
 }
 
 .gradientRight {
   right: 0;
   background: linear-gradient(
     to left,
-    rgba(0, 0, 0, 0.35),
-    rgba(0, 0, 0, 0.1),
+    var(--timeline-background-color),
     transparent
   );
+}
+
+.scrollRoot[data-overflow-x-end] {
+  .gradientRight {
+    opacity: 1;
+  }
 }
