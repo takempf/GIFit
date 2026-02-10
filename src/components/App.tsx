@@ -126,16 +126,15 @@ export function App() {
         <AppLogo />
       </header>
       <main className={css.main}>
-        {currentPreviewImage && (
-          <section className={css.preview}>
-            <GifPreview
-              previewImage={currentPreviewImage}
-              width={width}
-              height={height}
-              status={status}
-            />
-          </section>
-        )}
+        <section className={css.preview}>
+          <GifPreview
+            previewImage={currentPreviewImage}
+            width={width}
+            height={height}
+            status={status}
+          />
+        </section>
+
         <section className={css.panel} aria-live="polite">
           {status === 'configuring' && (
             <div className={css.configuring}>

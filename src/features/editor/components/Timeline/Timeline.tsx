@@ -1,9 +1,6 @@
 import { ScrollArea } from '@base-ui/react/scroll-area';
 import { useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { browser } from 'wxt/browser';
-
-import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import {
@@ -44,45 +41,6 @@ export function Timeline({
   const scrollRef = useRef<HTMLDivElement>(null);
   const selectionRef = useRef<TimelineSelectionHandle>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [storyboardSpec, setStoryboardSpec] = useState<{
-    baseUrl: string;
-    levels: StoryboardLevel[];
-  } | null>(null);
-
-  useEffect(() => {
-    // Reset storyboard when video changes
-    setStoryboardSpec(null);
-
-    // Fetch storyboard spec
-    const fetchStoryboard = async () => {
-      try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
-        });
-        const activeTab = tabs[0];
-
-        if (!activeTab?.id) {
-          console.warn('Timeline: No active tab found');
-          return;
-        }
-
-        const response = await browser.tabs.sendMessage(activeTab.id, {
-          type: 'GET_STORYBOARD'
-        });
-
-        if (response && response.spec) {
-          const parsed = parseStoryboardSpec(response.spec);
-          setStoryboardSpec(parsed);
-        } else {
-          console.warn('Timeline: No spec in response');
-        }
-      } catch (e) {
-        console.error('Failed to fetch storyboard spec', e);
-      }
-    };
-    fetchStoryboard();
-  }, [totalDuration]); // Refetch when video duration changes (indicates new video)
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -210,32 +168,6 @@ export function Timeline({
     rowVirtualizer.measure();
   }, [rowVirtualizer, pixelsPerSecond]);
 
-  // Storyboard Virtualization
-  const storyboardInterval =
-    storyboardSpec?.levels[storyboardSpec.levels.length - 1]?.interval || 1000;
-
-  const storyboardCount = storyboardSpec
-    ? Math.ceil(totalDurationMs / storyboardInterval)
-    : 0;
-
-  const storyboardVirtualizer = useVirtualizer({
-    count: storyboardCount,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: (index) => {
-      const start = index * storyboardInterval;
-      // We clip the last segment to the total duration, similar to segments
-      const end = Math.min(totalDurationMs, start + storyboardInterval);
-      const duration = Math.max(0, end - start);
-      return duration * PIXELS_PER_MS;
-    },
-    horizontal: true,
-    overscan: 2
-  });
-
-  useEffect(() => {
-    storyboardVirtualizer.measure();
-  }, [storyboardVirtualizer, pixelsPerSecond, storyboardSpec]);
-
   // Selection Indicator Calculation on Scrollbar
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
@@ -264,13 +196,11 @@ export function Timeline({
                 onMouseDown={handleBackgroundMouseDown}
                 data-testid="timeline-interior">
                 {/* Content Layer (Ticks + Storyboard) */}
-                {storyboardSpec && (
-                  <TimelineStoryboard
-                    virtualItems={storyboardVirtualizer.getVirtualItems()}
-                    storyboardSpec={storyboardSpec}
-                    totalDurationMs={totalDurationMs}
-                  />
-                )}
+                <TimelineStoryboard
+                  scrollRef={scrollRef}
+                  totalDurationMs={totalDurationMs}
+                  pixelsPerMs={PIXELS_PER_MS}
+                />
                 <TimelineSegments
                   virtualItems={rowVirtualizer.getVirtualItems()}
                   totalDurationMs={totalDurationMs}

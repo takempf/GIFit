@@ -7,11 +7,18 @@
   height: 100%;
 }
 
-.image {
-  display: block;
-  object-fit: fill;
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 150px;
+  background: var(--color_panel_background);
   box-shadow: 0 0px 1px rgba(255, 255, 255, 0.5);
   outline: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.image {
   outline-offset: 1px;
   view-transition-name: gif-preview;
   transition: outline 200ms ease;

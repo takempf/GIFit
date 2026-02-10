@@ -1,3 +1,5 @@
+import { Spinner } from '@/components/ui/Spinner/Spinner';
+
 import css from './GifPreview.module.css';
 
 type PreviewStatus = 'configuring' | 'generating' | 'generated';
@@ -15,25 +17,27 @@ export function GifPreview({
   height,
   status
 }: GifPreviewProps) {
-  if (!previewImage) {
-    return null;
-  }
-
   return (
     <div className={css.previewContainer}>
-      <img
-        src={previewImage}
-        className={css.image}
-        data-status={status}
-        style={{
-          width: 'auto',
-          height: 'auto',
-          maxWidth: `min(100%, ${width}px)`,
-          maxHeight: `min(100%, ${height}px)`,
-          aspectRatio: `${width} / ${height}`
-        }}
-        alt="Video Preview"
-      />
+      {!previewImage ? (
+        <div className={css.placeholder}>
+          <Spinner />
+        </div>
+      ) : (
+        <img
+          src={previewImage}
+          className={css.image}
+          data-status={status}
+          style={{
+            width: 'auto',
+            height: 'auto',
+            maxWidth: `min(100%, ${width}px)`,
+            maxHeight: `min(100%, ${height}px)`,
+            aspectRatio: `${width} / ${height}`
+          }}
+          alt="Video Preview"
+        />
+      )}
     </div>
   );
 }

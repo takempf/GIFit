@@ -73,17 +73,6 @@
   flex-grow: 1;
   flex-shrink: 1;
   min-height: 0;
-
-  &:empty::after {
-    content: 'Error: No Preview Data';
-    display: block;
-    text-transform: uppercase;
-    font-size: 0.8em;
-    letter-spacing: 0.1em;
-    outline: rgba(255, 255, 255, 0.25) 1px dashed;
-    padding: 1em 1.5em;
-    border-radius: 0.5em;
-  }
 }
 
 .panel {

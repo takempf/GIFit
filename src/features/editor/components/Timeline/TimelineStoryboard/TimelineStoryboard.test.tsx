@@ -1,82 +1,85 @@
 import { render } from '@testing-library/react';
+import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { TimelineStoryboard } from './TimelineStoryboard';
-import type { VirtualItem } from '@tanstack/react-virtual';
-import { getStoryboardFrame } from '@/utils/storyboard';
 
-// Mock child component
+const MOCK_STORYBOARD_SPEC = {
+  baseUrl: 'http://test.com/sb/$L/$N.jpg',
+  levels: [
+    {
+      width: 160,
+      height: 90,
+      count: 50,
+      cols: 5,
+      rows: 5,
+      interval: 2000,
+      name: 'default',
+      signature: 'abc123'
+    }
+  ]
+};
+
+vi.mock('wxt/browser', () => ({
+  browser: {
+    tabs: {
+      query: vi.fn().mockResolvedValue([{ id: 1 }]),
+      sendMessage: vi.fn().mockResolvedValue({
+        spec: 'http://test.com/sb/$L/$N.jpg|160#90#50#5#5#2000#default#abc123'
+      })
+    }
+  }
+}));
+
+vi.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () =>
+      Array.from({ length: count }, (_, i) => ({
+        key: `sb-${i}`,
+        index: i,
+        start: i * 100,
+        size: 100,
+        end: (i + 1) * 100,
+        lane: 0
+      })),
+    getTotalSize: () => count * 100,
+    measure: vi.fn()
+  })
+}));
+
 vi.mock('../TimelineStoryboardFrame/TimelineStoryboardFrame', () => ({
   StoryboardFrame: () => <div data-testid="storyboard-frame" />
 }));
 
-// Mock utils
-vi.mock('@/utils/storyboard', () => ({
-  getStoryboardFrame: vi.fn(),
-  StoryboardLevel: {}
-}));
-
 describe('TimelineStoryboard', () => {
-  const mockVirtualItems: VirtualItem[] = [
-    { key: '0', index: 0, start: 0, size: 100, end: 100, lane: 0 }
-  ];
+  const scrollRef = createRef<HTMLDivElement>();
 
-  const mockStoryboardSpec = {
-    baseUrl: 'http://test.com',
-    levels: [
-      {
-        interval: 100,
-        width: 100,
-        height: 100,
-        rows: 10,
-        cols: 10,
-        format: 'jpg'
-      }
-    ]
-  };
-
-  it('renders frames for valid virtual items', () => {
-    (getStoryboardFrame as any).mockReturnValue({ some: 'frame' });
-
-    const { getAllByTestId } = render(
-      <TimelineStoryboard
-        virtualItems={mockVirtualItems}
-        storyboardSpec={mockStoryboardSpec as any}
-        totalDurationMs={5000}
-      />
+  it('renders frames after spec is fetched', async () => {
+    const { findAllByTestId } = render(
+      <div ref={scrollRef}>
+        <TimelineStoryboard
+          scrollRef={scrollRef}
+          totalDurationMs={5000}
+          pixelsPerMs={0.12}
+        />
+      </div>
     );
 
-    expect(getAllByTestId('storyboard-frame')).toHaveLength(1);
+    const frames = await findAllByTestId('storyboard-frame');
+    expect(frames.length).toBeGreaterThan(0);
   });
 
-  it('does not render if frame data is missing', () => {
-    (getStoryboardFrame as any).mockReturnValue(null);
-
+  it('renders nothing before spec loads', () => {
     const { queryByTestId } = render(
-      <TimelineStoryboard
-        virtualItems={mockVirtualItems}
-        storyboardSpec={mockStoryboardSpec as any}
-        totalDurationMs={5000}
-      />
+      <div ref={scrollRef}>
+        <TimelineStoryboard
+          scrollRef={scrollRef}
+          totalDurationMs={5000}
+          pixelsPerMs={0.12}
+        />
+      </div>
     );
 
-    expect(queryByTestId('storyboard-frame')).not.toBeInTheDocument();
-  });
-
-  it('does not render if start time is beyond total duration', () => {
-    const virtualItems: VirtualItem[] = [
-      { key: '100', index: 100, start: 0, size: 100, end: 100, lane: 0 }
-    ];
-
-    (getStoryboardFrame as any).mockReturnValue({ some: 'frame' });
-
-    const { queryByTestId } = render(
-      <TimelineStoryboard
-        virtualItems={virtualItems}
-        storyboardSpec={mockStoryboardSpec as any}
-        totalDurationMs={5000}
-      />
-    );
-
+    // On initial synchronous render, spec hasn't loaded yet
     expect(queryByTestId('storyboard-frame')).not.toBeInTheDocument();
   });
 });
