@@ -4,14 +4,12 @@ import { TimelineSegment } from '../TimelineSegment/TimelineSegment';
 
 interface TimelineSegmentsProps {
   virtualItems: VirtualItem[];
-  totalDuration: number;
   totalDurationMs: number;
   fps: number;
 }
 
 export function TimelineSegments({
   virtualItems,
-  totalDuration,
   totalDurationMs,
   fps
 }: TimelineSegmentsProps) {
@@ -19,8 +17,8 @@ export function TimelineSegments({
     <>
       {virtualItems.map((virtualItem) => {
         const i = virtualItem.index;
-        // Don't render if it goes beyond totalDuration
-        if (i > totalDuration) return null;
+        // Don't render if segment starts beyond total duration
+        if (i * 1000 > totalDurationMs) return null;
 
         const segmentStartTimeMs = i * 1000;
         // Determine duration of this segment. Usually 1000ms, but last one might be less.

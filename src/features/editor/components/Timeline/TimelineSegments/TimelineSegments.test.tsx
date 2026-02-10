@@ -20,7 +20,6 @@ describe('TimelineSegments', () => {
     const { getAllByTestId } = render(
       <TimelineSegments
         virtualItems={mockVirtualItems}
-        totalDuration={5}
         totalDurationMs={5000}
         fps={10}
       />
@@ -39,7 +38,6 @@ describe('TimelineSegments', () => {
     const { getAllByTestId } = render(
       <TimelineSegments
         virtualItems={virtualItems}
-        totalDuration={5}
         totalDurationMs={5000}
         fps={10}
       />
@@ -53,7 +51,6 @@ describe('TimelineSegments', () => {
     const { getAllByTestId } = render(
       <TimelineSegments
         virtualItems={mockVirtualItems}
-        totalDuration={5}
         totalDurationMs={1500}
         fps={10}
       />

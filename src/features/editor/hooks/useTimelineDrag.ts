@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { toSeconds } from '@/utils/time';
 
 interface UseTimelineDragProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -92,7 +91,7 @@ export function useTimelineDrag({
         newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
 
         if (Math.abs(newStartMs - startTimeMs) > 0.001) {
-          onChange(toSeconds(newStartMs), toSeconds(durationMs), 'start');
+          onChange(newStartMs, durationMs, 'start');
         }
       } else if (isDragging === 'left') {
         let newStartMs = Math.max(0, targetTimeMs);
@@ -100,7 +99,7 @@ export function useTimelineDrag({
 
         if (Math.abs(newStartMs - startTimeMs) > 0.001) {
           const newDurationMs = anchorEndTimeMs - newStartMs;
-          onChange(toSeconds(newStartMs), toSeconds(newDurationMs), 'start');
+          onChange(newStartMs, newDurationMs, 'start');
         }
       } else if (isDragging === 'right') {
         let newEndMs = Math.max(startTimeMs + minDurationMs, targetTimeMs);
@@ -108,7 +107,7 @@ export function useTimelineDrag({
 
         const newDurationMs = newEndMs - startTimeMs;
         if (Math.abs(newDurationMs - durationMs) > 0.001) {
-          onChange(toSeconds(startTimeMs), toSeconds(newDurationMs), 'end');
+          onChange(startTimeMs, newDurationMs, 'end');
         }
       }
     };
@@ -208,7 +207,7 @@ export function useTimelineDrag({
     newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
 
     if (newStartMs !== startTimeMs) {
-      onChange(toSeconds(newStartMs), toSeconds(durationMs), 'start');
+      onChange(newStartMs, durationMs, 'start');
     }
   };
 

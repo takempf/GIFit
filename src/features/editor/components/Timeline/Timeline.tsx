@@ -3,7 +3,6 @@ import { useRef, useEffect, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { browser } from 'wxt/browser';
 
-import { toMilliseconds, toSeconds } from '@/utils/time';
 import { parseStoryboardSpec, StoryboardLevel } from '@/utils/storyboard';
 
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
@@ -17,14 +16,14 @@ import { TimelineStoryboard } from './TimelineStoryboard/TimelineStoryboard';
 import css from './Timeline.module.css';
 
 interface TimelineProps {
-  totalDuration: number;
-  startTime: number;
-  duration: number; // Selection duration
+  totalDuration: number; // ms
+  startTime: number; // ms
+  duration: number; // ms
   fps: number;
-  previewTime: number;
+  previewTime: number; // ms
   onChange: (
-    newStartTime: number,
-    newDuration: number,
+    newStartTimeMs: number,
+    newDurationMs: number,
     context: 'start' | 'end'
   ) => void;
   onHandleFocus: (handle: 'start' | 'end') => void;
@@ -104,10 +103,10 @@ export function Timeline({
   const pixelsPerSecond = effectiveWidth / VISIBLE_DURATION_SECONDS;
   const PIXELS_PER_MS = pixelsPerSecond / 1000;
 
-  // Convert props to ms for internal calculations
-  const totalDurationMs = toMilliseconds(totalDuration);
-  const startTimeMs = toMilliseconds(startTime);
-  const durationMs = toMilliseconds(duration);
+  // Props are already in ms
+  const totalDurationMs = totalDuration;
+  const startTimeMs = startTime;
+  const durationMs = duration;
 
   const {
     handleSelectionMouseDown,
@@ -143,7 +142,7 @@ export function Timeline({
     const newDurationMs = durationMs - (newStartMs - startTimeMs);
 
     if (newDurationMs >= MIN_DURATION_MS) {
-      onChange(toSeconds(newStartMs), toSeconds(newDurationMs), 'start');
+      onChange(newStartMs, newDurationMs, 'start');
       selectionRef.current?.scrollLeftIntoView();
     }
   }
@@ -164,7 +163,7 @@ export function Timeline({
     const newDurationMs = newEndMs - startTimeMs;
 
     if (newDurationMs >= MIN_DURATION_MS) {
-      onChange(toSeconds(startTimeMs), toSeconds(newDurationMs), 'end');
+      onChange(startTimeMs, newDurationMs, 'end');
       selectionRef.current?.scrollRightIntoView();
     }
   }
@@ -188,7 +187,7 @@ export function Timeline({
     }, UI_INITIALIZATION_DELAY);
   }, []);
 
-  const count = Math.floor(totalDuration) + 1; // Number of seconds to render
+  const count = Math.floor(totalDurationMs / 1000) + 1; // Number of seconds to render
 
   const rowVirtualizer = useVirtualizer({
     count,
@@ -241,8 +240,7 @@ export function Timeline({
   const safeTotalDuration = totalDurationMs > 0 ? totalDurationMs : 1;
   const selectionIndicatorLeftPct = (startTimeMs / safeTotalDuration) * 100;
   const selectionIndicatorWidthPct = (durationMs / safeTotalDuration) * 100;
-  const previewIndicatorLeftPct =
-    (toMilliseconds(previewTime) / safeTotalDuration) * 100;
+  const previewIndicatorLeftPct = (previewTime / safeTotalDuration) * 100;
 
   return (
     <div
@@ -275,7 +273,6 @@ export function Timeline({
                 )}
                 <TimelineSegments
                   virtualItems={rowVirtualizer.getVirtualItems()}
-                  totalDuration={totalDuration}
                   totalDurationMs={totalDurationMs}
                   fps={fps}
                 />
@@ -285,7 +282,7 @@ export function Timeline({
                   className={css.previewHighlight}
                   style={{
                     left: 0,
-                    transform: `translateX(${toMilliseconds(previewTime) * PIXELS_PER_MS}px)`,
+                    transform: `translateX(${previewTime * PIXELS_PER_MS}px)`,
                     width: `${(1000 / fps) * PIXELS_PER_MS}px`
                   }}
                 />

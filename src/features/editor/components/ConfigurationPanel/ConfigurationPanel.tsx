@@ -4,11 +4,7 @@ import {
   useConfigurationPanelStore,
   type ConfigState
 } from '@/features/editor/stores/configurationPanelStore';
-import {
-  toMilliseconds,
-  toSeconds,
-  calculateLastFramePreview
-} from '@/utils/time';
+import { calculateLastFramePreview } from '@/utils/time';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 import { Button } from '@/components/ui/Button/Button';
@@ -103,17 +99,12 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     return <NoVideoInterstitial onRetry={fetchVideoMetadata} />;
   }
 
-  // Pure data handlers for Timeline (preview logic handled via onPreviewRequest)
-  // Timeline callbacks provide Seconds (legacy interface)
+  // Timeline callbacks provide milliseconds directly
   function handleTimelineChange(
-    newStartS: number,
-    newDurationS: number,
+    newStartMs: number,
+    newDurationMs: number,
     context: 'start' | 'end'
-  ) {
-    const newStartMs = toMilliseconds(newStartS);
-    // Use floor for duration to prevent overstepping
-    const newDurationMs = Math.floor(newDurationS * 1000);
-
+  ): void {
     storeHandleInputChange({
       name: 'start',
       value: newStartMs
@@ -122,13 +113,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       name: 'duration',
       value: newDurationMs
     });
-    console.log('handle timeline change', newStartMs, context);
-    // Explicit Preview Logic based on context from Timeline
+
     if (context === 'start') {
       handlePreviewRequest(newStartMs);
     } else {
-      // context === 'end'
-      // Logic: Preview the Last GIF Frame.
       const previewTimeMs = calculateLastFramePreview(
         newStartMs,
         newDurationMs,
@@ -182,11 +170,11 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       noValidate>
       <div className={css.timeline}>
         <Timeline
-          totalDuration={toSeconds(videoDuration)}
-          startTime={toSeconds(start)}
-          duration={toSeconds(duration)}
+          totalDuration={videoDuration}
+          startTime={start}
+          duration={duration}
           fps={framerate}
-          previewTime={toSeconds(previewTime)}
+          previewTime={previewTime}
           onChange={handleTimelineChange}
           onHandleFocus={handleTimelineHandleFocus}
         />

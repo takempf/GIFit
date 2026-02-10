@@ -37,11 +37,11 @@ vi.mock('@tanstack/react-virtual', () => {
 
 describe('Timeline', () => {
   const defaultProps = {
-    totalDuration: 10,
-    startTime: 2,
-    duration: 3,
+    totalDuration: 10000,
+    startTime: 2000,
+    duration: 3000,
     fps: 10,
-    previewTime: 2,
+    previewTime: 2000,
     onChange: vi.fn(),
     onHandleFocus: vi.fn()
   };
@@ -108,7 +108,7 @@ describe('Timeline', () => {
     // time = 10 / 10 = 1.0s.
     fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
 
-    expect(onChange).toHaveBeenCalledWith(1, 3, 'start'); // duration is 3
+    expect(onChange).toHaveBeenCalledWith(1000, 3000, 'start'); // duration is 3000ms
   });
 
   it('scrolls to selection on mount', () => {
@@ -200,7 +200,7 @@ describe('Timeline', () => {
     // Click at 220px (relative 120px -> 1s)
     fireEvent.mouseDown(interior, { clientX: 220, button: 0 });
     // Expect onChange
-    expect(props.onChange).toHaveBeenCalledWith(1, 3, 'start');
+    expect(props.onChange).toHaveBeenCalledWith(1000, 3000, 'start');
 
     // Handles interactions logic is similar but requires mocking dragging state which is internal.
     // However, I can trigger mouseDown on handles.
