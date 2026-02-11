@@ -159,7 +159,7 @@ describe('Timeline', () => {
     }
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
-      behavior: 'smooth',
+      behavior: 'instant',
       block: 'center',
       inline: 'start'
     });

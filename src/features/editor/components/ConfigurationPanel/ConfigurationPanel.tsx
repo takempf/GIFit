@@ -1,11 +1,12 @@
 import css from './ConfigurationPanel.module.css';
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import {
   useConfigurationPanelStore,
   type ConfigState
 } from '@/features/editor/stores/configurationPanelStore';
 import { calculateLastFramePreview } from '@/utils/time';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useVideoMetadata } from '@/features/editor/hooks/useVideoMetadata';
 
 import { Button } from '@/components/ui/Button/Button';
 import { Timeline } from '../Timeline/Timeline';
@@ -45,6 +46,8 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   const previewTime = useConfigurationPanelStore((state) => state.previewTime);
 
+  const { isMetadataLoaded } = useVideoMetadata();
+
   const debouncedSeekVideo = useDebouncedCallback(
     async (time: number) => {
       await seekVideo(time);
@@ -62,29 +65,6 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     [debouncedSeekVideo]
   );
 
-  useEffect(() => {
-    fetchVideoMetadata().then(() => {
-      // Capture frame at start time initially
-      captureFrame(useConfigurationPanelStore.getState().start);
-    });
-
-    // Poll for video metadata if missing (race condition handling)
-    const intervalId = setInterval(() => {
-      const state = useConfigurationPanelStore.getState();
-      if (state.videoDuration === 0) {
-        fetchVideoMetadata().then(() => {
-          if (useConfigurationPanelStore.getState().videoDuration > 0) {
-            captureFrame(useConfigurationPanelStore.getState().start);
-          }
-        });
-      } else {
-        clearInterval(intervalId);
-      }
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [fetchVideoMetadata, captureFrame]);
-
   // Store values are now in Milliseconds
   const videoDurationMs = videoDuration;
   const durationMs = duration;
@@ -95,7 +75,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
   const maxDuration = Math.min(videoDurationMs - startMs, 30000); // 30s limit
 
   // Early return MUST be after all hooks
-  if (videoDuration === 0) {
+  if (!isMetadataLoaded) {
     return <NoVideoInterstitial onRetry={fetchVideoMetadata} />;
   }
 
