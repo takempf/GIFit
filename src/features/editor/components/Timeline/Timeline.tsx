@@ -130,20 +130,27 @@ export function Timeline({
 
   // Initial scroll to selection
   useEffect(() => {
-    const UI_INITIALIZATION_DELAY = 20;
+    // Wait until we have a valid width (meaning ResizeObserver has fired)
+    if (
+      hasInitialScrolled.current ||
+      !selectionRef.current ||
+      containerWidth === 0
+    )
+      return;
 
-    setTimeout(() => {
-      if (hasInitialScrolled.current || !selectionRef.current) return;
+    // Wait even more as a sanity check
+    setTimeout(
+      () =>
+        selectionRef?.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'start'
+        }),
+      100
+    );
 
-      selectionRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'start'
-      });
-
-      hasInitialScrolled.current = true;
-    }, UI_INITIALIZATION_DELAY);
-  }, []);
+    hasInitialScrolled.current = true;
+  }, [containerWidth]);
 
   const count = Math.floor(totalDurationMs / 1000) + 1; // Number of seconds to render
 

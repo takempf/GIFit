@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { Timeline } from './Timeline';
 import { vi, describe, it, expect } from 'vitest';
 
@@ -34,6 +34,15 @@ vi.mock('@tanstack/react-virtual', () => {
     }
   };
 });
+
+// Mock ResizeObserver
+// Mock ResizeObserver
+const ResizeObserverMock = vi.fn((_cb: ResizeObserverCallback) => ({
+  observe: vi.fn(),
+  unobserve: vi.fn(),
+  disconnect: vi.fn()
+}));
+vi.stubGlobal('ResizeObserver', ResizeObserverMock);
 
 describe('Timeline', () => {
   const defaultProps = {
@@ -112,7 +121,20 @@ describe('Timeline', () => {
   });
 
   it('scrolls to selection on mount', () => {
-    vi.useFakeTimers();
+    // We need to capture the callback passed to ResizeObserver so we can trigger it
+    let resizeCallback: ResizeObserverCallback = () => {};
+    const observeMock = vi.fn();
+    const disconnectMock = vi.fn();
+
+    ResizeObserverMock.mockImplementation((cb: ResizeObserverCallback) => {
+      resizeCallback = cb;
+      return {
+        observe: observeMock,
+        disconnect: disconnectMock,
+        unobserve: vi.fn()
+      };
+    });
+
     // Verify scrollIntoView is called
     const scrollIntoViewMock = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoViewMock;
@@ -120,16 +142,27 @@ describe('Timeline', () => {
     const props = { ...defaultProps, startTime: 2 };
     render(<Timeline {...props} />);
 
-    // Advance timers by 20ms (UI_INITIALIZATION_DELAY)
-    vi.advanceTimersByTime(20);
+    // Trigger ResizeObserver callback to set containerWidth
+    // This simulates the container being measured
+    if (resizeCallback) {
+      act(() => {
+        resizeCallback(
+          [
+            {
+              contentRect: { width: 1000 } as DOMRectReadOnly
+            } as ResizeObserverEntry
+          ],
+          // @ts-ignore
+          {} as ResizeObserver
+        );
+      });
+    }
 
     expect(scrollIntoViewMock).toHaveBeenCalledWith({
       behavior: 'smooth',
       block: 'center',
       inline: 'start'
     });
-
-    vi.useRealTimers();
   });
 
   it('renders preview highlight at correct position', () => {
