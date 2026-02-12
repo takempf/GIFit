@@ -6,8 +6,8 @@ import React from 'react';
 
 describe('useScrollToHandles', () => {
   let selectionRef: React.RefObject<TimelineSelectionHandle | null>;
-  let scrollLeftIntoView: any;
-  let scrollRightIntoView: any;
+  let scrollLeftIntoView: import('vitest').Mock;
+  let scrollRightIntoView: import('vitest').Mock;
 
   beforeEach(() => {
     scrollLeftIntoView = vi.fn();

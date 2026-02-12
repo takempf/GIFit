@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
+
 import { StartTimeInput } from './StartTimeInput';
 import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
 
@@ -55,8 +56,11 @@ describe('StartTimeInput Stepping Logic', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (
-      useConfigurationPanelStore as unknown as { getState: () => any }
+      useConfigurationPanelStore as unknown as {
+        getState: import('vitest').Mock;
+      }
     ).getState = vi.fn();
+
     // Mock the selector hook
     (
       useConfigurationPanelStore as unknown as import('vitest').Mock

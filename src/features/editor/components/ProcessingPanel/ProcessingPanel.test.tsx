@@ -18,7 +18,7 @@ describe('ProcessingPanel', () => {
     vi.mocked(useGifStore).mockReturnValue({
       progress: 0.5,
       abortGif: abortGifMock
-    } as any);
+    } as unknown);
 
     vi.mocked(useAppStore).mockImplementation((selector) => {
       if (selector.toString().includes('setStatus')) return setStatusMock;

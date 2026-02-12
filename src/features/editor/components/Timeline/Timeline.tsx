@@ -56,11 +56,13 @@ export function Timeline({
   }, []);
 
   // Show ~7 seconds in the viewport
+  // Show ~7 seconds in the viewport
   const VISIBLE_DURATION_SECONDS = 7;
+  const MS_PER_SEC = 1000;
   // Fallback width prevents division by zero issues on initial render
   const effectiveWidth = containerWidth || 840; // 120 * 7
   const pixelsPerSecond = effectiveWidth / VISIBLE_DURATION_SECONDS;
-  const PIXELS_PER_MS = pixelsPerSecond / 1000;
+  const PIXELS_PER_MS = pixelsPerSecond / MS_PER_SEC;
 
   // Props are already in ms
   const totalDurationMs = totalDuration;
@@ -93,7 +95,10 @@ export function Timeline({
   const frameDurationMs = 1000 / fps;
   const MIN_DURATION_MS = frameDurationMs; // Minimum 1 frame
 
-  function handleLeftKeyDown(e: React.KeyboardEvent): void {
+  const handleHandleKeyDown = (
+    e: React.KeyboardEvent,
+    handleType: 'start' | 'end'
+  ) => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
     e.preventDefault();
 
@@ -101,36 +106,30 @@ export function Timeline({
     const delta =
       (e.key === 'ArrowRight' ? frameDurationMs : -frameDurationMs) *
       frameMultiplier;
-    const newStartMs = Math.max(
-      0,
-      Math.min(startTimeMs + delta, totalDurationMs - MIN_DURATION_MS)
-    );
-    const newDurationMs = durationMs - (newStartMs - startTimeMs);
 
-    if (newDurationMs >= MIN_DURATION_MS) {
-      onChange(newStartMs, newDurationMs, 'start');
+    if (handleType === 'start') {
+      const newStartMs = Math.max(
+        0,
+        Math.min(startTimeMs + delta, totalDurationMs - MIN_DURATION_MS)
+      );
+      const newDurationMs = durationMs - (newStartMs - startTimeMs);
+
+      if (newDurationMs >= MIN_DURATION_MS) {
+        onChange(newStartMs, newDurationMs, 'start');
+      }
+    } else {
+      const endTimeMs = startTimeMs + durationMs;
+      const newEndMs = Math.max(
+        startTimeMs + MIN_DURATION_MS,
+        Math.min(endTimeMs + delta, totalDurationMs)
+      );
+      const newDurationMs = newEndMs - startTimeMs;
+
+      if (newDurationMs >= MIN_DURATION_MS) {
+        onChange(startTimeMs, newDurationMs, 'end');
+      }
     }
-  }
-
-  function handleRightKeyDown(e: React.KeyboardEvent): void {
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    e.preventDefault();
-
-    const frameMultiplier = e.shiftKey ? 5 : 1;
-    const delta =
-      (e.key === 'ArrowRight' ? frameDurationMs : -frameDurationMs) *
-      frameMultiplier;
-    const endTimeMs = startTimeMs + durationMs;
-    const newEndMs = Math.max(
-      startTimeMs + MIN_DURATION_MS,
-      Math.min(endTimeMs + delta, totalDurationMs)
-    );
-    const newDurationMs = newEndMs - startTimeMs;
-
-    if (newDurationMs >= MIN_DURATION_MS) {
-      onChange(startTimeMs, newDurationMs, 'end');
-    }
-  }
+  };
 
   const hasInitialScrolled = useRef(false);
 
@@ -240,8 +239,8 @@ export function Timeline({
                   onRightDrag={startRightDrag}
                   onLeftFocus={() => onHandleFocus('start')}
                   onRightFocus={() => onHandleFocus('end')}
-                  onLeftKeyDown={handleLeftKeyDown}
-                  onRightKeyDown={handleRightKeyDown}
+                  onLeftKeyDown={(e) => handleHandleKeyDown(e, 'start')}
+                  onRightKeyDown={(e) => handleHandleKeyDown(e, 'end')}
                   draggingState={draggingState}
                 />
               </div>

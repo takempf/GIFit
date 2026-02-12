@@ -14,6 +14,7 @@ class ImageData {
     this.height = height;
   }
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 global.ImageData = ImageData as any;
 
 describe('areFramesEqual', () => {
@@ -39,7 +40,7 @@ describe('areFramesEqual', () => {
       0,
       255
     ]);
-    return new ImageData(data, width, height);
+    return new ImageData(data, width, height) as unknown as ImageData;
   };
 
   const createBlueFrame = () => {
@@ -61,7 +62,7 @@ describe('areFramesEqual', () => {
       255,
       255
     ]);
-    return new ImageData(data, width, height);
+    return new ImageData(data, width, height) as unknown as ImageData;
   };
 
   const createSlightlyDifferentRedFrame = (diff: number) => {
@@ -83,7 +84,7 @@ describe('areFramesEqual', () => {
       0,
       255
     ]);
-    return new ImageData(data, width, height);
+    return new ImageData(data, width, height) as unknown as ImageData;
   };
 
   it('should return true for identical frames', () => {

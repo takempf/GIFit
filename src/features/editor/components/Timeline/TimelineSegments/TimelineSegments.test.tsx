@@ -5,7 +5,7 @@ import type { VirtualItem } from '@tanstack/react-virtual';
 
 // Mock TimelineSegment to avoid testing its internal logic again and to simplify prop verification
 vi.mock('../TimelineSegment/TimelineSegment', () => ({
-  TimelineSegment: (props: any) => (
+  TimelineSegment: (props: Record<string, unknown>) => (
     <div data-testid="timeline-segment" data-props={JSON.stringify(props)} />
   )
 }));

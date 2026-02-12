@@ -78,37 +78,88 @@ export function useTimelineDrag({
       const targetTimeMs = rawMs;
 
       // Current End Time (fixed if dragging left)
-      // We use the anchor for left drags to prevent floating point drift
-      const anchorEndTimeMs = anchorEndTimeRef.current;
-      const minDurationMs = 1; // Allow arbitrary small duration (1ms)
 
       if (isDragging === 'move') {
-        const proposedLeftBytes = relativeX - dragOffsetRef.current;
-        // Convert pixels back to ms
-        let newStartMs = proposedLeftBytes / PIXELS_PER_MS;
-
-        newStartMs = Math.max(0, newStartMs);
-        newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
-
-        if (Math.abs(newStartMs - startTimeMs) > 0.001) {
-          onChange(newStartMs, durationMs, 'start');
-        }
+        handleMoveDrag(
+          relativeX,
+          dragOffsetRef.current,
+          startTimeMs,
+          durationMs,
+          totalDurationMs,
+          PIXELS_PER_MS,
+          onChange
+        );
       } else if (isDragging === 'left') {
-        let newStartMs = Math.max(0, targetTimeMs);
-        newStartMs = Math.min(newStartMs, anchorEndTimeMs - minDurationMs);
-
-        if (Math.abs(newStartMs - startTimeMs) > 0.001) {
-          const newDurationMs = anchorEndTimeMs - newStartMs;
-          onChange(newStartMs, newDurationMs, 'start');
-        }
+        handleLeftResize(
+          targetTimeMs,
+          anchorEndTimeRef.current,
+          startTimeMs,
+          durationMs,
+          onChange
+        );
       } else if (isDragging === 'right') {
-        let newEndMs = Math.max(startTimeMs + minDurationMs, targetTimeMs);
-        newEndMs = Math.min(newEndMs, totalDurationMs);
+        handleRightResize(
+          targetTimeMs,
+          startTimeMs,
+          durationMs,
+          totalDurationMs,
+          onChange
+        );
+      }
+    };
 
-        const newDurationMs = newEndMs - startTimeMs;
-        if (Math.abs(newDurationMs - durationMs) > 0.001) {
-          onChange(startTimeMs, newDurationMs, 'end');
-        }
+    const handleMoveDrag = (
+      relativeX: number,
+      dragOffset: number,
+      currentStartMs: number,
+      durationMs: number,
+      totalDurationMs: number,
+      pixelsPerMs: number,
+      onChange: UseTimelineDragProps['onChange']
+    ) => {
+      const proposedLeftBytes = relativeX - dragOffset;
+      // Convert pixels back to ms
+      let newStartMs = proposedLeftBytes / pixelsPerMs;
+
+      newStartMs = Math.max(0, newStartMs);
+      newStartMs = Math.min(newStartMs, totalDurationMs - durationMs);
+
+      if (Math.abs(newStartMs - currentStartMs) > 0.001) {
+        onChange(newStartMs, durationMs, 'start');
+      }
+    };
+
+    const handleLeftResize = (
+      targetTimeMs: number,
+      anchorEndTimeMs: number,
+      currentStartMs: number,
+      currentDurationMs: number,
+      onChange: UseTimelineDragProps['onChange']
+    ) => {
+      const minDurationMs = 1; // Allow arbitrary small duration (1ms)
+      let newStartMs = Math.max(0, targetTimeMs);
+      newStartMs = Math.min(newStartMs, anchorEndTimeMs - minDurationMs);
+
+      if (Math.abs(newStartMs - currentStartMs) > 0.001) {
+        const newDurationMs = anchorEndTimeMs - newStartMs;
+        onChange(newStartMs, newDurationMs, 'start');
+      }
+    };
+
+    const handleRightResize = (
+      targetTimeMs: number,
+      currentStartMs: number,
+      currentDurationMs: number,
+      totalDurationMs: number,
+      onChange: UseTimelineDragProps['onChange']
+    ) => {
+      const minDurationMs = 1;
+      let newEndMs = Math.max(currentStartMs + minDurationMs, targetTimeMs);
+      newEndMs = Math.min(newEndMs, totalDurationMs);
+
+      const newDurationMs = newEndMs - currentStartMs;
+      if (Math.abs(newDurationMs - currentDurationMs) > 0.001) {
+        onChange(currentStartMs, newDurationMs, 'end');
       }
     };
 

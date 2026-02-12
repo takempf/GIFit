@@ -3,22 +3,6 @@ import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { TimelineStoryboard } from './TimelineStoryboard';
 
-const MOCK_STORYBOARD_SPEC = {
-  baseUrl: 'http://test.com/sb/$L/$N.jpg',
-  levels: [
-    {
-      width: 160,
-      height: 90,
-      count: 50,
-      cols: 5,
-      rows: 5,
-      interval: 2000,
-      name: 'default',
-      signature: 'abc123'
-    }
-  ]
-};
-
 vi.mock('wxt/browser', () => ({
   browser: {
     tabs: {

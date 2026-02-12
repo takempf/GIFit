@@ -29,7 +29,7 @@ describe('ResultPanel', () => {
       frameCount: 10,
       reset: resetMock,
       setName: setNameMock
-    } as any);
+    } as unknown);
 
     vi.mocked(useAppStore).mockImplementation((selector) => {
       if (selector.toString().includes('setStatus')) return setStatusMock;
@@ -76,7 +76,7 @@ describe('ResultPanel', () => {
       frameCount: 0,
       reset: resetMock,
       setName: setNameMock
-    } as any);
+    } as unknown);
 
     render(<ResultPanel />);
     const downloadButton = screen.getByTestId('download-gif-button');
