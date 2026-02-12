@@ -51,7 +51,7 @@ export function areFramesEqual(
   return mse <= threshold;
 }
 
-export interface IndexingOptions {
+interface IndexingOptions {
   noDither?: boolean;
   palette: number[][];
   width: number;

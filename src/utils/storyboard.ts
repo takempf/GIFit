@@ -17,7 +17,7 @@ export interface StoryboardLevel {
  * Parses a single level string from the storyboard spec.
  * Format: "Width#Height#Count#Cols#Rows#Interval#Name#Signature"
  */
-export function parseLevel(levelStr: string): StoryboardLevel | null {
+function parseLevel(levelStr: string): StoryboardLevel | null {
   const parts = levelStr.split('#');
   if (parts.length < 8) return null;
 

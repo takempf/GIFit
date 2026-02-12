@@ -17,9 +17,8 @@ type ButtonOwnProps<E extends React.ElementType = 'button'> = {
   disabled?: boolean;
 };
 
-export type ButtonProps<E extends React.ElementType = 'button'> =
-  ButtonOwnProps<E> &
-    Omit<React.ComponentPropsWithRef<E>, keyof ButtonOwnProps<E>>;
+type ButtonProps<E extends React.ElementType = 'button'> = ButtonOwnProps<E> &
+  Omit<React.ComponentPropsWithRef<E>, keyof ButtonOwnProps<E>>;
 
 export function Button<E extends React.ElementType = 'button'>({
   as,

@@ -104,17 +104,6 @@ export interface MsgGetStoryboard {
   type: 'GET_STORYBOARD';
 }
 
-export interface StoryboardSpec {
-  baseUrl: string;
-  l1: string; // Level 1
-  l2: string; // Level 2 (High res usually)
-  spec: string; // Original spec string
-  languages: Array<{
-    code: string;
-    name: string;
-  }>;
-}
-
 export interface MsgStoryboardData {
   type: 'STORYBOARD_DATA';
   spec: string | null;

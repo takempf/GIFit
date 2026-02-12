@@ -2,7 +2,7 @@ import { Progress as BaseProgress } from '@base-ui/react/progress';
 
 import css from './Progress.module.css';
 
-export interface ProgressProps {
+interface ProgressProps {
   value: number;
   label?: React.ReactNode;
   showValue?: boolean;
