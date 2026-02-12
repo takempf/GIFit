@@ -69,8 +69,12 @@ describe('Timeline', () => {
     // startTimeMs = 2000ms, pixelsPerMs = 120/1000 = 0.12
     // transform = translateX(2000 * 0.12) = translateX(240px)
     // durationMs = 3000ms, width = 3000 * 0.12 = 360px
-    expect(selection).toHaveStyle('transform: translateX(240px)');
-    expect(selection).toHaveStyle('width: 360px');
+    // Calculate expected styles
+    // startTimeMs = 2000ms, pixelsPerMs = 120/1000 = 0.12
+    // transform = translateX(2000 * 0.12) = translateX(240px)
+    // durationMs = 3000ms, width = 3000 * 0.12 = 360px
+    expect(selection.style.transform).toBe('translateX(240px)');
+    expect(selection.style.width).toBe('360px');
   });
 
   it('renders ticks', () => {

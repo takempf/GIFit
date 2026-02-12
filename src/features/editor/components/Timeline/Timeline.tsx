@@ -9,6 +9,7 @@ import {
 } from './TimelineSelection/TimelineSelection';
 import { TimelineSegments } from './TimelineSegments/TimelineSegments';
 import { TimelineStoryboard } from './TimelineStoryboard/TimelineStoryboard';
+import { useScrollToHandles } from './hooks/useScrollToHandles';
 
 import css from './Timeline.module.css';
 
@@ -81,6 +82,13 @@ export function Timeline({
     onChange
   });
 
+  useScrollToHandles({
+    startTimeMs,
+    durationMs,
+    selectionRef,
+    draggingState
+  });
+
   // Keyboard navigation for handles
   const frameDurationMs = 1000 / fps;
   const MIN_DURATION_MS = frameDurationMs; // Minimum 1 frame
@@ -101,7 +109,6 @@ export function Timeline({
 
     if (newDurationMs >= MIN_DURATION_MS) {
       onChange(newStartMs, newDurationMs, 'start');
-      selectionRef.current?.scrollLeftIntoView();
     }
   }
 
@@ -122,7 +129,6 @@ export function Timeline({
 
     if (newDurationMs >= MIN_DURATION_MS) {
       onChange(startTimeMs, newDurationMs, 'end');
-      selectionRef.current?.scrollRightIntoView();
     }
   }
 
@@ -224,6 +230,7 @@ export function Timeline({
                 {/* Selection Layer */}
                 <TimelineSelection
                   ref={selectionRef}
+                  scrollContainerRef={scrollRef}
                   startTimeMs={startTimeMs}
                   durationMs={durationMs}
                   pixelsPerMs={PIXELS_PER_MS}

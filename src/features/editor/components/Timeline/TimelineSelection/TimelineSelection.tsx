@@ -1,8 +1,11 @@
 import React, { useRef, useImperativeHandle } from 'react';
 
+import { useVisibilityObserver } from '../../../hooks/useVisibilityObserver';
+
 import css from './TimelineSelection.module.css';
 
 interface TimelineSelectionProps {
+  scrollContainerRef?: React.RefObject<HTMLDivElement | null>;
   startTimeMs: number;
   durationMs: number;
   pixelsPerMs: number;
@@ -40,7 +43,8 @@ export const TimelineSelection = React.forwardRef<
       onRightFocus,
       onLeftKeyDown,
       onRightKeyDown,
-      draggingState
+      draggingState,
+      ...props // capture remaining props including scrollContainerRef
     },
     ref
   ) => {
@@ -50,23 +54,20 @@ export const TimelineSelection = React.forwardRef<
 
     const SCROLL_MARGIN = 100;
 
-    const isInViewport = (el: HTMLElement, edge: 'left' | 'right'): boolean => {
-      const scrollContainer = el.closest('[data-testid="scroll-container"]');
-      if (!scrollContainer) return true;
+    const leftVisible = useVisibilityObserver(leftHandleRef, {
+      root: props.scrollContainerRef?.current,
+      rootMargin: `0px -${SCROLL_MARGIN}px 0px -${SCROLL_MARGIN}px`
+    });
 
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-
-      if (edge === 'left') {
-        return elRect.left >= containerRect.left + SCROLL_MARGIN;
-      }
-      return elRect.right <= containerRect.right - SCROLL_MARGIN;
-    };
+    const rightVisible = useVisibilityObserver(rightHandleRef, {
+      root: props.scrollContainerRef?.current,
+      rootMargin: `0px -${SCROLL_MARGIN}px 0px -${SCROLL_MARGIN}px`
+    });
 
     useImperativeHandle(ref, () => ({
       scrollLeftIntoView: () => {
         const el = leftHandleRef.current;
-        if (!el || isInViewport(el, 'left')) return;
+        if (!el || leftVisible) return;
         el.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
@@ -75,7 +76,7 @@ export const TimelineSelection = React.forwardRef<
       },
       scrollRightIntoView: () => {
         const el = rightHandleRef.current;
-        if (!el || isInViewport(el, 'right')) return;
+        if (!el || rightVisible) return;
         el.scrollIntoView({
           behavior: 'smooth',
           block: 'nearest',
