@@ -1,9 +1,7 @@
 import css from './ConfigurationPanel.module.css';
 import { useCallback } from 'react';
-import {
-  useConfigurationPanelStore,
-  type ConfigState
-} from '@/features/editor/stores/configurationPanelStore';
+import { useConfigurationPanelStore, useConfigStoreApi } from '@/stores/storeContext';
+import type { ConfigState } from '@/features/editor/stores/configurationPanelStore';
 import { calculateLastFramePreview } from '@/utils/time';
 import { useDebouncedCallback } from '@/hooks/useDebounce';
 import { useVideoMetadata } from '@/features/editor/hooks/useVideoMetadata';
@@ -24,6 +22,7 @@ interface ConfigurationPanelProps {
 }
 
 export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
+  const configStoreApi = useConfigStoreApi();
   const start = useConfigurationPanelStore((state) => state.start);
   const duration = useConfigurationPanelStore((state) => state.duration);
   const width = useConfigurationPanelStore((state) => state.width);
@@ -125,7 +124,7 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const currentConfigState = useConfigurationPanelStore.getState();
+    const currentConfigState = configStoreApi.getState();
     onSubmit({
       start, // MS
       duration, // MS

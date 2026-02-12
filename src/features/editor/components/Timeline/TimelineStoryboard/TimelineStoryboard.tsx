@@ -1,6 +1,5 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { browser } from 'wxt/browser';
 
 import {
   parseStoryboardSpec,
@@ -17,6 +16,10 @@ interface TimelineStoryboardProps {
   pixelsPerMs: number;
 }
 
+/**
+ * Hook to fetch storyboard spec. Only works in extension context.
+ * In non-extension contexts (e.g. demo page), returns null gracefully.
+ */
 function useStoryboardSpec(totalDurationMs: number): {
   baseUrl: string;
   levels: StoryboardLevel[];
@@ -31,6 +34,9 @@ function useStoryboardSpec(totalDurationMs: number): {
 
     const fetchStoryboard = async (): Promise<void> => {
       try {
+        // Dynamic import of wxt/browser - will fail gracefully outside extension context
+        const { browser } = await import('wxt/browser');
+
         const tabs = await browser.tabs.query({
           active: true,
           currentWindow: true
@@ -52,8 +58,9 @@ function useStoryboardSpec(totalDurationMs: number): {
         } else {
           console.warn('Timeline: No spec in response');
         }
-      } catch (e) {
-        console.error('Failed to fetch storyboard spec', e);
+      } catch {
+        // Expected in non-extension context (demo page)
+        // Silently return null
       }
     };
     fetchStoryboard();

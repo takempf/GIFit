@@ -1,5 +1,5 @@
 import React from 'react';
-import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { useConfigurationPanelStore } from '@/stores/storeContext';
 import { InputNumber } from '@/components/ui/InputNumber/InputNumber';
 import { toSeconds, calculateLastFramePreview } from '@/utils/time';
 import css from './DurationInput.module.css';

@@ -3,7 +3,7 @@ import css from './ResultPanel.module.css';
 import cx from 'classnames';
 
 import { useAppStore } from '@/stores/appStore';
-import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
+import { useGifStore } from '@/stores/storeContext';
 
 import { Button } from '@/components/ui/Button/Button';
 

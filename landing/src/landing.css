@@ -1,0 +1,106 @@
+@import 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Extension CSS variables (needed for embedded demo components) */
+  --color_primary: rgb(235, 10, 30);
+  --color_focus_border: oklch(from var(--color_primary) calc(l * 1.25) c h / 1);
+
+  --color_popup_background: rgb(15, 15, 15);
+  --color_panel_border: rgb(65, 65, 65);
+  --color_panel_background: rgb(35, 35, 35);
+
+  --color_panel_text: rgb(125, 125, 125);
+  --color_input_text: rgb(25, 25, 25);
+
+  --color_slider_thumb: rgb(235, 235, 235);
+  --color_slider_thumb_focus: rgb(255, 255, 255);
+  --color_slider_background: rgba(0, 0, 0, 0.06);
+
+  --color_button: rgb(235, 235, 235);
+  --color_button_background: rgb(25, 25, 25);
+  --color_button_primary_background: rgb(235, 15, 15);
+  --color_accent: rgb(0, 225, 255);
+  --color_subtle_shadow: rgba(0, 0, 0, 0.25);
+
+  --ease_in_expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
+  --ease_out_expo: cubic-bezier(0.19, 1, 0.22, 1);
+
+  --border-radius: 0.5em;
+
+  /* Landing page specific tokens */
+  --landing_bg: #0a0a0a;
+  --landing_surface: #141414;
+  --landing_surface_elevated: #1a1a1a;
+  --landing_border: #262626;
+  --landing_text: rgba(255, 255, 255, 0.9);
+  --landing_text_muted: rgba(255, 255, 255, 0.5);
+  --landing_accent: #eb0a1e;
+}
+
+body {
+  font-family: 'Geist', sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  font-weight: 400;
+  font-size: 16px;
+  background: var(--landing_bg);
+  color: var(--landing_text);
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: rgba(235, 10, 30, 0.3);
+  color: white;
+}
+
+a {
+  color: white;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+  text-decoration-color: var(--landing_accent);
+  text-decoration-thickness: 0.1em;
+}
+
+input {
+  font-family: inherit;
+  letter-spacing: 0.05em;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+  animation-duration: 350ms;
+  animation-timing-function: var(--ease_out_expo);
+}
+
+::view-transition-old(app-panel),
+::view-transition-new(app-panel) {
+  height: calc-size(auto);
+  object-fit: none;
+  object-position: bottom;
+}

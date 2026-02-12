@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
-import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { useConfigurationPanelStore, useConfigStoreApi } from '@/stores/storeContext';
 
 export function useVideoMetadata() {
+  const configStoreApi = useConfigStoreApi();
+
   const videoDuration = useConfigurationPanelStore(
     (state) => state.videoDuration
   );
@@ -17,18 +19,18 @@ export function useVideoMetadata() {
     // Initial fetch
     fetchVideoMetadata().then(() => {
       // If we got metadata immediately, capture the initial frame
-      if (useConfigurationPanelStore.getState().videoDuration > 0) {
-        captureFrame(useConfigurationPanelStore.getState().start);
+      if (configStoreApi.getState().videoDuration > 0) {
+        captureFrame(configStoreApi.getState().start);
       }
     });
 
     // Race condition handling: poll if duration is still 0
     const intervalId = setInterval(() => {
-      const state = useConfigurationPanelStore.getState();
+      const state = configStoreApi.getState();
       if (state.videoDuration === 0) {
         fetchVideoMetadata().then(() => {
-          if (useConfigurationPanelStore.getState().videoDuration > 0) {
-            captureFrame(useConfigurationPanelStore.getState().start);
+          if (configStoreApi.getState().videoDuration > 0) {
+            captureFrame(configStoreApi.getState().start);
           }
         });
       } else {
@@ -37,7 +39,7 @@ export function useVideoMetadata() {
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [fetchVideoMetadata, captureFrame]);
+  }, [fetchVideoMetadata, captureFrame, configStoreApi]);
 
   return {
     isMetadataLoaded: videoDuration > 0

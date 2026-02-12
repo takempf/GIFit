@@ -1,4 +1,4 @@
-import { useGifStore } from '@/features/generator/stores/gifGeneratorStore';
+import { useGifStore } from '@/stores/storeContext';
 
 import { Button } from '@/components/ui/Button/Button';
 import { Progress } from '@/components/ui/Progress/Progress';

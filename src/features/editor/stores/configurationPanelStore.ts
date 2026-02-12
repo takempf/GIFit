@@ -1,9 +1,8 @@
 import { create } from 'zustand';
 import { log } from '@/utils/logger';
-import { storedConfig } from '@/utils/storage';
 import { VideoMetadata } from '@/types';
-import { videoController } from '@/services/VideoController';
 import { toMilliseconds, toSeconds } from '@/utils/time';
+import type { VideoAdapter, StorageAdapter } from '@/adapters/types';
 
 const DEFAULT_WIDTH = 420;
 
@@ -43,10 +42,6 @@ interface VideoLoadedDataPayload {
   currentTime?: number; // Seconds (from video metadata)
 }
 
-interface VideoSeekedPayload {
-  currentTime: number; // Seconds
-}
-
 interface SetStartToCurrentTimePayload {
   currentTime: number; // Seconds
 }
@@ -55,7 +50,7 @@ interface SetStartToCurrentTimePayload {
 export interface ConfigActions {
   handleInputChange: (payload: InputActionPayload) => void;
   handleVideoLoadedData: (payload: VideoLoadedDataPayload) => void;
-  handleVideoSeeked: (payload: VideoSeekedPayload) => void;
+  handleVideoSeeked: (payload: { currentTime: number }) => void;
   handleSetStartToCurrentTime: (payload: SetStartToCurrentTimePayload) => void;
   resetState: (metadata?: VideoMetadata) => void;
   seekVideo: (timeMs: number) => Promise<void>;
@@ -123,133 +118,143 @@ const getInitialState = (
   };
 };
 
-export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
-  (set, get) => ({
-    ...getInitialState(undefined),
+/**
+ * Factory function that creates the configuration panel store
+ * with injectable video and storage adapters.
+ */
+export function createConfigurationPanelStore(
+  videoAdapter: VideoAdapter,
+  storageAdapter: StorageAdapter
+) {
+  const store = create<ConfigurationPanelStore>(
+    (set, get) => ({
+      ...getInitialState(undefined),
 
-    loadInitialConfig: async () => {
-      try {
-        const [storedWidth, storedFps, storedQuality] = await Promise.all([
-          storedConfig.width.getValue(),
-          storedConfig.fps.getValue(),
-          storedConfig.quality.getValue()
-        ]);
+      loadInitialConfig: async () => {
+        try {
+          const [storedWidth, storedFps, storedQuality] = await Promise.all([
+            storageAdapter.getWidth(),
+            storageAdapter.getFps(),
+            storageAdapter.getQuality()
+          ]);
 
-        const currentMetadata: VideoMetadata | undefined =
-          get().videoWidth > 0
-            ? {
-                width: get().videoWidth,
-                height: get().videoHeight,
-                duration: toSeconds(get().videoDuration),
-                currentTime: toSeconds(get().start) // approximation
-              }
-            : undefined;
+          const currentMetadata: VideoMetadata | undefined =
+            get().videoWidth > 0
+              ? {
+                  width: get().videoWidth,
+                  height: get().videoHeight,
+                  duration: toSeconds(get().videoDuration),
+                  currentTime: toSeconds(get().start) // approximation
+                }
+              : undefined;
 
-        const initialStateFromStorage = getInitialState(currentMetadata, {
-          width: storedWidth,
-          framerate: storedFps,
-          quality: storedQuality
-        });
+          const initialStateFromStorage = getInitialState(currentMetadata, {
+            width: storedWidth,
+            framerate: storedFps,
+            quality: storedQuality
+          });
 
-        set(initialStateFromStorage);
-      } catch (error) {
-        log('Failed to load initial config from storage:', error);
-      }
-    },
-
-    handleInputChange: (payload) =>
-      set((state) => {
-        const { name, value } = payload;
-        const newState = { ...state, [name]: value };
-
-        // Persist relevant changes to storage
-        if (name === 'width' && typeof value === 'number') {
-          storedConfig.width
-            .setValue(value)
-            .catch((err) => log('Error saving width:', err));
-          newState.height = Math.round(value / state.aspectRatio);
-        } else if (name === 'height' && typeof value === 'number') {
-          newState.width = Math.round(value * state.aspectRatio);
-          storedConfig.width
-            .setValue(newState.width)
-            .catch((err) => log('Error saving width:', err));
-        } else if (name === 'framerate' && typeof value === 'number') {
-          storedConfig.fps
-            .setValue(value)
-            .catch((err) => log('Error saving framerate:', err));
-        } else if (name === 'quality' && typeof value === 'number') {
-          storedConfig.quality
-            .setValue(value)
-            .catch((err) => log('Error saving quality:', err));
+          set(initialStateFromStorage);
+        } catch (error) {
+          log('Failed to load initial config from storage:', error);
         }
+      },
 
-        return newState;
-      }),
+      handleInputChange: (payload) =>
+        set((state) => {
+          const { name, value } = payload;
+          const newState = { ...state, [name]: value };
 
-    handleVideoLoadedData: (payload) =>
-      set((state) => ({
-        ...state,
-        aspectRatio: payload.aspectRatio,
-        videoDuration: toMilliseconds(payload.duration),
-        videoWidth: payload.videoWidth,
-        videoHeight: payload.videoHeight,
-        start:
-          state.videoDuration === 0 && payload.currentTime !== undefined
-            ? toMilliseconds(payload.currentTime)
-            : state.start,
-        height: Math.round(state.width / payload.aspectRatio)
-      })),
+          // Persist relevant changes to storage
+          if (name === 'width' && typeof value === 'number') {
+            storageAdapter.setWidth(value)
+              .catch((err) => log('Error saving width:', err));
+            newState.height = Math.round(value / state.aspectRatio);
+          } else if (name === 'height' && typeof value === 'number') {
+            newState.width = Math.round(value * state.aspectRatio);
+            storageAdapter.setWidth(newState.width)
+              .catch((err) => log('Error saving width:', err));
+          } else if (name === 'framerate' && typeof value === 'number') {
+            storageAdapter.setFps(value)
+              .catch((err) => log('Error saving framerate:', err));
+          } else if (name === 'quality' && typeof value === 'number') {
+            storageAdapter.setQuality(value)
+              .catch((err) => log('Error saving quality:', err));
+          }
 
-    handleVideoSeeked: (_payload) => {
-      // no-op
-    },
+          return newState;
+        }),
 
-    handleSetStartToCurrentTime: (payload) =>
-      set({ start: toMilliseconds(payload.currentTime) }),
-
-    seekVideo: async (timeMs) => {
-      // Video controller expects seconds
-      await videoController.seek(toSeconds(timeMs));
-    },
-
-    resetState: (metadata?: VideoMetadata) => {
-      set(getInitialState(metadata));
-      get().loadInitialConfig();
-    },
-
-    fetchVideoMetadata: async () => {
-      const metadata = await videoController.getMetadata();
-      if (metadata) {
-        get().handleVideoLoadedData({
-          aspectRatio: metadata.width / metadata.height,
-          duration: metadata.duration,
-          videoWidth: metadata.width,
-          videoHeight: metadata.height,
-          currentTime: metadata.currentTime
-        });
-      }
-    },
-
-    syncStartToVideoTime: async () => {
-      const metadata = await videoController.getMetadata();
-      if (metadata) {
-        get().handleSetStartToCurrentTime({
-          currentTime: metadata.currentTime // Seconds
-        });
-      }
-    },
-
-    captureFrame: async (timeMs?: number) => {
-      const dataUrl = await videoController.captureFrame();
-      if (dataUrl) {
+      handleVideoLoadedData: (payload) =>
         set((state) => ({
-          previewImage: dataUrl,
-          previewTime: timeMs !== undefined ? timeMs : state.previewTime
-        }));
-      }
-    }
-  })
-);
+          ...state,
+          aspectRatio: payload.aspectRatio,
+          videoDuration: toMilliseconds(payload.duration),
+          videoWidth: payload.videoWidth,
+          videoHeight: payload.videoHeight,
+          start:
+            state.videoDuration === 0 && payload.currentTime !== undefined
+              ? toMilliseconds(payload.currentTime)
+              : state.start,
+          height: Math.round(state.width / payload.aspectRatio)
+        })),
 
-// Initialize stored values
-useConfigurationPanelStore.getState().loadInitialConfig();
+      handleVideoSeeked: (_payload) => {
+        // no-op
+      },
+
+      handleSetStartToCurrentTime: (payload) =>
+        set({ start: toMilliseconds(payload.currentTime) }),
+
+      seekVideo: async (timeMs) => {
+        await videoAdapter.seek(toSeconds(timeMs));
+      },
+
+      resetState: (metadata?: VideoMetadata) => {
+        set(getInitialState(metadata));
+        get().loadInitialConfig();
+      },
+
+      fetchVideoMetadata: async () => {
+        const metadata = await videoAdapter.getMetadata();
+        if (metadata) {
+          get().handleVideoLoadedData({
+            aspectRatio: metadata.width / metadata.height,
+            duration: metadata.duration,
+            videoWidth: metadata.width,
+            videoHeight: metadata.height,
+            currentTime: metadata.currentTime
+          });
+        }
+      },
+
+      syncStartToVideoTime: async () => {
+        const metadata = await videoAdapter.getMetadata();
+        if (metadata) {
+          get().handleSetStartToCurrentTime({
+            currentTime: metadata.currentTime
+          });
+        }
+      },
+
+      captureFrame: async (timeMs?: number) => {
+        const dataUrl = await videoAdapter.captureFrame();
+        if (dataUrl) {
+          set((state) => ({
+            previewImage: dataUrl,
+            previewTime: timeMs !== undefined ? timeMs : state.previewTime
+          }));
+        }
+      }
+    })
+  );
+
+  // Initialize stored values
+  store.getState().loadInitialConfig();
+
+  return store;
+}
+
+// Re-export the store type for consumers
+export type ConfigurationPanelStoreApi = ReturnType<typeof createConfigurationPanelStore>;
+export type { ConfigurationPanelStore };

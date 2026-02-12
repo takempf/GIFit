@@ -1,5 +1,5 @@
 import React from 'react';
-import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { useConfigurationPanelStore } from '@/stores/storeContext';
 import { InputTime } from '@/components/ui/InputTime/InputTime';
 import css from './StartTimeInput.module.css';
 

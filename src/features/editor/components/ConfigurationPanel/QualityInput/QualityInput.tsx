@@ -1,5 +1,5 @@
 import React from 'react';
-import { useConfigurationPanelStore } from '@/features/editor/stores/configurationPanelStore';
+import { useConfigurationPanelStore } from '@/stores/storeContext';
 import { Slider } from '@/components/ui/Slider/Slider';
 import css from './QualityInput.module.css';
 

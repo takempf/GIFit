@@ -1,0 +1,112 @@
+.demoContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* --- Video Selector --- */
+
+.videoSelector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.selectorLabel {
+  font-size: 0.875rem;
+  color: var(--landing_text_muted);
+  font-weight: 500;
+}
+
+.selectorButtons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.selectorButton {
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.375rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--landing_border);
+  background: transparent;
+  color: var(--landing_text_muted);
+  cursor: pointer;
+  transition:
+    border-color 200ms,
+    color 200ms,
+    background 200ms;
+}
+
+.selectorButton:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: white;
+}
+
+.selectorButtonActive {
+  border-color: var(--landing_accent);
+  color: white;
+  background: rgba(235, 10, 30, 0.1);
+}
+
+/* --- Video Player --- */
+
+.videoContainer {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--landing_border);
+  background: black;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.videoCredit {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.02em;
+}
+
+/* --- GIFit Editor Embed --- */
+
+.editorContainer {
+  width: 100%;
+  max-width: 800px;
+  min-height: 600px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--landing_border);
+  background: var(--color_popup_background);
+
+  /* Match the extension's body sizing */
+  font-size: 16px;
+}
+
+/* --- Loading --- */
+
+.loading {
+  width: 100%;
+  max-width: 800px;
+  min-height: 400px;
+  border-radius: 12px;
+  border: 1px solid var(--landing_border);
+  background: var(--landing_surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--landing_text_muted);
+  font-size: 0.875rem;
+}
