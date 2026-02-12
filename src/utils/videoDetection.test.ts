@@ -2,13 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { findBestVideo } from './videoDetection';
 
 describe('findBestVideo', () => {
-  let mockVideos: HTMLVideoElement[];
-
   beforeEach(() => {
     // Reset mocks and viewport
     vi.stubGlobal('innerWidth', 1024);
     vi.stubGlobal('innerHeight', 768);
-    mockVideos = [];
   });
 
   afterEach(() => {
@@ -17,7 +14,7 @@ describe('findBestVideo', () => {
 
   const createMockVideo = (
     rect: Partial<DOMRect>,
-    style: Partial<CSSStyleDeclaration> = {},
+    _style: Partial<CSSStyleDeclaration> = {},
     isConnected = true
   ) => {
     const video = document.createElement('video');
