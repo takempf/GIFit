@@ -4,22 +4,23 @@ import { pipeline } from 'stream/promises';
 
 const VIDEOS_DIR = path.resolve('landing/public/videos');
 
-// Using Pixabay CDN - all videos are public domain (Pixabay License)
+// Google-hosted sample videos (from the official Google HTML5 video samples)
+// These are reliable, publicly accessible, and small
 const VIDEOS = [
   {
     name: 'ocean.mp4',
-    url: 'https://cdn.pixabay.com/video/2020/07/30/45684-446787644_tiny.mp4',
-    label: 'Ocean Waves'
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    label: 'Blazes'
   },
   {
     name: 'city.mp4',
-    url: 'https://cdn.pixabay.com/video/2016/09/12/5104-183787916_tiny.mp4',
-    label: 'City Timelapse'
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+    label: 'Escapes'
   },
   {
     name: 'nature.mp4',
-    url: 'https://cdn.pixabay.com/video/2019/07/09/25060-347740808_tiny.mp4',
-    label: 'Nature'
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+    label: 'Joyrides'
   }
 ];
 
