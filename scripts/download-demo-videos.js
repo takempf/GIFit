@@ -4,23 +4,22 @@ import { pipeline } from 'stream/promises';
 
 const VIDEOS_DIR = path.resolve('landing/public/videos');
 
-// Small CC0 videos from Pexels (direct download links for SD quality)
-// These are all Creative Commons Zero (CC0) licensed
+// Using Pixabay CDN - all videos are public domain (Pixabay License)
 const VIDEOS = [
   {
     name: 'ocean.mp4',
-    // Ocean waves - Pexels CC0
-    url: 'https://videos.pexels.com/video-files/1093662/1093662-sd_640_360_30fps.mp4'
+    url: 'https://cdn.pixabay.com/video/2020/07/30/45684-446787644_tiny.mp4',
+    label: 'Ocean Waves'
   },
   {
     name: 'city.mp4',
-    // City traffic time lapse - Pexels CC0
-    url: 'https://videos.pexels.com/video-files/1721294/1721294-sd_640_360_25fps.mp4'
+    url: 'https://cdn.pixabay.com/video/2016/09/12/5104-183787916_tiny.mp4',
+    label: 'City Timelapse'
   },
   {
     name: 'nature.mp4',
-    // Nature forest - Pexels CC0
-    url: 'https://videos.pexels.com/video-files/2491284/2491284-sd_640_360_24fps.mp4'
+    url: 'https://cdn.pixabay.com/video/2019/07/09/25060-347740808_tiny.mp4',
+    label: 'Nature'
   }
 ];
 
@@ -28,40 +27,53 @@ async function downloadVideo(video) {
   const filePath = path.join(VIDEOS_DIR, video.name);
 
   if (fs.existsSync(filePath)) {
-    console.log(`[skip] ${video.name} already exists`);
-    return;
+    const stats = fs.statSync(filePath);
+    if (stats.size > 10000) {
+      console.log(`Skipping ${video.name} - already exists (${(stats.size / 1024 / 1024).toFixed(1)} MB)`);
+      return true;
+    }
+    fs.unlinkSync(filePath);
   }
 
-  console.log(`[download] ${video.name} from ${video.url}`);
+  console.log(`Downloading ${video.name} (${video.label}) from ${video.url}...`);
 
-  const response = await fetch(video.url);
+  try {
+    const response = await fetch(video.url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible)',
+        'Accept': '*/*',
+      }
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to download ${video.name}: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      console.error(`Failed to download ${video.name}: ${response.status} ${response.statusText}`);
+      return false;
+    }
+
+    const fileStream = fs.createWriteStream(filePath);
+    await pipeline(response.body, fileStream);
+
+    const stats = fs.statSync(filePath);
+    console.log(`Done! ${video.name} (${(stats.size / 1024 / 1024).toFixed(1)} MB)`);
+    return true;
+  } catch (err) {
+    console.error(`Error downloading ${video.name}: ${err.message}`);
+    return false;
   }
-
-  const fileStream = fs.createWriteStream(filePath);
-  await pipeline(response.body, fileStream);
-
-  const stats = fs.statSync(filePath);
-  console.log(`[done] ${video.name} (${(stats.size / 1024 / 1024).toFixed(1)} MB)`);
 }
 
 async function main() {
-  // Ensure directory exists
   fs.mkdirSync(VIDEOS_DIR, { recursive: true });
 
-  console.log(`Downloading demo videos to ${VIDEOS_DIR}...`);
+  console.log(`Downloading demo videos to ${VIDEOS_DIR}...\n`);
 
+  let success = 0;
   for (const video of VIDEOS) {
-    try {
-      await downloadVideo(video);
-    } catch (error) {
-      console.error(`Failed to download ${video.name}:`, error.message);
-    }
+    const ok = await downloadVideo(video);
+    if (ok) success++;
   }
 
-  console.log('Done!');
+  console.log(`\nDownloaded ${success}/${VIDEOS.length} videos.`);
 }
 
 main();
