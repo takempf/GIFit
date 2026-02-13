@@ -9,10 +9,13 @@ lerna-debug.log*
 
 node_modules
 .output
+dist
+dist-*
 stats.html
 stats-*.json
 .wxt
 web-ext.config.ts
+
 
 # Environment variables
 .env
