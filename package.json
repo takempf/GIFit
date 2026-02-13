@@ -22,7 +22,10 @@
     "test:e2e": "playwright test",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
-    "validate": "npm run lint && npm run compile"
+    "validate": "npm run lint && npm run compile",
+    "website:dev": "vite serve -c vite.website.config.ts",
+    "website:build": "vite build -c vite.website.config.ts",
+    "website:preview": "vite preview -c vite.website.config.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.1.0",
@@ -59,6 +62,7 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.0",
+    "vite": "^7.3.1",
     "vite-plugin-svgr": "^4.3.0",
     "vitest": "^3.2.4",
     "wxt": "^0.20.13"
