@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, createMockAdapters } from '@shared/test-utils';
 import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { TimelineStoryboard } from './TimelineStoryboard';
@@ -45,7 +45,19 @@ describe('TimelineStoryboard', () => {
           totalDurationMs={5000}
           pixelsPerMs={0.12}
         />
-      </div>
+      </div>,
+      {
+        adapters: {
+          video: {
+            ...createMockAdapters().video,
+            getStoryboardSpec: vi
+              .fn()
+              .mockResolvedValue(
+                'http://test.com/sb/$L/$N.jpg|160#90#50#5#5#2000#default#abc123'
+              )
+          }
+        }
+      }
     );
 
     const frames = await findAllByTestId('storyboard-frame');

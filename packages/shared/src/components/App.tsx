@@ -1,7 +1,6 @@
 import css from './App.module.css';
 
 import { useCallback, useEffect } from 'react';
-import { browser } from 'wxt/browser';
 
 import { AppLogo } from './AppLogo/AppLogo';
 import { ConfigurationPanel } from '../features/editor/components/ConfigurationPanel/ConfigurationPanel';
@@ -20,20 +19,15 @@ import { useConfigurationPanelStore } from '@shared/features/editor/stores/confi
 import TKLogo from '@shared/assets/tk.svg?react';
 import BugIcon from '@shared/assets/bug.svg?react';
 
-import { ExtensionMessage } from '@shared/types';
+import { useAdapters } from '@shared/adapters/context';
 
 // We can just use ConfigState directly or Pick what we need.
 // handleSubmit uses: start, duration, width, height, framerate (from fps alias?), quality.
 // ConfigState has: start, duration, width, height, framerate, quality...
 // Let's use ConfigState for the handler.
 
-async function getVideoTitle() {
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-  const title = tabs[0]?.title ?? 'untitled';
-  return title.replace(' - YouTube', '');
-}
-
 export function App() {
+  const { gif: gifAdapter, getVideoTitle } = useAdapters();
   const status = useAppStore((state) => state.status);
   const setStatus = useAppStore((state) => state.setStatus);
   const setName = useGifStore((state) => state.setName);
@@ -47,47 +41,26 @@ export function App() {
   const width = useConfigurationPanelStore((state) => state.width);
   const height = useConfigurationPanelStore((state) => state.height);
 
+  // Listen for messages from content script via adapter
   useEffect(() => {
-    // Establish a long-lived connection to the content script
-    // This signals that the popup is open, and the content script can
-    // enforce the video pause state.
-    const port = browser.tabs
-      .query({ active: true, currentWindow: true })
-      .then((tabs) => {
-        if (tabs[0]?.id) {
-          return browser.tabs.connect(tabs[0].id, {
-            name: 'GIFIT_POPUP_CONTEXT'
-          });
-        }
-      });
-
-    return () => {
-      port.then((p) => p?.disconnect());
-    };
-  }, []);
-
-  // Listen for messages from content script
-  useEffect(() => {
-    const handleMessage = (message: ExtensionMessage) => {
-      if (message.type === 'GIF_PROGRESS') {
-        updateProgress(
-          message.progress,
-          message.frameCount,
-          message.frameDataUrl
-        );
-      } else if (message.type === 'GIF_COMPLETE') {
-        complete(message.data);
+    gifAdapter.setCallbacks({
+      onProgress: (progress, frameCount, frameDataUrl) => {
+        updateProgress(progress, frameCount, frameDataUrl);
+      },
+      onComplete: (data) => {
+        complete(data);
         setStatus('generated');
-      } else if (message.type === 'GIF_ERROR') {
-        setError(message.error);
+      },
+      onError: (error) => {
+        setError(error);
       }
-    };
+    });
 
-    browser.runtime.onMessage.addListener(handleMessage);
     return () => {
-      browser.runtime.onMessage.removeListener(handleMessage);
+      // Optional: clear callbacks or destroy adapter if needed
+      // gifAdapter.destroy?.();
     };
-  }, [updateProgress, complete, setError, setStatus]);
+  }, [gifAdapter, updateProgress, complete, setError, setStatus]);
 
   const handleSubmit = useCallback(
     async function handleSubmit(config: ConfigState) {
@@ -95,7 +68,7 @@ export function App() {
       const end = start + config.duration; // ms
       const name = await getVideoTitle();
 
-      createGif({
+      const gifConfig = {
         name,
         quality: config.quality,
         width: config.width,
@@ -103,12 +76,23 @@ export function App() {
         start,
         end,
         fps: config.framerate
-      });
+      };
 
+      // 1. Update UI state
+      createGif(gifConfig);
       setName(name);
       setStatus('generating');
+
+      // 2. Trigger generation via adapter
+      try {
+        await gifAdapter.createGif(gifConfig);
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to start generation';
+        setError(message);
+      }
     },
-    [createGif, setName, setStatus]
+    [createGif, setName, setStatus, gifAdapter, getVideoTitle, setError]
   );
 
   const currentFrame = useGifStore((state) => state.currentFrame);

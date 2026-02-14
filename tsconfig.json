@@ -4,5 +4,16 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "typeRoots": ["./types", "./node_modules/@types"]
-  }
+  },
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/web" },
+    { "path": "./packages/extension" }
+  ],
+  "exclude": [
+    "__EXAMPLE_IMPLEMENTATION_DO_NOT_EDIT",
+    "test",
+    "playwright.config.ts",
+    "eslint.config.js"
+  ]
 }

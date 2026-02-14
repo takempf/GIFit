@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@shared/test-utils';
 import { Timeline } from './Timeline';
 import { vi, describe, it, expect } from 'vitest';
 

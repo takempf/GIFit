@@ -5,15 +5,15 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react(), svgr()],
-  root: 'src',
-  base: './', // Use relative base for flexibility
+  base: './',
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true
   },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@gifit/shared': path.resolve(__dirname, '../shared/src'),
       '@shared': path.resolve(__dirname, '../shared/src'),
       '~': path.resolve(__dirname, './src')
     }

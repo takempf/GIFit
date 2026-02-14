@@ -1,4 +1,6 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, createMockAdapters, act } from '@shared/test-utils';
+import { GifProgressCallbacks } from '@shared/adapters/types';
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 import { App } from './App';
 import { useAppStore } from '@shared/stores/appStore';
@@ -138,12 +140,19 @@ describe('App Integration', () => {
   });
 
   test('transitions to "generated" status when GIF_COMPLETE message is received', () => {
-    render(<App />);
+    const mockSetCallbacks = vi.fn();
+    const gifAdapter = {
+      ...createMockAdapters().gif,
+      setCallbacks: mockSetCallbacks
+    };
 
-    // Get the registered callback
-    // Ensure addListener was called
-    expect(addListenerMock).toHaveBeenCalled();
-    const handleMessage = addListenerMock.mock.calls[0][0];
+    render(<App />, { adapters: { gif: gifAdapter } });
+
+    // Verify setCallbacks was called
+    expect(mockSetCallbacks).toHaveBeenCalled();
+
+    // Get the callbacks
+    const callbacks = mockSetCallbacks.mock.calls[0][0] as GifProgressCallbacks;
 
     // Simulate GIF_COMPLETE message
     const completeData = {
@@ -154,9 +163,8 @@ describe('App Integration', () => {
       size: 1024
     };
 
-    handleMessage({
-      type: 'GIF_COMPLETE',
-      data: completeData
+    act(() => {
+      callbacks.onComplete(completeData);
     });
 
     expect(mockSetStatus).toHaveBeenCalledWith('generated');

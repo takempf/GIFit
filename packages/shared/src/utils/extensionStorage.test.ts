@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { storedConfig } from './storage';
+import { storedConfig } from './extensionStorage';
 
 // Mock wxt/utils/storage
 vi.mock('wxt/utils/storage', () => ({

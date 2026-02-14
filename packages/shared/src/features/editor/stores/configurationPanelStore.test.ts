@@ -1,7 +1,7 @@
 import { vi, describe, beforeEach, afterEach, expect, it } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { useConfigurationPanelStore } from './configurationPanelStore';
-import { storedConfig } from '@shared/utils/storage';
+import { storageAdapter } from '@shared/utils/storage';
 import { videoController } from '@shared/services/VideoController';
 
 // Mock VideoController
@@ -14,21 +14,15 @@ vi.mock('@shared/services/VideoController', () => ({
   }
 }));
 
-// Mock storedConfig
+// Mock storageAdapter
 vi.mock('@shared/utils/storage', () => ({
-  storedConfig: {
-    width: {
-      getValue: vi.fn(),
-      setValue: vi.fn()
-    },
-    fps: {
-      getValue: vi.fn(),
-      setValue: vi.fn()
-    },
-    quality: {
-      getValue: vi.fn(),
-      setValue: vi.fn()
-    }
+  storageAdapter: {
+    getWidth: vi.fn(),
+    setWidth: vi.fn(),
+    getFps: vi.fn(),
+    setFps: vi.fn(),
+    getQuality: vi.fn(),
+    setQuality: vi.fn()
   }
 }));
 
@@ -43,12 +37,12 @@ const mockMetadata = {
 describe('useConfigurationPanelStore', () => {
   // Helper function to reset mocks and stores
   const resetMocksAndStores = async () => {
-    vi.mocked(storedConfig.width.getValue).mockResolvedValue(0);
-    vi.mocked(storedConfig.fps.getValue).mockResolvedValue(0);
-    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(0);
-    vi.mocked(storedConfig.width.setValue).mockResolvedValue(undefined);
-    vi.mocked(storedConfig.fps.setValue).mockResolvedValue(undefined);
-    vi.mocked(storedConfig.quality.setValue).mockResolvedValue(undefined);
+    vi.mocked(storageAdapter.getWidth).mockResolvedValue(0);
+    vi.mocked(storageAdapter.getFps).mockResolvedValue(0);
+    vi.mocked(storageAdapter.getQuality).mockResolvedValue(0);
+    vi.mocked(storageAdapter.setWidth).mockResolvedValue(undefined);
+    vi.mocked(storageAdapter.setFps).mockResolvedValue(undefined);
+    vi.mocked(storageAdapter.setQuality).mockResolvedValue(undefined);
 
     vi.mocked(videoController.seek).mockResolvedValue();
     vi.mocked(videoController.pause).mockResolvedValue();
@@ -95,11 +89,9 @@ describe('useConfigurationPanelStore', () => {
     const storedWidthVal = 300;
     const storedFpsVal = 15;
     const storedQualityVal = 7;
-    vi.mocked(storedConfig.width.getValue).mockResolvedValue(storedWidthVal);
-    vi.mocked(storedConfig.fps.getValue).mockResolvedValue(storedFpsVal);
-    vi.mocked(storedConfig.quality.getValue).mockResolvedValue(
-      storedQualityVal
-    );
+    vi.mocked(storageAdapter.getWidth).mockResolvedValue(storedWidthVal);
+    vi.mocked(storageAdapter.getFps).mockResolvedValue(storedFpsVal);
+    vi.mocked(storageAdapter.getQuality).mockResolvedValue(storedQualityVal);
 
     // Re-initialize store by calling loadInitialConfig manually for this test case
     await act(async () => {
@@ -129,7 +121,7 @@ describe('useConfigurationPanelStore', () => {
       result.current.handleInputChange({ name: 'width', value: newWidth });
     });
     expect(result.current.width).toBe(newWidth);
-    expect(storedConfig.width.setValue).toHaveBeenCalledWith(newWidth);
+    expect(storageAdapter.setWidth).toHaveBeenCalledWith(newWidth);
     expect(result.current.height).toBe(
       Math.round(newWidth / (mockMetadata.width / mockMetadata.height))
     );
@@ -141,16 +133,16 @@ describe('useConfigurationPanelStore', () => {
       });
     });
     expect(result.current.framerate).toBe(newFramerate);
-    expect(storedConfig.fps.setValue).toHaveBeenCalledWith(newFramerate);
+    expect(storageAdapter.setFps).toHaveBeenCalledWith(newFramerate);
 
     act(() => {
       result.current.handleInputChange({ name: 'quality', value: newQuality });
     });
     expect(result.current.quality).toBe(newQuality);
-    expect(storedConfig.quality.setValue).toHaveBeenCalledWith(newQuality);
+    expect(storageAdapter.setQuality).toHaveBeenCalledWith(newQuality);
 
     // Test persisting width when height is changed and dimensions are linked
-    vi.mocked(storedConfig.width.setValue).mockClear(); // Clear previous calls
+    vi.mocked(storageAdapter.setWidth).mockClear(); // Clear previous calls
     const newHeight = 450;
     act(() => {
       result.current.handleInputChange({ name: 'height', value: newHeight });
@@ -160,7 +152,7 @@ describe('useConfigurationPanelStore', () => {
     );
     expect(result.current.height).toBe(newHeight);
     expect(result.current.width).toBe(expectedWidth);
-    expect(storedConfig.width.setValue).toHaveBeenCalledWith(expectedWidth);
+    expect(storageAdapter.setWidth).toHaveBeenCalledWith(expectedWidth);
   });
 
   it('handleInputChange should always link dimensions', async () => {

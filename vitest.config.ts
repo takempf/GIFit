@@ -6,13 +6,15 @@ export default defineConfig({
   plugins: [svgrPlugin()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      '@shared': path.resolve(__dirname, './packages/shared/src'),
+      '@gifit/shared': path.resolve(__dirname, './packages/shared/src')
     }
   },
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './src/setupTests.ts',
+    setupFiles: './packages/shared/src/setupTests.ts',
     exclude: [
       '**/node_modules/**',
       '**/dist/**',

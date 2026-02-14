@@ -30,9 +30,9 @@ export default defineConfig({
         '@shared': path.resolve(__dirname, '../shared/src')
       }
     }
-  }),
+  })
 
-  autoIcons: {
-    baseIconPath: path.resolve('../shared/src/assets/gifit-icon.svg')
-  }
+  // autoIcons: {
+  //   baseIconPath: path.resolve('../shared/src/assets/gifit-icon.svg')
+  // }
 });

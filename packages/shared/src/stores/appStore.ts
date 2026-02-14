@@ -14,7 +14,7 @@ interface AppActions {
   reset: (resetState?: Partial<AppState>) => void;
 }
 
-type AppStore = AppState & AppActions;
+export type AppStore = AppState & AppActions;
 
 const initialState: AppState = {
   videoId: null,

@@ -1,103 +1,55 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { videoController } from './VideoController';
-import { browser } from 'wxt/browser';
-
-// Mock wxt/browser
-vi.mock('wxt/browser', () => ({
-  browser: {
-    tabs: {
-      query: vi.fn(),
-      sendMessage: vi.fn()
-    }
-  }
-}));
+import { VideoAdapter } from '@shared/adapters/types';
 
 describe('VideoController', () => {
-  const mockTabId = 123;
+  let mockAdapter: VideoAdapter;
 
   beforeEach(() => {
-    vi.clearAllMocks();
-    (browser.tabs.query as unknown as Mock).mockResolvedValue([
-      { id: mockTabId }
-    ]);
+    mockAdapter = {
+      seek: vi.fn(),
+      pause: vi.fn(),
+      getMetadata: vi.fn(),
+      captureFrame: vi.fn(),
+      getStoryboardSpec: vi.fn()
+    };
+    videoController.setAdapter(mockAdapter);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
+  it('delegates seek to adapter', async () => {
+    await videoController.seek(10);
+    expect(mockAdapter.seek).toHaveBeenCalledWith(10);
   });
 
-  describe('seek', () => {
-    it('should send SEEK_VIDEO message to active tab', async () => {
-      await videoController.seek(10);
-      expect(browser.tabs.query).toHaveBeenCalledWith({
-        active: true,
-        currentWindow: true
-      });
-      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(mockTabId, {
-        type: 'SEEK_VIDEO',
-        time: 10
-      });
-    });
-
-    it('should handle missing tab ID gracefully', async () => {
-      (browser.tabs.query as unknown as Mock).mockResolvedValue([]);
-      await videoController.seek(10);
-      expect(browser.tabs.sendMessage).not.toHaveBeenCalled();
-    });
-
-    it('should handle sendMessage errors', async () => {
-      (browser.tabs.sendMessage as unknown as Mock).mockRejectedValue(
-        new Error('Failed')
-      );
-      // Should not throw
-      await expect(videoController.seek(10)).resolves.not.toThrow();
-    });
+  it('delegates pause to adapter', async () => {
+    await videoController.pause();
+    expect(mockAdapter.pause).toHaveBeenCalled();
   });
 
-  describe('pause', () => {
-    it('should send PAUSE_VIDEO message', async () => {
-      await videoController.pause();
-      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(mockTabId, {
-        type: 'PAUSE_VIDEO'
-      });
-    });
+  it('delegates getMetadata to adapter', async () => {
+    const mockMetadata = {
+      duration: 100,
+      width: 1920,
+      height: 1080,
+      currentTime: 0
+    };
+    vi.mocked(mockAdapter.getMetadata).mockResolvedValue(mockMetadata);
+    expect(await videoController.getMetadata()).toEqual(mockMetadata);
   });
 
-  describe('getMetadata', () => {
-    it('should return metadata when successful', async () => {
-      const mockMetadata = { duration: 100, width: 1920, height: 1080 };
-      (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
-        mockMetadata
-      );
-
-      const result = await videoController.getMetadata();
-      expect(result).toEqual(mockMetadata);
-      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(mockTabId, {
-        type: 'GET_VIDEO_METADATA'
-      });
-    });
-
-    it('should return null on error', async () => {
-      (browser.tabs.sendMessage as unknown as Mock).mockRejectedValue(
-        new Error('Failed')
-      );
-      const result = await videoController.getMetadata();
-      expect(result).toBeNull();
-    });
+  it('delegates captureFrame to adapter', async () => {
+    const mockUrl = 'data:image/png;base64,...';
+    vi.mocked(mockAdapter.captureFrame).mockResolvedValue(mockUrl);
+    expect(await videoController.captureFrame()).toBe(mockUrl);
   });
 
-  describe('captureFrame', () => {
-    it('should return data URL when successful', async () => {
-      const mockDataUrl = 'data:image/png;base64,...';
-      (browser.tabs.sendMessage as unknown as Mock).mockResolvedValue(
-        mockDataUrl
-      );
+  it('returns null/undefined when no adapter is set', async () => {
+    // Force null to test safety checks
+    (videoController as unknown as { adapter: null }).adapter = null;
 
-      const result = await videoController.captureFrame();
-      expect(result).toBe(mockDataUrl);
-      expect(browser.tabs.sendMessage).toHaveBeenCalledWith(mockTabId, {
-        type: 'CAPTURE_VISIBLE_FRAME'
-      });
-    });
+    await expect(videoController.seek(10)).resolves.not.toThrow();
+    await expect(videoController.pause()).resolves.not.toThrow();
+    expect(await videoController.getMetadata()).toBeNull();
+    expect(await videoController.captureFrame()).toBeNull();
   });
 });

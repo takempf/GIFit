@@ -15,12 +15,18 @@ export default [
       'public/',
       '**/*.d.ts', // Ensure .d.ts files are ignored globally
       '.prettierrc.mjs',
-      'eslint.config.js'
+      'eslint.config.js',
+      '__EXAMPLE_IMPLEMENTATION_DO_NOT_EDIT/'
     ]
   },
   // Main configuration for TypeScript files (type-aware)
   {
-    files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+    files: [
+      'src/**/*.{ts,tsx}',
+      'packages/*/src/**/*.{ts,tsx}',
+      'packages/*/entrypoints/**/*.{ts,tsx}',
+      'test/**/*.{ts,tsx}'
+    ],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -32,7 +38,11 @@ export default [
         ecmaFeatures: { jsx: true },
         ecmaVersion: 12,
         sourceType: 'module',
-        project: true,
+        project: [
+          './tsconfig.json',
+          './tsconfig.eslint.json',
+          './packages/*/tsconfig.json'
+        ],
         tsconfigRootDir: import.meta.dirname
       }
     },

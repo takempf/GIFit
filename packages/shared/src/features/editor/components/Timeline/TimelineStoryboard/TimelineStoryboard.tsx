@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { browser } from 'wxt/browser';
+import { useAdapters } from '@shared/adapters/context';
 
 import {
   parseStoryboardSpec,
@@ -21,6 +21,7 @@ function useStoryboardSpec(totalDurationMs: number): {
   baseUrl: string;
   levels: StoryboardLevel[];
 } | null {
+  const { video } = useAdapters();
   const [storyboardSpec, setStoryboardSpec] = useState<{
     baseUrl: string;
     levels: StoryboardLevel[];
@@ -31,23 +32,15 @@ function useStoryboardSpec(totalDurationMs: number): {
 
     const fetchStoryboard = async (): Promise<void> => {
       try {
-        const tabs = await browser.tabs.query({
-          active: true,
-          currentWindow: true
-        });
-        const activeTab = tabs[0];
-
-        if (!activeTab?.id) {
-          console.warn('Timeline: No active tab found');
+        if (!video.getStoryboardSpec) {
+          console.warn('Timeline: Video adapter does not support storyboard');
           return;
         }
 
-        const response = await browser.tabs.sendMessage(activeTab.id, {
-          type: 'GET_STORYBOARD'
-        });
+        const spec = await video.getStoryboardSpec();
 
-        if (response && response.spec) {
-          const parsed = parseStoryboardSpec(response.spec);
+        if (spec && typeof spec === 'string') {
+          const parsed = parseStoryboardSpec(spec);
           setStoryboardSpec(parsed);
         } else {
           console.warn('Timeline: No spec in response');
@@ -57,7 +50,7 @@ function useStoryboardSpec(totalDurationMs: number): {
       }
     };
     fetchStoryboard();
-  }, [totalDurationMs]);
+  }, [totalDurationMs, video]);
 
   return storyboardSpec;
 }

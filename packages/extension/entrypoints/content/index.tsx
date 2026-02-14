@@ -10,11 +10,14 @@ import {
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
   runAt: 'document_idle',
-  async main(ctx) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async main(ctx: any) {
     log('Running content script');
 
     let activeVideoElement: HTMLVideoElement | null = null;
     const gifService = new GifService();
+
+    // ... (rest of code) ...
 
     /**
      * securely gets the video element, ensuring it is connected to the DOM.
@@ -84,7 +87,7 @@ export default defineContentScript({
           frameCount,
           frameDataUrl
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           log('Failed to send GIF_PROGRESS message:', error);
         });
     });
@@ -92,7 +95,7 @@ export default defineContentScript({
     gifService.on('COMPLETE', (data) => {
       browser.runtime
         .sendMessage({ type: 'GIF_COMPLETE', data })
-        .catch((error) => {
+        .catch((error: unknown) => {
           log('Failed to send GIF_COMPLETE message:', error);
         });
     });
@@ -100,7 +103,7 @@ export default defineContentScript({
     gifService.on('ERROR', (error) => {
       browser.runtime
         .sendMessage({ type: 'GIF_ERROR', error: error.message })
-        .catch((error) => {
+        .catch((error: unknown) => {
           log('Failed to send GIF_ERROR message:', error);
         });
     });
@@ -222,7 +225,7 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener(
       (
         message: ExtensionMessage,
-        _sender,
+        _sender: unknown,
         sendResponse: (response?: unknown) => void
       ): true | undefined => {
         log('Content Script received message:', message.type);
@@ -350,7 +353,9 @@ export default defineContentScript({
     );
 
     // --- Port Listener (Popup Lifecycle) ---
-    browser.runtime.onConnect.addListener((port) => {
+    // --- Port Listener (Popup Lifecycle) ---
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    browser.runtime.onConnect.addListener((port: any) => {
       if (port.name === 'GIFIT_POPUP_CONTEXT') {
         log('Popup connected, enforcing video pause');
         const video = getVideoElement();
@@ -386,7 +391,7 @@ export default defineContentScript({
       getVideoElement();
     };
 
-    ctx.addEventListener(window, 'wxt:locationchange', (event) => {
+    ctx.addEventListener(window, 'wxt:locationchange', (event: Event) => {
       log('URL changed, checking for video element', event);
       // Give it a moment for the new page/video to load
       setTimeout(updateVideoElement, 500);

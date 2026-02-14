@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { log } from '@shared/utils/logger';
-import { storedConfig } from '@shared/utils/storage';
+import { storageAdapter } from '@shared/utils/storage';
 import { VideoMetadata } from '@shared/types';
 import { videoController } from '@shared/services/VideoController';
 import { toMilliseconds, toSeconds } from '@shared/utils/time';
@@ -65,7 +65,7 @@ export interface ConfigActions {
   captureFrame: (timeMs?: number) => Promise<void>;
 }
 
-type ConfigurationPanelStore = ConfigState & ConfigActions;
+export type ConfigurationPanelStore = ConfigState & ConfigActions;
 
 const getInitialState = (
   metadata?: VideoMetadata,
@@ -130,9 +130,9 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
     loadInitialConfig: async () => {
       try {
         const [storedWidth, storedFps, storedQuality] = await Promise.all([
-          storedConfig.width.getValue(),
-          storedConfig.fps.getValue(),
-          storedConfig.quality.getValue()
+          storageAdapter.getWidth(),
+          storageAdapter.getFps(),
+          storageAdapter.getQuality()
         ]);
 
         const currentMetadata: VideoMetadata | undefined =
@@ -164,22 +164,22 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
 
         // Persist relevant changes to storage
         if (name === 'width' && typeof value === 'number') {
-          storedConfig.width
-            .setValue(value)
+          storageAdapter
+            .setWidth(value)
             .catch((err) => log('Error saving width:', err));
           newState.height = Math.round(value / state.aspectRatio);
         } else if (name === 'height' && typeof value === 'number') {
           newState.width = Math.round(value * state.aspectRatio);
-          storedConfig.width
-            .setValue(newState.width)
+          storageAdapter
+            .setWidth(newState.width)
             .catch((err) => log('Error saving width:', err));
         } else if (name === 'framerate' && typeof value === 'number') {
-          storedConfig.fps
-            .setValue(value)
+          storageAdapter
+            .setFps(value)
             .catch((err) => log('Error saving framerate:', err));
         } else if (name === 'quality' && typeof value === 'number') {
-          storedConfig.quality
-            .setValue(value)
+          storageAdapter
+            .setQuality(value)
             .catch((err) => log('Error saving quality:', err));
         }
 
