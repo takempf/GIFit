@@ -9,6 +9,8 @@ import {
 import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
 
+import './App.css';
+
 // Mock video source (Big Buck Bunny Trailer)
 const VIDEO_SRC = '/videos/big-buck-bunny-trailer.mp4';
 
@@ -35,23 +37,21 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center p-4 relative">
-      <h1 className="text-2xl font-bold mb-4 z-10">GIFit! Web Demo</h1>
+    <div className="container">
+      <h1 className="heading">GIFit! Web Demo</h1>
 
-      <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl mb-8">
+      <div className="videoWrapper">
         <video
           src={VIDEO_SRC}
           controls
-          className="w-full h-full object-contain"
+          className="video"
           crossOrigin="anonymous"
         />
 
         {/* Simulate the extension popup overlay */}
         {adapters && (
-          <div className="absolute top-4 right-4 z-50">
-            <div
-              className="bg-white rounded-xl shadow-xl overflow-hidden"
-              style={{ width: 420 }}>
+          <div className="popupOverlay">
+            <div className="popupFrame" style={{ width: 420 }}>
               <AdapterContext.Provider value={adapters}>
                 <SharedApp />
               </AdapterContext.Provider>
@@ -65,7 +65,7 @@ export default function App() {
         It uses a &quot;virtual&quot; content script to simulate the extension
         environment.
       </p>
-      <p className="text-gray-400 max-w-md text-center">
+      <p className="description">
         This demo simulates the extension running on a YouTube video. The
         &quot;popup&quot; is rendered as an overlay on the video player.
       </p>
