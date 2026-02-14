@@ -1,54 +1,4 @@
-@import 'https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap';
-
-* {
-  box-sizing: border-box;
-}
-
-:root {
-  color-scheme: dark light;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-
-  --MAXIMUM_Z_INDEX: 2147483647;
-
-  --color_primary: rgb(235, 10, 30);
-  --color_focus_border: oklch(from var(--color_primary) calc(l * 1.25) c h / 1);
-
-  --color_popup_background: rgb(15, 15, 15);
-  --color_panel_border: rgb(65, 65, 65);
-  --color_panel_background: rgb(35, 35, 35);
-
-  --color_panel_text: rgb(125, 125, 125);
-  --color_input_text: rgb(25, 25, 25);
-
-  --color_slider_thumb: rgb(235, 235, 235);
-  --color_slider_thumb_focus: rgb(255, 255, 255);
-  --color_slider_background: rgba(0, 0, 0, 0.06);
-
-  --color_button: rgb(235, 235, 235);
-  --color_button_background: rgb(25, 25, 25);
-  --color_button_primary_background: rgb(235, 15, 15);
-  --color_accent: rgb(0, 225, 255);
-  --color_subtle_shadow: rgba(0, 0, 0, 0.25);
-
-  --ease_in_expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
-  --ease_out_expo: cubic-bezier(0.19, 1, 0.22, 1);
-
-  --border-radius: 0.5em;
-}
-
 body {
-  font-family: 'Geist', sans-serif;
-  letter-spacing: 0.01em;
-  line-height: 1.5;
-  font-weight: 400;
-  font-size: 16px;
-
   margin: 0;
   display: flex;
   place-items: stretch;
@@ -58,55 +8,8 @@ body {
   max-width: 800px;
   min-height: 480px;
   max-height: 600px;
-
-  background: var(--color_popup_background);
 }
 
 #root {
   width: 100%;
-}
-
-::selection {
-  background-color: rgba(0, 0, 0, 0.9);
-  color: white;
-}
-
-input {
-  font-family: inherit;
-  letter-spacing: 0.05em;
-}
-
-/* Style for browser's default spinners (optional) */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none; /* Hide default spinners in WebKit */
-  margin: 0;
-}
-
-input[type='number'] {
-  -moz-appearance: textfield; /* Hide default spinners in Firefox */
-  appearance: textfield;
-}
-
-a {
-  color: white;
-  text-decoration: underline;
-  text-underline-offset: 0.3em;
-  text-decoration-color: var(--color_primary);
-  text-decoration-thickness: 0.1em;
-}
-
-::view-transition-group(*),
-::view-transition-old(*),
-::view-transition-new(*) {
-  animation-duration: 350ms;
-  animation-timing-function: var(--ease_out_expo);
-}
-
-::view-transition-old(app-panel),
-::view-transition-new(app-panel) {
-  /* Prevent content distortion during panel resize */
-  height: calc-size(auto);
-  object-fit: none;
-  object-position: bottom;
 }

@@ -27,7 +27,8 @@ export default defineConfig({
     plugins: [svgrPlugin()],
     resolve: {
       alias: {
-        '@shared': path.resolve(__dirname, '../shared/src')
+        '@shared': path.resolve(__dirname, '../shared/src'),
+        '@gifit/shared': path.resolve(__dirname, '../shared/src')
       }
     }
   }),

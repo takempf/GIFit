@@ -1,4 +1,6 @@
+import '@gifit/shared/style.css';
 import './style.css';
+
 import ReactDOM from 'react-dom/client';
 import { AdapterContext } from '@gifit/shared/adapters/context';
 import { App } from '@gifit/shared/components/App';
