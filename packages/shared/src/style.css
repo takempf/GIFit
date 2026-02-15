@@ -81,9 +81,11 @@ a {
   text-decoration-color: var(--color_primary);
   text-decoration-thickness: 0.1em;
   font-weight: 600;
+  border-radius: 0.25em;
   transition:
     color 250ms,
-    text-decoration-color 250ms;
+    text-decoration-color 250ms,
+    outline 200ms ease-in-out;
 
   &:hover {
     color: rgb(255, 255, 255);
@@ -91,6 +93,16 @@ a {
       from var(--color_primary) calc(l * 1.25) c h / 1
     );
   }
+}
+
+* {
+  outline: transparent 2px solid;
+  outline-offset: 0.25em;
+  transition: outline 200ms ease-in-out;
+}
+
+:focus-visible {
+  outline-color: var(--color_focus_border);
 }
 
 ::view-transition-group(*),

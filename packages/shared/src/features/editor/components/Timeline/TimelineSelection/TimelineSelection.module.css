@@ -57,6 +57,7 @@
   backdrop-filter: blur(1px);
   border-radius: 0.5em;
   outline: 2px solid transparent;
+  outline-offset: 2px;
   cursor: ew-resize;
   z-index: 20;
   display: flex;
@@ -71,8 +72,7 @@
   }
 
   &:focus {
-    outline: var(--color_focus_border) 2px solid;
-    outline-offset: 1px;
+    outline-color: var(--color_focus_border);
     background: rgba(255, 255, 255, 0.75);
   }
 }

@@ -16,6 +16,7 @@
   gap: 0.25em;
   border: none;
   outline: transparent 2px solid;
+  outline-offset: 2px;
   border-radius: var(--border-radius);
   corner-shape: squircle;
   padding: var(--padding) calc(var(--padding) * 2);
@@ -55,7 +56,6 @@
 
   &:focus {
     outline: var(--color_focus_border) 2px solid;
-    outline-offset: 1px;
   }
 }
 

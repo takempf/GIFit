@@ -19,7 +19,7 @@
 }
 
 .image {
-  outline-offset: 1px;
+  outline-offset: 2px;
   view-transition-name: gif-preview;
   transition: outline 200ms ease;
 }

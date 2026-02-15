@@ -29,11 +29,11 @@
   min-width: 0;
   height: auto; /* Allow height to fit content */
   outline: transparent 2px solid;
+  outline-offset: 2px;
   transition: outline 200ms ease-in-out;
 
   &:focus-within {
     outline: var(--color_focus_border) 2px solid;
-    outline-offset: 1px;
   }
 }
 
@@ -72,6 +72,7 @@
   backdrop-filter: blur(1px);
   border-radius: 50%;
   outline: none;
+  outline-offset: 2px;
   transition: background 160ms ease-out;
 
   &:hover {
@@ -84,8 +85,7 @@
 }
 
 .Thumb:focus-visible {
-  outline: 2px solid var(--color_primary, #007bff);
-  outline-offset: 2px;
+  outline: var(--color_focus_border) 2px solid;
 }
 
 .Value {
