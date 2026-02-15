@@ -8,10 +8,10 @@ import prettierPlugin from 'eslint-plugin-prettier';
 export default [
   {
     ignores: [
-      '.wxt/',
-      '.output/',
-      'dist/',
-      'node_modules/',
+      '**/.wxt/',
+      '**/.output/',
+      '**/dist/',
+      '**/node_modules/',
       'public/',
       '**/*.d.ts', // Ensure .d.ts files are ignored globally
       '.prettierrc.mjs',

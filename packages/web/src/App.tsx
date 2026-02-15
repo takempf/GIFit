@@ -11,7 +11,6 @@ import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
 
 import GifitLogo from '@gifit/shared/assets/gifit-logo.svg?react';
-import GifitIcon from '@gifit/shared/assets/gifit-icon.svg?react';
 
 import './App.css';
 
@@ -48,7 +47,7 @@ export default function App() {
       </div>
       <section className="conversation">
         <p>
-          Hi, I'm <a href="https://kempf.dev">Tim</a>!
+          Hi, I&apos;m <a href="https://kempf.dev">Tim</a>!
         </p>
         <p>
           With this extension you can create GIFs from any video on YouTube,
@@ -78,7 +77,10 @@ export default function App() {
 
         <div className="source">
           Video Source:{' '}
-          <a href="https://www.youtube.com/watch?v=aqz-KE-bpKQ" target="_blank">
+          <a
+            href="https://www.youtube.com/watch?v=aqz-KE-bpKQ"
+            target="_blank"
+            rel="noreferrer">
             Big Buck Bunny
           </a>{' '}
           Trailer
