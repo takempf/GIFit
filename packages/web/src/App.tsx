@@ -75,17 +75,6 @@ export default function App() {
           onSeeked={() => setIsReady(true)}
         />
 
-        <div className="source">
-          Video Source:{' '}
-          <a
-            href="https://www.youtube.com/watch?v=aqz-KE-bpKQ"
-            target="_blank"
-            rel="noreferrer">
-            Big Buck Bunny
-          </a>{' '}
-          Trailer
-        </div>
-
         {/* Simulate the extension popup overlay */}
         {adapters && isReady && (
           <div className="popupOverlay">
@@ -97,6 +86,17 @@ export default function App() {
           </div>
         )}
       </section>
+
+      <p className="attribution">
+        Demo video source: Big Buck Bunny
+        <br />© 2008, Blender Foundation /{' '}
+        <a
+          href="https://www.bigbuckbunny.org/"
+          target="_blank"
+          rel="noreferrer">
+          www.bigbuckbunny.org
+        </a>
+      </p>
     </main>
   );
 }
