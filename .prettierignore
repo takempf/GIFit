@@ -1,0 +1,8 @@
+node_modules
+.output
+dist
+dist-*
+.wxt
+stats.html
+stats-*.json
+package-lock.json

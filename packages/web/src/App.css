@@ -1,0 +1,63 @@
+#main {
+  width: 1200px;
+  max-width: 100svw;
+  padding: 2.5em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
+}
+
+.logo {
+  height: 2em;
+}
+
+.conversation {
+  font-size: 1.25em;
+  max-width: 40ch;
+}
+
+.gifitToolbarButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  aspect-ratio: 1 / 1;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: 50%;
+
+  & > * {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1em;
+}
+
+.video {
+  visibility: hidden;
+  display: none;
+  max-width: 500px;
+}
+
+.popupOverlay {
+}
+
+.popupFrame {
+  border: rgba(255, 255, 255, 0.2) 1px solid;
+  border-radius: 0.5em;
+  overflow: hidden;
+  width: min-content;
+  height: min-content;
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 0.35em 0.35em -0.1em;
+}
+
+.attribution {
+  font-size: 0.8em;
+  opacity: 0.8;
+}

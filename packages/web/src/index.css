@@ -1,0 +1,9 @@
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  flex-direction: column;
+  min-width: 320px;
+  min-height: 100svh;
+  background: rgb(35, 35, 35);
+}
