@@ -16,7 +16,7 @@
 
   --MAXIMUM_Z_INDEX: 2147483647;
 
-  --color_primary: rgb(235, 10, 30);
+  --color_primary: rgb(207, 10, 55);
   --color_focus_border: oklch(from var(--color_primary) calc(l * 1.25) c h / 1);
 
   --color_popup_background: rgb(15, 15, 15);
@@ -75,11 +75,22 @@ input[type='number'] {
 }
 
 a {
-  color: white;
+  color: rgb(235, 235, 235);
   text-decoration: underline;
   text-underline-offset: 0.3em;
   text-decoration-color: var(--color_primary);
   text-decoration-thickness: 0.1em;
+  font-weight: 600;
+  transition:
+    color 250ms,
+    text-decoration-color 250ms;
+
+  &:hover {
+    color: rgb(255, 255, 255);
+    text-decoration-color: oklch(
+      from var(--color_primary) calc(l * 1.25) c h / 1
+    );
+  }
 }
 
 ::view-transition-group(*),

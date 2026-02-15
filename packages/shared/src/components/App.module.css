@@ -9,8 +9,8 @@
 
   --bg-size: 50px;
   background-image:
-    radial-gradient(rgb(255 125 125 / 20%) 1px, transparent 1px),
-    radial-gradient(rgb(255 255 255 / 10%) 1px, #111 1px);
+    radial-gradient(rgba(255, 125, 125, 0.2) 1px, transparent 1px),
+    radial-gradient(rgba(55, 55, 55, 0.8) 1px, #111 1px);
   background-size: var(--bg-size) var(--bg-size);
   background-position:
     0 0,
