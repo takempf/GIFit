@@ -155,7 +155,7 @@ export function App() {
             GitHub
           </a>
         </span>
-        <span className={css.version}>v3.0.0</span>
+        <span className={css.version}>v{__APP_VERSION__}</span>
       </footer>
     </div>
   );

@@ -1,11 +1,14 @@
-import { defineContentScript } from '#imports';
+import { defineContentScript } from 'wxt/utils/define-content-script';
 import { browser } from 'wxt/browser';
+import ReactDOM from 'react-dom/client';
 import {
   GifService,
   log,
   ExtensionMessage,
   findBestVideo
 } from '@gifit/shared';
+
+import { MigrationNotice } from './MigrationNotice';
 
 export default defineContentScript({
   matches: ['*://*.youtube.com/*'],
@@ -14,10 +17,14 @@ export default defineContentScript({
   async main(ctx: any) {
     log('Running content script');
 
+    // --- v3 → v4 Migration Notice ---
+    const noticeHost = document.createElement('div');
+    noticeHost.id = 'gifit-migration-notice-root';
+    document.body.appendChild(noticeHost);
+    ReactDOM.createRoot(noticeHost).render(<MigrationNotice />);
+
     let activeVideoElement: HTMLVideoElement | null = null;
     const gifService = new GifService();
-
-    // ... (rest of code) ...
 
     /**
      * securely gets the video element, ensuring it is connected to the DOM.

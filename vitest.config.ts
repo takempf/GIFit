@@ -1,9 +1,17 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 import svgrPlugin from 'vite-plugin-svgr';
+import { readFileSync } from 'fs';
+
+const rootPkg = JSON.parse(
+  readFileSync(path.resolve(__dirname, './package.json'), 'utf-8')
+) as { version: string };
 
 export default defineConfig({
   plugins: [svgrPlugin()],
+  define: {
+    __APP_VERSION__: JSON.stringify(rootPkg.version)
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
