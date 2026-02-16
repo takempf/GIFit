@@ -96,13 +96,12 @@ a {
 }
 
 * {
-  outline: transparent 2px solid;
-  outline-offset: 0.25em;
+  outline-color: oklch(from var(--color_focus_border) l c h / 0);
   transition: outline 200ms ease-in-out;
 }
 
 :focus-visible {
-  outline-color: var(--color_focus_border);
+  outline: var(--color_focus_border) 2px solid;
 }
 
 ::view-transition-group(*),
