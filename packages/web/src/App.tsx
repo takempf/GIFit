@@ -43,7 +43,8 @@ export default function App() {
   return (
     <main id="main">
       <div className="logo">
-        <GifitLogo />
+        <GifitLogo className="logo-image" />
+        <span className="version">v{__APP_VERSION__}</span>
       </div>
       <section className="conversation">
         <p>

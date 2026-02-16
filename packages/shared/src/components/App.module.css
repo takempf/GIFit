@@ -122,7 +122,6 @@
 .support {
   grid-area: main;
   justify-self: center;
-  font-family: serif;
   font-style: italic;
   display: flex;
   align-items: center;

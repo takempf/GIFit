@@ -9,7 +9,22 @@
 }
 
 .logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-image {
   height: 2em;
+}
+
+.version {
+  align-self: end;
+  font-size: 0.8em;
+  opacity: 0.5;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
 }
 
 .conversation {
