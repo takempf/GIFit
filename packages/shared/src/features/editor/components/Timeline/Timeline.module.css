@@ -12,6 +12,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 0.5em;
+  overflow: hidden;
   background-color: var(--timeline-background-color);
   box-shadow:
     inset rgba(0, 0, 0, 0.25) 0 0.125em 0.5em,
@@ -83,6 +84,8 @@
   border-radius: 0.125em;
   height: calc(100% - 2px);
   margin-top: 1px;
+  border-bottom-left-radius: calc(0.5em - 1px);
+  border-bottom-right-radius: calc(0.5em - 1px);
 }
 
 .scrollbarThumb:hover {
