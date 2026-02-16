@@ -6,26 +6,26 @@ import GifitIcon from '@gifit/shared/assets/gifit-icon.svg?react';
 
 import css from './MigrationNotice.module.css';
 
-const STORAGE_KEY = 'gifit:v4_migration_notice_dismissed';
+const STORAGE_KEY = 'gifit:show_v4_migration_notice';
 
 /**
  * One-time notice for users upgrading from v3 → v4.
  * Informs them that the in-page button has been replaced
  * with the browser toolbar icon.
  *
- * Persists dismissal to `browser.storage.sync` so it only
- * appears once per profile.
+ * Only appears when the background script has flagged a
+ * v3 → v4 upgrade via `browser.storage.sync`.
  */
 export function MigrationNotice(): React.JSX.Element | null {
   const [visible, setVisible] = useState(false);
   const [dismissing, setDismissing] = useState(false);
 
-  // Read dismiss state on mount
+  // Show only if the background script flagged a v3 → v4 upgrade
   useEffect(() => {
-    const checkDismissed = async () => {
+    const checkShouldShow = async (): Promise<void> => {
       try {
         const result = await browser.storage.sync.get(STORAGE_KEY);
-        if (!result[STORAGE_KEY]) {
+        if (result[STORAGE_KEY] === true) {
           setVisible(true);
         }
       } catch {
@@ -35,16 +35,16 @@ export function MigrationNotice(): React.JSX.Element | null {
       }
     };
 
-    checkDismissed();
+    checkShouldShow();
   }, []);
 
   const handleDismiss = useCallback(async () => {
     setDismissing(true);
 
     try {
-      await browser.storage.sync.set({ [STORAGE_KEY]: true });
+      await browser.storage.sync.remove(STORAGE_KEY);
     } catch {
-      console.error('GIFit: Could not set migration notice in storage');
+      console.error('GIFit: Could not clear migration notice from storage');
     }
 
     // Wait for exit animation before unmounting
