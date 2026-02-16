@@ -83,7 +83,13 @@ export default [
   },
   // Lighter configuration for JS/MJS/CJS config files & specific TS config files
   {
-    files: ['*.{js,mjs,cjs}', 'vitest.config.ts', 'wxt.config.ts', 'knip.ts'],
+    files: [
+      '**/*.{js,mjs,cjs}',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/wxt.config.ts',
+      'knip.ts'
+    ],
     languageOptions: {
       globals: {
         ...globals.node,

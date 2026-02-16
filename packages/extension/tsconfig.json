@@ -22,7 +22,13 @@
     "paths": {
       "@/*": ["./src/*"]
     },
+    "types": ["@testing-library/jest-dom"],
     "outDir": "./dist-types"
   },
-  "include": ["entrypoints", "wxt.config.ts", ".wxt/wxt.d.ts"]
+  "include": [
+    "entrypoints",
+    "wxt.config.ts",
+    ".wxt/wxt.d.ts",
+    "../../vite-env.d.ts"
+  ]
 }
