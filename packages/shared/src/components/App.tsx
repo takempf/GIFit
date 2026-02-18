@@ -19,7 +19,7 @@ import { useConfigurationPanelStore } from '@shared/features/editor/stores/confi
 import TKLogo from '@shared/assets/tk.svg?react';
 import BugIcon from '@shared/assets/bug.svg?react';
 
-import { useAdapters } from '@shared/adapters/context';
+import { useAdapters, useAnalytics } from '@shared/adapters/context';
 
 // We can just use ConfigState directly or Pick what we need.
 // handleSubmit uses: start, duration, width, height, framerate (from fps alias?), quality.
@@ -28,6 +28,7 @@ import { useAdapters } from '@shared/adapters/context';
 
 export function App() {
   const { gif: gifAdapter, getVideoTitle } = useAdapters();
+  const analytics = useAnalytics();
   const status = useAppStore((state) => state.status);
   const setStatus = useAppStore((state) => state.setStatus);
   const setName = useGifStore((state) => state.setName);
@@ -81,6 +82,7 @@ export function App() {
       // 1. Update UI state
       createGif(gifConfig);
       setName(name);
+      analytics.track('gif_generation_started', gifConfig);
       setStatus('generating');
 
       // 2. Trigger generation via adapter
@@ -92,7 +94,15 @@ export function App() {
         setError(message);
       }
     },
-    [createGif, setName, setStatus, gifAdapter, getVideoTitle, setError]
+    [
+      createGif,
+      setName,
+      setStatus,
+      gifAdapter,
+      getVideoTitle,
+      setError,
+      analytics
+    ]
   );
 
   const currentFrame = useGifStore((state) => state.currentFrame);

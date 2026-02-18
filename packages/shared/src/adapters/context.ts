@@ -1,10 +1,16 @@
 import { createContext, useContext } from 'react';
-import type { VideoAdapter, GifAdapter, StorageAdapter } from './types';
+import type {
+  VideoAdapter,
+  GifAdapter,
+  StorageAdapter,
+  AnalyticsProvider
+} from './types';
 
 export interface AdapterSet {
   video: VideoAdapter;
   gif: GifAdapter;
   storage: StorageAdapter;
+  analytics: AnalyticsProvider;
   getVideoTitle: () => Promise<string>;
 }
 
@@ -18,4 +24,8 @@ export function useAdapters(): AdapterSet {
     );
   }
   return adapters;
+}
+
+export function useAnalytics(): AnalyticsProvider {
+  return useAdapters().analytics;
 }

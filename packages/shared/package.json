@@ -24,6 +24,7 @@
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
     "gifenc": "^1.0.3",
+    "posthog-js": "^1.347.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "zustand": "^5.0.3"

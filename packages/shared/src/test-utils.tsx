@@ -29,6 +29,10 @@ export const createMockAdapters = (): AdapterSet => ({
     set: vi.fn()
     // Add others
   } as unknown as StorageAdapter,
+  analytics: {
+    track: vi.fn(),
+    identify: vi.fn()
+  },
   getVideoTitle: vi.fn().mockResolvedValue('Test Video')
 });
 

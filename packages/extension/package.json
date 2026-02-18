@@ -18,16 +18,17 @@
   },
   "dependencies": {
     "@gifit/shared": "*",
+    "posthog-js": "^1.347.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "wxt": "^0.20.13",
-    "@wxt-dev/module-react": "^1.1.3",
-    "@wxt-dev/auto-icons": "^1.0.2",
-    "typescript": "^5.8.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.2",
-    "vitest": "^3.2.4"
+    "@wxt-dev/auto-icons": "^1.0.2",
+    "@wxt-dev/module-react": "^1.1.3",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4",
+    "wxt": "^0.20.13"
   }
 }

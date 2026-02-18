@@ -34,6 +34,7 @@ export default defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(rootPkg.version)
     },
+    envDir: path.resolve(__dirname, '../../'),
     resolve: {
       alias: {
         '@shared': path.resolve(__dirname, '../shared/src'),

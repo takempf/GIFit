@@ -9,6 +9,7 @@ import {
 } from '@gifit/shared/adapters/direct';
 import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
+import { webAnalyticsProvider } from './analytics';
 
 import GifitLogo from '@gifit/shared/assets/gifit-logo.svg?react';
 
@@ -36,6 +37,7 @@ export default function App() {
       video: videoAdapter,
       gif: gifAdapter,
       storage: storageAdapterImpl,
+      analytics: webAnalyticsProvider,
       getVideoTitle: async () => 'Big Buck Bunny'
     });
   }, []);

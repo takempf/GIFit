@@ -10,6 +10,7 @@ const rootPkg = JSON.parse(
 ) as { version: string };
 
 export default defineConfig({
+  envDir: path.resolve(__dirname, '../../'),
   plugins: [
     react(),
     svgr(),

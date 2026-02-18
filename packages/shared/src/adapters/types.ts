@@ -54,3 +54,13 @@ export interface GifProgressCallbacks {
   onComplete: (data: GifCompleteData) => void;
   onError: (error: string) => void;
 }
+
+/**
+ * Abstraction over analytics tracking.
+ * Extension: PostHog with autocapture disabled, localStorage persistence
+ * Web: PostHog with standard autocapture
+ */
+export interface AnalyticsProvider {
+  track(event: string, properties?: Record<string, unknown>): void;
+  identify(distinctId: string, properties?: Record<string, unknown>): void;
+}

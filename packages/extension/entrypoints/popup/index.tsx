@@ -13,6 +13,7 @@ import {
 } from '@gifit/shared/adapters/extension';
 import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
+import { extensionAnalyticsProvider } from '../../lib/analytics';
 
 // Initialize adapters
 const videoAdapter = new ExtensionVideoAdapter();
@@ -34,8 +35,11 @@ const adapters = {
   video: videoAdapter,
   gif: gifAdapter,
   storage: storageAdapterImpl,
+  analytics: extensionAnalyticsProvider,
   getVideoTitle: getExtensionVideoTitle
 };
+
+extensionAnalyticsProvider.track('popup_opened');
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <AdapterContext.Provider value={adapters}>

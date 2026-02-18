@@ -25,6 +25,7 @@ export default [
       'src/**/*.{ts,tsx}',
       'packages/*/src/**/*.{ts,tsx}',
       'packages/*/entrypoints/**/*.{ts,tsx}',
+      'packages/*/lib/**/*.{ts,tsx}',
       'test/**/*.{ts,tsx}'
     ],
     languageOptions: {
