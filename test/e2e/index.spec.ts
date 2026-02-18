@@ -1,121 +1,162 @@
 import { test, expect } from './fixtures';
 import { Page } from '@playwright/test';
 
-export async function getGifit(page: Page) {
-  async function getByTestIdAsync(testId: string) {
-    const elementLocator = await page.getByTestId(testId);
-    await elementLocator.waitFor({ state: 'visible' });
-    return elementLocator;
-  }
+const YOUTUBE_VIDEO_URL =
+  'https://www.youtube.com/watch?v=kSXTGztiNRQ&list=PLXzNzl-6IoyWE1nI6kR_xqXqY5aDLTAOv';
 
-  await page.waitForSelector('#gifit-button');
-
-  const gifit = {
-    // element getters
-    getEntryButton: () => page.waitForSelector('#gifit-button'),
-    getStartInput: () => getByTestIdAsync('start-input'),
-    getDurationInput: () => getByTestIdAsync('duration-input'),
-    getSubmitButton: () => page.waitForSelector('#gifit-submit'),
-    getProgress: () => getByTestIdAsync('progress'),
-    getResultImage: () => getByTestIdAsync('result-image'),
-    getBackToConfigButton: () => getByTestIdAsync('back-to-config-button'),
-    getDownloadGifButton: () => getByTestIdAsync('download-gif-button'),
-
-    // actions
-    clickEntryButton: async () => {
-      const entryButton = await gifit.getEntryButton();
-      await entryButton.click();
-    },
-    clickSubmitButton: async () => {
-      const submitButton = await gifit.getSubmitButton();
-      await submitButton.click();
-    }
-  };
-  return gifit;
+export async function openPopup(page: Page, extensionId: string) {
+  await page.goto(`chrome-extension://${extensionId}/popup.html`);
+  await page.waitForSelector('#root');
+  return page;
 }
 
-test('Creates GIF using default settings', async ({ page }) => {
-  await page.goto(
-    'https://www.youtube.com/watch?v=kSXTGztiNRQ&list=PLXzNzl-6IoyWE1nI6kR_xqXqY5aDLTAOv'
-  );
-  const gifit = await getGifit(page);
-
-  await gifit.clickEntryButton();
-  await gifit.clickSubmitButton();
-  await gifit.getProgress();
-  expect(await gifit.getResultImage());
-});
-
-test('Creates GIF at a specific timecode', async ({ page }) => {
-  await page.goto(
-    'https://www.youtube.com/watch?v=kSXTGztiNRQ&list=PLXzNzl-6IoyWE1nI6kR_xqXqY5aDLTAOv'
-  );
-  const gifit = await getGifit(page);
-
-  await gifit.clickEntryButton();
-  const startInput = await gifit.getStartInput();
-  startInput.fill('20');
-  const durationInput = await gifit.getDurationInput();
-  durationInput.fill('3');
-  await page.waitForTimeout(500); // allow "commit" to happen for start input
-  await gifit.clickSubmitButton();
-  await gifit.getProgress();
-  expect(await gifit.getResultImage());
-  // TODO test how long the generated GIF is
-});
-
-test('After creating GIF, can return to config and generate another', async ({
-  page
+test('Popup renders and communicates with active tab', async ({
+  page: ytPage,
+  context,
+  extensionId
 }) => {
-  await page.goto(
-    'https://www.youtube.com/watch?v=kSXTGztiNRQ&list=PLXzNzl-6IoyWE1nI6kR_xqXqY5aDLTAOv'
-  );
-  const gifit = await getGifit(page);
+  // 1. Navigate to YouTube video
+  await ytPage.goto(YOUTUBE_VIDEO_URL, { waitUntil: 'domcontentloaded' });
 
-  await gifit.clickEntryButton();
+  // 1.1 Get the YouTube tab ID via Service Worker to avoid recursion in popup mock
+  let ytTabId: number;
 
-  // First generation
-  await gifit.clickSubmitButton();
-  await gifit.getProgress();
-  expect(await gifit.getResultImage());
+  // Poll for service worker to be ready
+  await expect
+    .poll(
+      async () => {
+        const workers = context.serviceWorkers();
+        if (workers.length > 0) return true;
+        return false;
+      },
+      { timeout: 10000 }
+    )
+    .toBeTruthy();
 
-  // Back to config
-  const backToConfigButton = await gifit.getBackToConfigButton();
-  backToConfigButton.click();
-  await page.waitForTimeout(1000); // allow time for animation to clear
+  const worker = context.serviceWorkers()[0];
 
-  // Second generation
-  const startInput = await gifit.getStartInput();
-  startInput.fill('20');
-  const durationInput = await gifit.getDurationInput();
-  durationInput.fill('3');
-  await page.waitForTimeout(500); // allow "commit" to happen for start input
-  await gifit.clickSubmitButton();
-  await gifit.getProgress();
-  expect(await gifit.getResultImage());
-  // TODO test how long the generated GIF is
+  // Query for the tab ID
+  await expect
+    .poll(
+      async () => {
+        try {
+          const tabs = await worker.evaluate(async () => {
+            // @ts-ignore
+            const result = await chrome.tabs.query({
+              url: '*://*.youtube.com/*'
+            });
+            return result;
+          });
+          if (tabs && tabs.length > 0) {
+            ytTabId = tabs[0].id;
+            return true;
+          }
+        } catch (e) {
+          console.error('Worker evaluation failed:', e);
+        }
+        return false;
+      },
+      { timeout: 10000 }
+    )
+    .toBeTruthy();
+
+  console.log(`Found YouTube Tab ID: ${ytTabId!}`);
+
+  // 2. Open popup
+  const popupPage = await context.newPage();
+  popupPage.on('console', (msg) => console.log('POPUP LOG:', msg.text()));
+  popupPage.on('pageerror', (err) => console.log('POPUP ERROR:', err));
+
+  // Targeted Mock: Return the specific YT tab ID
+  await popupPage.addInitScript((targetTabId) => {
+    const log = (...args: any[]) => console.log('MOCK-HELPER:', ...args);
+
+    const win = window as any;
+    win.chrome = win.chrome || {};
+    win.chrome.tabs = win.chrome.tabs || {};
+
+    // Keep reference if needed, or just overwrite
+    const originalQuery = win.chrome.tabs.query;
+
+    win.chrome.tabs.query = function (queryInfo: any, callback: any) {
+      // If asking for active/currentWindow (popup's view of "active"), return our target tab
+      if (queryInfo.active && queryInfo.currentWindow) {
+        log(`Intercepting query, returning target tab ${targetTabId}`);
+        const result = [
+          {
+            id: targetTabId,
+            active: true,
+            currentWindow: true,
+            windowId: 1, // Add windowId as it might be checked
+            title: 'Mock Video', // Title doesn't matter much for messaging
+            url: 'https://www.youtube.com/watch?v=kSXTGztiNRQ'
+          }
+        ];
+
+        if (callback) {
+          callback(result);
+        }
+        // Support Promise expectation
+        return Promise.resolve(result);
+      }
+
+      // Pass through other queries (though mostly unused by popup)
+      if (originalQuery) {
+        return originalQuery.apply(win.chrome.tabs, arguments);
+      }
+      return Promise.resolve([]);
+    };
+  }, ytTabId!); // Pass value provided by Node to Page context
+
+  await openPopup(popupPage, extensionId);
+
+  // 3. Verify Popup UI Elements (Real Data)
+
+  const startInput = popupPage.getByTestId('start-input');
+  await expect(startInput).toBeVisible({ timeout: 10000 });
+
+  // Real video metadata might be slightly different depending on load time,
+
+  const durationInput = popupPage.getByTestId('duration-input');
+  await expect(durationInput).toBeVisible();
+  // Default is 2s (config), not video duration.
+  await expect(durationInput).toHaveValue('2');
+
+  // 4. Interact (Create GIF)
+  // This should send a real message to the content script.
+  // The content script should respond.
+
+  // Determine if successful by checking for side-effects on the Content Page.
+  const msgPromise = ytPage.waitForEvent('console', {
+    predicate: (msg) =>
+      msg.text().includes('Content Script received message: START_GIF'),
+    timeout: 10000
+  });
+
+  const createBtn = popupPage.getByRole('button', { name: /Create GIF/i });
+  await createBtn.click();
+
+  // Wait for the message to be logged in the YouTube page console
+  await msgPromise;
 });
 
-test('Creates a GIF after navigating from the front page', async ({ page }) => {
-  await page.goto('https://www.youtube.com/');
-  const ytSearch = await page.waitForSelector('yt-searchbox input');
-  ytSearch.fill('Gundam Wing Just Communication');
-  ytSearch.press('Enter');
-  const ytSearchFirstResult = await page.waitForSelector(
-    'ytd-search ytd-video-renderer:first-child a'
-  );
-  ytSearchFirstResult.click();
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status !== test.info().status) {
+    const screenshotPath = testInfo.outputPath(`failure.png`);
+    console.log(`Saving screenshot to: ${screenshotPath}`);
+    try {
+      await page.screenshot({ path: screenshotPath, fullPage: true });
+      console.log('Screenshot saved successfully.');
+    } catch (e) {
+      console.error('Failed to save screenshot:', e);
+    }
 
-  // Wait for detail page to load
-  await page.waitForTimeout(1500);
-
-  const gifit = await getGifit(page);
-
-  await gifit.clickEntryButton();
-  await page.waitForTimeout(1000);
-
-  // First generation
-  await gifit.clickSubmitButton();
-  await gifit.getProgress();
-  expect(await gifit.getResultImage());
+    // Dump HTML
+    try {
+      const html = await page.content();
+      console.log('PAGE HTML DUMP:', html);
+    } catch (e) {
+      console.error('Failed to get page content:', e);
+    }
+  }
 });

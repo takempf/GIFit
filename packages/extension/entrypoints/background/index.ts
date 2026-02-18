@@ -1,6 +1,6 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
-import { extensionAnalyticsProvider } from '../lib/analytics';
+import { extensionAnalyticsProvider } from '../../lib/analytics';
 
 const MIGRATION_NOTICE_KEY = 'gifit:show_v4_migration_notice';
 console.log('within background');

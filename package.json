@@ -9,12 +9,14 @@
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "compile": "tsc --build",
     "validate": "npm run lint && npm run compile",
     "website:dev": "npm run dev -w @gifit/web",
     "extension:dev": "npm run dev -w @gifit/extension"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",
     "critters": "^0.0.23",
