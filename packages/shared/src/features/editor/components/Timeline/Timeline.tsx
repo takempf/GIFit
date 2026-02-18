@@ -145,14 +145,16 @@ export function Timeline({
     )
       return;
 
-    selectionRef.current.scrollIntoView({
-      behavior: 'instant', // Use instant for initial setup to avoid visual jumps
-      block: 'center',
-      inline: 'start'
+    const selectionCenter = (startTimeMs + durationMs / 2) * PIXELS_PER_MS;
+    const targetScrollLeft = selectionCenter - containerWidth / 2;
+
+    scrollRef.current?.scrollTo({
+      left: targetScrollLeft,
+      behavior: 'instant'
     });
 
     hasInitialScrolled.current = true;
-  }, [containerWidth, totalDurationMs]);
+  }, [containerWidth, totalDurationMs, startTimeMs, durationMs, PIXELS_PER_MS]);
 
   const count = Math.floor(totalDurationMs / 1000) + 1; // Number of seconds to render
 

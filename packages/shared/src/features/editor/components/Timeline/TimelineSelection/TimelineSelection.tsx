@@ -66,21 +66,28 @@ export const TimelineSelection = React.forwardRef<
 
     useImperativeHandle(ref, () => ({
       scrollLeftIntoView: () => {
-        const el = leftHandleRef.current;
-        if (!el || leftVisible) return;
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'start'
+        const container = props.scrollContainerRef?.current;
+        if (!container || leftVisible) return;
+
+        const handleCenter = startTimeMs * pixelsPerMs;
+        const targetScrollLeft = handleCenter - SCROLL_MARGIN;
+
+        container.scrollTo({
+          left: targetScrollLeft,
+          behavior: 'smooth'
         });
       },
       scrollRightIntoView: () => {
-        const el = rightHandleRef.current;
-        if (!el || rightVisible) return;
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-          inline: 'end'
+        const container = props.scrollContainerRef?.current;
+        if (!container || rightVisible) return;
+
+        const handleCenter = (startTimeMs + durationMs) * pixelsPerMs;
+        const containerWidth = container.clientWidth;
+        const targetScrollLeft = handleCenter + SCROLL_MARGIN - containerWidth;
+
+        container.scrollTo({
+          left: targetScrollLeft,
+          behavior: 'smooth'
         });
       },
       scrollIntoView: (options?: ScrollIntoViewOptions) => {

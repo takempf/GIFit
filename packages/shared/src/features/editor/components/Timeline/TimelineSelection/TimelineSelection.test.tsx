@@ -1,5 +1,8 @@
-import { render, fireEvent, screen } from '@testing-library/react';
-import { TimelineSelection } from './TimelineSelection';
+import { render, fireEvent, screen, act } from '@testing-library/react';
+import {
+  TimelineSelection,
+  TimelineSelectionHandle
+} from './TimelineSelection';
 import { vi, describe, it, expect } from 'vitest';
 
 describe('TimelineSelection', () => {
@@ -126,5 +129,53 @@ describe('TimelineSelection', () => {
         scrollRightIntoView: expect.any(Function)
       })
     );
+  });
+  it('scrolls container when calling imperative handles', () => {
+    const scrollContainerRef = {
+      current: document.createElement('div')
+    };
+    const scrollToMock = vi.fn();
+    scrollContainerRef.current.scrollTo = scrollToMock;
+
+    // Mock clientWidth for right scrolling calc
+    Object.defineProperty(scrollContainerRef.current, 'clientWidth', {
+      value: 800,
+      configurable: true
+    });
+
+    const ref = { current: null as TimelineSelectionHandle | null };
+    render(
+      <TimelineSelection
+        {...defaultProps}
+        ref={ref}
+        scrollContainerRef={scrollContainerRef}
+      />
+    );
+
+    // Test scrollLeftIntoView
+    act(() => {
+      ref.current?.scrollLeftIntoView();
+    });
+
+    // startTimeMs(2000) * pixelsPerMs(0.12) = 240
+    // target = 240 - SCROLL_MARGIN(100) = 140
+    expect(scrollToMock).toHaveBeenCalledWith({
+      left: 140,
+      behavior: 'smooth'
+    });
+
+    scrollToMock.mockClear();
+
+    // Test scrollRightIntoView
+    act(() => {
+      ref.current?.scrollRightIntoView();
+    });
+
+    // (startTimeMs(2000) + durationMs(3000)) * pixelsPerMs(0.12) = 5000 * 0.12 = 600
+    // target = 600 + SCROLL_MARGIN(100) - clientWidth(800) = 700 - 800 = -100
+    expect(scrollToMock).toHaveBeenCalledWith({
+      left: -100,
+      behavior: 'smooth'
+    });
   });
 });

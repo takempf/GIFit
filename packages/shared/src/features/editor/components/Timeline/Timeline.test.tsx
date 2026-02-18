@@ -139,9 +139,9 @@ describe('Timeline', () => {
       };
     });
 
-    // Verify scrollIntoView is called
-    const scrollIntoViewMock = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoViewMock;
+    // Verify scrollTo is called
+    const scrollToMock = vi.fn();
+    Element.prototype.scrollTo = scrollToMock;
 
     const props = { ...defaultProps, startTime: 2 };
     render(<Timeline {...props} />);
@@ -162,10 +162,9 @@ describe('Timeline', () => {
       });
     }
 
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({
+    expect(scrollToMock).toHaveBeenCalledWith({
       behavior: 'instant',
-      block: 'center',
-      inline: 'start'
+      left: expect.any(Number)
     });
   });
 
