@@ -176,9 +176,13 @@ export function setupPopupPort(): () => void {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .then((tabs: any[]) => {
       if (tabs[0]?.id) {
-        return browser.tabs.connect(tabs[0].id, {
+        const port = browser.tabs.connect(tabs[0].id, {
           name: 'GIFIT_POPUP_CONTEXT'
         });
+        port.onDisconnect.addListener(() => {
+          window.close();
+        });
+        return port;
       }
       return undefined;
     });

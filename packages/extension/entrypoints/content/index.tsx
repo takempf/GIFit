@@ -24,6 +24,8 @@ export default defineContentScript({
     ReactDOM.createRoot(noticeHost).render(<MigrationNotice />);
 
     let activeVideoElement: HTMLVideoElement | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let activePopupPort: any = null;
     const gifService = new GifService();
 
     /**
@@ -364,6 +366,7 @@ export default defineContentScript({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     browser.runtime.onConnect.addListener((port: any) => {
       if (port.name === 'GIFIT_POPUP_CONTEXT') {
+        activePopupPort = port;
         log('Popup connected, enforcing video pause');
         const video = getVideoElement();
         if (!video) return;
@@ -384,6 +387,7 @@ export default defineContentScript({
 
         port.onDisconnect.addListener(() => {
           log('Popup disconnected, releasing video control');
+          activePopupPort = null;
           video.removeEventListener('play', enforcePause);
           video.removeEventListener('playing', enforcePause);
           gifService.abort(); // Cancel any in-progress generation
@@ -400,6 +404,18 @@ export default defineContentScript({
 
     ctx.addEventListener(window, 'wxt:locationchange', (event: Event) => {
       log('URL changed, checking for video element', event);
+
+      // If popup is open, close it by disconnecting the port
+      if (activePopupPort) {
+        log('Navigation detected, disconnecting popup port');
+        try {
+          activePopupPort.disconnect();
+        } catch {
+          // ignore if already disconnected
+        }
+        activePopupPort = null;
+      }
+
       // Give it a moment for the new page/video to load
       setTimeout(updateVideoElement, 500);
       setTimeout(updateVideoElement, 2000);
