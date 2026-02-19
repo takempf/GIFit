@@ -92,6 +92,14 @@
   }
 }
 
+:global(::view-transition-old(app-panel)),
+:global(::view-transition-new(app-panel)) {
+  /* Prevent content distortion during panel resize */
+  height: calc-size(auto);
+  object-fit: none;
+  object-position: bottom;
+}
+
 .config {
 }
 

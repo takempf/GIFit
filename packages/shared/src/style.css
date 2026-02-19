@@ -110,11 +110,3 @@ a {
   animation-duration: 350ms;
   animation-timing-function: var(--ease_out_expo);
 }
-
-::view-transition-old(app-panel),
-::view-transition-new(app-panel) {
-  /* Prevent content distortion during panel resize */
-  height: calc-size(auto);
-  object-fit: none;
-  object-position: bottom;
-}

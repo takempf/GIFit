@@ -1,4 +1,3 @@
-import css from './ConfigurationPanel.module.css';
 import { useCallback } from 'react';
 import {
   useConfigurationPanelStore,
@@ -18,6 +17,8 @@ import { FrameRateInput } from './FrameRateInput/FrameRateInput';
 import { WidthInput } from './WidthInput/WidthInput';
 import { HeightInput } from './HeightInput/HeightInput';
 import { QualityInput } from './QualityInput/QualityInput';
+
+import css from './ConfigurationPanel.module.css';
 
 interface ConfigurationPanelProps {
   onSubmit: (config: ConfigState) => void;

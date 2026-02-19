@@ -18,7 +18,6 @@
   grid-area: submit;
   display: flex;
   place-content: center;
-  padding: 0.25em;
   gap: 0.25em;
 }
 
