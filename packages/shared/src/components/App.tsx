@@ -45,8 +45,8 @@ export function App() {
   // Listen for messages from content script via adapter
   useEffect(() => {
     gifAdapter.setCallbacks({
-      onProgress: (progress, frameCount, frameDataUrl) => {
-        updateProgress(progress, frameCount, frameDataUrl);
+      onProgress: (progress, frameCount, frameDataUrl, stage) => {
+        updateProgress(progress, frameCount, frameDataUrl, stage);
       },
       onComplete: (data) => {
         complete(data);

@@ -3,10 +3,12 @@ import { browser } from 'wxt/browser';
 import ReactDOM from 'react-dom/client';
 import {
   GifService,
-  log,
+  createLogger,
   ExtensionMessage,
   findBestVideo
 } from '@gifit/shared';
+
+const logger = createLogger('Content');
 
 import { MigrationNotice } from './MigrationNotice';
 
@@ -15,7 +17,7 @@ export default defineContentScript({
   runAt: 'document_idle',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async main(ctx: any) {
-    log('Running content script');
+    logger.log('Running content script');
 
     // --- v3 → v4 Migration Notice ---
     const noticeHost = document.createElement('div');
@@ -38,7 +40,7 @@ export default defineContentScript({
 
       if (bestVideo) {
         if (activeVideoElement !== bestVideo) {
-          log('Found new best video element', bestVideo);
+          logger.log('Found new best video element', bestVideo);
         }
         activeVideoElement = bestVideo;
         return activeVideoElement;
@@ -50,7 +52,7 @@ export default defineContentScript({
       // However, if we have a connected activeVideoElement, maybe we return it?
       // Strict interpretation: "Ensure its' visible" -> return null if not.
 
-      log('No suitable video element found');
+      logger.log('No suitable video element found');
       return null;
     };
 
@@ -77,7 +79,7 @@ export default defineContentScript({
       }
 
       if (foundNew) {
-        log('New video element detected in DOM via MutationObserver');
+        logger.log('New video element detected in DOM via MutationObserver');
         // We don't blindly set activeVideoElement anymore, we let getVideoElement find it when needed.
       }
     });
@@ -88,24 +90,28 @@ export default defineContentScript({
     // getVideoElement();
 
     // --- Service Event Listeners ---
-    gifService.on('FRAMES_PROGRESS', (progress, frameCount, frameDataUrl) => {
-      browser.runtime
-        .sendMessage({
-          type: 'GIF_PROGRESS',
-          progress,
-          frameCount,
-          frameDataUrl
-        })
-        .catch((error: unknown) => {
-          log('Failed to send GIF_PROGRESS message:', error);
-        });
-    });
+    gifService.on(
+      'FRAMES_PROGRESS',
+      (progress, frameCount, frameDataUrl, stage) => {
+        browser.runtime
+          .sendMessage({
+            type: 'GIF_PROGRESS',
+            progress,
+            frameCount,
+            frameDataUrl,
+            stage
+          })
+          .catch((error: unknown) => {
+            logger.error('Failed to send GIF_PROGRESS message:', error);
+          });
+      }
+    );
 
     gifService.on('COMPLETE', (data) => {
       browser.runtime
         .sendMessage({ type: 'GIF_COMPLETE', data })
         .catch((error: unknown) => {
-          log('Failed to send GIF_COMPLETE message:', error);
+          logger.log('Failed to send GIF_COMPLETE message:', error);
         });
     });
 
@@ -113,7 +119,7 @@ export default defineContentScript({
       browser.runtime
         .sendMessage({ type: 'GIF_ERROR', error: error.message })
         .catch((error: unknown) => {
-          log('Failed to send GIF_ERROR message:', error);
+          logger.log('Failed to send GIF_ERROR message:', error);
         });
     });
 
@@ -127,7 +133,7 @@ export default defineContentScript({
       if (event.source !== window) return;
 
       if (event.data.type === 'YOUTUBE_PLAYER_RESPONSE') {
-        log('Received player response from page', event.data.payload);
+        logger.log('Received player response from page', event.data.payload);
         // We received the data, now we can forward it to the popup if needed
         // But efficiently, we might store it or just send it when requested?
         // Actually, the flow is: Popup (Component) -> MSG -> Content Script -> PostMessage -> Page -> PostMessage -> Content Script -> SendResponse
@@ -188,15 +194,15 @@ export default defineContentScript({
               const script = document.createElement('script');
               script.src = scriptUrl;
               script.onload = () => {
-                log('Content: main-world.js loaded successfully');
+                logger.log('Content: main-world.js loaded successfully');
               };
               script.onerror = (e) => {
                 console.error('Content: Failed to load main-world.js', e);
               };
               (document.head || document.documentElement).appendChild(script);
-              log('Content: Injected main-world.js via script src');
+              logger.log('Content: Injected main-world.js via script src');
             } else {
-              log('Content: main-world.js already injected');
+              logger.log('Content: main-world.js already injected');
             }
           } catch (e) {
             console.error('Content: Failed to inject main-world.js', e);
@@ -204,7 +210,7 @@ export default defineContentScript({
 
           const sendRequest = () => {
             attempts++;
-            log(
+            logger.log(
               `Content: Sending GIFIT_GET_STORYBOARD (Attempt ${attempts}/${maxAttempts})`
             );
             window.postMessage({ type: 'GIFIT_GET_STORYBOARD' }, '*');
@@ -237,12 +243,12 @@ export default defineContentScript({
         _sender: unknown,
         sendResponse: (response?: unknown) => void
       ): true | undefined => {
-        log('Content Script received message:', message.type);
+        logger.log('Content Script received message:', message.type);
 
         if (message.type === 'START_GIF') {
           const video = getVideoElement();
           if (!video) {
-            log('No active video element found to start GIF');
+            logger.log('No active video element found to start GIF');
             sendResponse({ success: false, error: 'No video found' });
             return;
           }
@@ -258,19 +264,19 @@ export default defineContentScript({
         }
 
         if (message.type === 'GET_VIDEO_METADATA') {
-          log('Handling GET_VIDEO_METADATA');
+          logger.log('Handling GET_VIDEO_METADATA');
           const video = getVideoElement();
 
           if (video) {
             // Check if metadata is loaded
             if (video.readyState < 1) {
-              log('Video metadata not loaded yet (readyState < 1)');
+              logger.log('Video metadata not loaded yet (readyState < 1)');
               sendResponse(null);
               return;
             }
 
-            log('Selected video element:', video);
-            log(
+            logger.log('Selected video element:', video);
+            logger.log(
               `Video details: id="${video.id}", class="${video.className}", src="${video.currentSrc}"`
             );
 
@@ -280,11 +286,11 @@ export default defineContentScript({
               height: video.videoHeight,
               currentTime: video.currentTime
             };
-            log('Returning video metadata:', metadata);
+            logger.log('Returning video metadata:', metadata);
             sendResponse(metadata);
             return;
           }
-          log('No video found for GET_VIDEO_METADATA');
+          logger.log('No video found for GET_VIDEO_METADATA');
           sendResponse(null);
           return;
         }
@@ -350,7 +356,7 @@ export default defineContentScript({
               sendResponse({ spec });
             })
             .catch((error) => {
-              log('Error fetching storyboard:', error);
+              logger.log('Error fetching storyboard:', error);
               sendResponse({ spec: null });
             });
           return true; // Keep channel open for async response
@@ -367,13 +373,15 @@ export default defineContentScript({
     browser.runtime.onConnect.addListener((port: any) => {
       if (port.name === 'GIFIT_POPUP_CONTEXT') {
         activePopupPort = port;
-        log('Popup connected, enforcing video pause');
+        logger.log('Popup connected, enforcing video pause');
         const video = getVideoElement();
         if (!video) return;
 
         const enforcePause = () => {
           if (!video.paused) {
-            log('Video tried to play while popup is open, pausing again');
+            logger.log(
+              'Video tried to play while popup is open, pausing again'
+            );
             video.pause();
           }
         };
@@ -386,7 +394,7 @@ export default defineContentScript({
         video.addEventListener('playing', enforcePause);
 
         port.onDisconnect.addListener(() => {
-          log('Popup disconnected, releasing video control');
+          logger.log('Popup disconnected, releasing video control');
           activePopupPort = null;
           video.removeEventListener('play', enforcePause);
           video.removeEventListener('playing', enforcePause);
@@ -403,11 +411,11 @@ export default defineContentScript({
     };
 
     ctx.addEventListener(window, 'wxt:locationchange', (event: Event) => {
-      log('URL changed, checking for video element', event);
+      logger.log('URL changed, checking for video element', event);
 
       // If popup is open, close it by disconnecting the port
       if (activePopupPort) {
-        log('Navigation detected, disconnecting popup port');
+        logger.log('Navigation detected, disconnecting popup port');
         try {
           activePopupPort.disconnect();
         } catch {

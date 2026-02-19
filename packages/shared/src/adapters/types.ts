@@ -49,7 +49,8 @@ export interface GifProgressCallbacks {
   onProgress: (
     progress: number,
     frameCount: number,
-    frameDataUrl?: string
+    frameDataUrl?: string,
+    stage?: string
   ) => void;
   onComplete: (data: GifCompleteData) => void;
   onError: (error: string) => void;

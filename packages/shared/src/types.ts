@@ -44,6 +44,7 @@ export interface MsgGifProgress {
   progress: number;
   frameCount: number;
   frameDataUrl?: string;
+  stage?: string;
 }
 
 export interface MsgGifComplete {

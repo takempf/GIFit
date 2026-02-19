@@ -95,8 +95,13 @@ export class DirectGifAdapter implements GifAdapter {
     // Wire up events
     this.gifService.on(
       'FRAMES_PROGRESS',
-      (progress: number, frameCount: number, frameDataUrl?: string) => {
-        this.callbacks?.onProgress(progress, frameCount, frameDataUrl);
+      (
+        progress: number,
+        frameCount: number,
+        frameDataUrl?: string,
+        stage?: string
+      ) => {
+        this.callbacks?.onProgress(progress, frameCount, frameDataUrl, stage);
       }
     );
 

@@ -13,6 +13,7 @@ interface GifState {
   result: GifCompleteData | null;
   generationId: string | null;
   currentFrame: string | null;
+  stage: string | null;
 }
 
 interface GifActions {
@@ -24,7 +25,8 @@ interface GifActions {
   updateProgress: (
     progress: number,
     frameCount: number,
-    frame?: string
+    frame?: string,
+    stage?: string
   ) => void;
   complete: (data: GifCompleteData) => void;
   setError: (error: string) => void;
@@ -43,7 +45,8 @@ const initialState: GifState = {
   error: null,
   result: null,
   generationId: null,
-  currentFrame: null
+  currentFrame: null,
+  stage: null
 };
 
 export const useGifStore = create<GifStore>((set) => ({
@@ -74,13 +77,14 @@ export const useGifStore = create<GifStore>((set) => ({
     set({ name });
   },
 
-  updateProgress(progress, frameCount, frame) {
+  updateProgress(progress, frameCount, frame, stage) {
     set((state) => ({
       status: 'processing',
       progress,
       processedFrameCount: frameCount,
       // Only update currentFrame when a new frame is provided
-      currentFrame: frame ?? state.currentFrame
+      currentFrame: frame ?? state.currentFrame,
+      stage: stage ?? state.stage
     }));
   },
 

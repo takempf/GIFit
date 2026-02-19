@@ -58,12 +58,14 @@ interface IndexingOptions {
   height: number;
 }
 
+const PALETTE_WEIGHT = 0.2;
+
 /**
  * Service for creating GIFs from HTMLVideoElement frames using gifenc.
  *
  * Emits:
  * - 'COMPLETE' (data: GifCompleteData)
- * - 'FRAMES_PROGRESS' (ratio: number, frameCount: number)
+ * - 'FRAMES_PROGRESS' (ratio: number, frameCount: number, frameDataUrl?: string, stage?: string)
  * - 'FRAMES_COMPLETE'
  * - 'ABORT'
  * - 'ERROR' (error: Error)
@@ -342,6 +344,18 @@ class GifService extends EventEmitter {
       samples.push(
         this.downsampleFrame(videoElement, sampleWidth, sampleHeight)
       );
+
+      // Report progress for palette gathering
+      // Scale 0 to 1 relative to the sample count, but weighted by PALETTE_WEIGHT in the overall progress
+      const progress = (i + 1) / count;
+      const weightedProgress = progress * PALETTE_WEIGHT;
+      this.emit(
+        'FRAMES_PROGRESS',
+        weightedProgress,
+        0,
+        undefined,
+        'Gathering Palette...'
+      );
     }
 
     return samples;
@@ -476,6 +490,10 @@ class GifService extends EventEmitter {
           ? Math.min(1, Math.max(0, elapsed / trueGifDuration))
           : 1;
 
+      // Calculate total weighted progress
+      // total = PALETTE_WEIGHT + (progress * (1 - PALETTE_WEIGHT))
+      const weightedProgress = PALETTE_WEIGHT + progress * (1 - PALETTE_WEIGHT);
+
       // Sample frame preview - only generate data URL every 5 frames to reduce overhead
       // Use JPEG with low quality for faster encoding and smaller transfer size
       const frameDataUrl =
@@ -483,7 +501,13 @@ class GifService extends EventEmitter {
           ? this.canvasEl.toDataURL('image/jpeg', 0.5)
           : undefined;
 
-      this.emit('FRAMES_PROGRESS', progress, this.framesComplete, frameDataUrl);
+      this.emit(
+        'FRAMES_PROGRESS',
+        weightedProgress,
+        this.framesComplete,
+        frameDataUrl,
+        'Processing Frames...'
+      );
 
       // Seek to next frame start
       const nextFrameTimeMs = videoElement.currentTime * 1000 + frameIntervalMs;

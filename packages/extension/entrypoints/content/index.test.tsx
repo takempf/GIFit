@@ -44,7 +44,11 @@ vi.mock('@gifit/shared', () => ({
     on() {}
     abort() {}
   },
-  log: vi.fn(),
+  createLogger: vi.fn(() => ({
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  })),
   findBestVideo: vi.fn()
 }));
 

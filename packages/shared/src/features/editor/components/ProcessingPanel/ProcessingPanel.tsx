@@ -12,14 +12,17 @@ import { useAppStore } from '@shared/stores/appStore';
 
 export function ProcessingPanel() {
   const setStatus = useAppStore((state) => state.setStatus);
-  const { progress, abortGif } = useGifStore();
+  const { progress, stage, abortGif } = useGifStore();
 
   return (
     <div className={css.processingPanel}>
       <Progress
         label={
           <span className={css.progressLabel}>
-            <Spinner /> Generating GIF
+            <Spinner />{' '}
+            {progress === 0 && !stage
+              ? 'Starting...'
+              : (stage ?? 'Generating GIF...')}
           </span>
         }
         showValue={true}

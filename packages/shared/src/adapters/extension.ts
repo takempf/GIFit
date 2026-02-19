@@ -106,7 +106,8 @@ export class ExtensionGifAdapter implements GifAdapter {
         this.callbacks?.onProgress(
           message.progress,
           message.frameCount,
-          message.frameDataUrl
+          message.frameDataUrl,
+          message.stage
         );
       } else if (message.type === 'GIF_COMPLETE') {
         this.callbacks?.onComplete(message.data);
