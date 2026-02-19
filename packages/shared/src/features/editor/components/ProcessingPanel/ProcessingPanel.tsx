@@ -9,10 +9,12 @@ import XIcon from '@shared/assets/x.svg?react';
 import css from './ProcessingPanel.module.css';
 
 import { useAppStore } from '@shared/stores/appStore';
+import { useAdapters } from '@shared/adapters/context';
 
 export function ProcessingPanel() {
   const setStatus = useAppStore((state) => state.setStatus);
   const { progress, stage, abortGif } = useGifStore();
+  const { gif } = useAdapters();
 
   return (
     <div className={css.processingPanel}>
@@ -33,7 +35,8 @@ export function ProcessingPanel() {
         rounded={true}
         variant="secondary"
         onClick={() => {
-          abortGif();
+          abortGif(); // Updates local store state
+          gif.abortGif(); // Signals backend to stop
           setStatus('configuring');
         }}
         append={<XIcon />}>

@@ -4,12 +4,16 @@ import { ProcessingPanel } from './ProcessingPanel';
 import { useGifStore } from '@shared/features/generator/stores/gifGeneratorStore';
 import { useAppStore } from '@shared/stores/appStore';
 
+import { useAdapters, AdapterSet } from '@shared/adapters/context';
+
 // Mock stores
 vi.mock('@shared/features/generator/stores/gifGeneratorStore');
 vi.mock('@shared/stores/appStore');
+vi.mock('@shared/adapters/context');
 
 describe('ProcessingPanel', () => {
   const abortGifMock = vi.fn();
+  const adapterAbortGifMock = vi.fn();
   const setStatusMock = vi.fn();
 
   beforeEach(() => {
@@ -24,6 +28,12 @@ describe('ProcessingPanel', () => {
       if (selector.toString().includes('setStatus')) return setStatusMock;
       return null;
     });
+
+    vi.mocked(useAdapters).mockReturnValue({
+      gif: {
+        abortGif: adapterAbortGifMock
+      }
+    } as unknown as AdapterSet);
   });
 
   it('should render progress correctly', () => {
@@ -39,6 +49,7 @@ describe('ProcessingPanel', () => {
     fireEvent.click(cancelButton);
 
     expect(abortGifMock).toHaveBeenCalled();
+    expect(adapterAbortGifMock).toHaveBeenCalled();
     expect(setStatusMock).toHaveBeenCalledWith('configuring');
   });
 });

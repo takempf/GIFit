@@ -45,7 +45,7 @@ export default defineBackground(() => {
   });
 
   // Handle context menu clicks
-  browser.contextMenus.onClicked.addListener((info, tab) => {
+  browser.contextMenus.onClicked.addListener((info, _tab) => {
     if (info.menuItemId === CONTEXT_MENU_ID) {
       // type-check hack for Firefox MV2/MV3 legacy support
       const legacyBrowser = browser as unknown as {
