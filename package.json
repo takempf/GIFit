@@ -13,7 +13,8 @@
     "compile": "tsc --build",
     "validate": "npm run lint && npm run compile",
     "website:dev": "npm run dev -w @gifit/web",
-    "extension:dev": "npm run dev -w @gifit/extension"
+    "extension:dev": "npm run dev -w @gifit/extension",
+    "extension:dev:firefox": "npm run dev:firefox -w @gifit/extension"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

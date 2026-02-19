@@ -13,7 +13,9 @@ if (POSTHOG_API_KEY) {
     api_host: POSTHOG_HOST ?? 'https://us.i.posthog.com',
     autocapture: false,
     capture_pageview: false,
-    persistence: 'localStorage'
+    persistence: 'localStorage',
+    disable_surveys: true,
+    disable_session_recording: true
   });
 
   posthog.register({ source: 'extension' });

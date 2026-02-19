@@ -2,6 +2,13 @@ import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
 import { extensionAnalyticsProvider } from '../../lib/analytics';
 
+function getExtensionAction() {
+  const legacyBrowser = browser as unknown as {
+    browserAction?: typeof browser.action;
+  };
+  return browser.action || legacyBrowser.browserAction;
+}
+
 const MIGRATION_NOTICE_KEY = 'gifit:show_v4_migration_notice';
 console.log('within background');
 const CONTEXT_MENU_ID = 'gifit:create-gif';
@@ -47,17 +54,10 @@ export default defineBackground(() => {
   // Handle context menu clicks
   browser.contextMenus.onClicked.addListener((info, _tab) => {
     if (info.menuItemId === CONTEXT_MENU_ID) {
-      // type-check hack for Firefox MV2/MV3 legacy support
-      const legacyBrowser = browser as unknown as {
-        browserAction?: {
-          openPopup: () => Promise<void>;
-        };
-      };
-      const openPopup =
-        browser.action?.openPopup || legacyBrowser.browserAction?.openPopup;
+      const action = getExtensionAction();
 
-      if (openPopup) {
-        openPopup().catch((err: unknown) => {
+      if (action?.openPopup) {
+        action.openPopup().catch((err: unknown) => {
           console.error('GIFit: Failed to open popup', err);
         });
       } else {
@@ -88,11 +88,17 @@ function updateActionState(tabId: number | undefined, url: string | undefined) {
     (url.startsWith('https://www.youtube.com/') ||
       url.startsWith('https://youtube.com/'));
 
+  const action = getExtensionAction();
+
   if (isYouTube) {
-    browser.action.enable(tabId);
-    browser.contextMenus.update(CONTEXT_MENU_ID, { enabled: true });
+    if (action?.enable) action.enable(tabId);
+    browser.contextMenus
+      .update(CONTEXT_MENU_ID, { enabled: true })
+      .catch(() => {});
   } else {
-    browser.action.disable(tabId);
-    browser.contextMenus.update(CONTEXT_MENU_ID, { enabled: false });
+    if (action?.disable) action.disable(tabId);
+    browser.contextMenus
+      .update(CONTEXT_MENU_ID, { enabled: false })
+      .catch(() => {});
   }
 }

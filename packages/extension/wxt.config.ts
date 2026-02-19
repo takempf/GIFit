@@ -9,6 +9,11 @@ const rootPkg = JSON.parse(
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
+  dev: {
+    server: {
+      port: 4242
+    }
+  },
   manifest: {
     name: 'GIFit!',
     version: rootPkg.version,
