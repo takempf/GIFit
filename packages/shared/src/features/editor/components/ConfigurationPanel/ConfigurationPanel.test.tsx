@@ -33,7 +33,13 @@ vi.mock('wxt/browser', () => ({
     }
   }
 }));
-vi.mock('@shared/utils/logger', () => ({ log: vi.fn() }));
+vi.mock('@shared/utils/logger', () => ({
+  createLogger: vi.fn(() => ({
+    log: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn()
+  }))
+}));
 // Mock Input components to avoid complexity
 vi.mock('@shared/components/ui/Input/Input', () => ({
   Input: (props: React.ComponentProps<'input'> & { label: string }) => (

@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { log } from '@shared/utils/logger';
+import { createLogger } from '@shared/utils/logger';
 import { storageAdapter } from '@shared/utils/storage';
 import { VideoMetadata } from '@shared/types';
 import { videoController } from '@shared/services/VideoController';
 import { toMilliseconds, toSeconds } from '@shared/utils/time';
 
 const DEFAULT_WIDTH = 420;
+const logger = createLogger('ConfigurationPanel');
 
 export interface ConfigState {
   start: number; // Milliseconds
@@ -153,7 +154,7 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
 
         set(initialStateFromStorage);
       } catch (error) {
-        log('Failed to load initial config from storage:', error);
+        logger.log('Failed to load initial config from storage:', error);
       }
     },
 
@@ -166,21 +167,21 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
         if (name === 'width' && typeof value === 'number') {
           storageAdapter
             .setWidth(value)
-            .catch((err) => log('Error saving width:', err));
+            .catch((err) => logger.log('Error saving width:', err));
           newState.height = Math.round(value / state.aspectRatio);
         } else if (name === 'height' && typeof value === 'number') {
           newState.width = Math.round(value * state.aspectRatio);
           storageAdapter
             .setWidth(newState.width)
-            .catch((err) => log('Error saving width:', err));
+            .catch((err) => logger.log('Error saving width:', err));
         } else if (name === 'framerate' && typeof value === 'number') {
           storageAdapter
             .setFps(value)
-            .catch((err) => log('Error saving framerate:', err));
+            .catch((err) => logger.log('Error saving framerate:', err));
         } else if (name === 'quality' && typeof value === 'number') {
           storageAdapter
             .setQuality(value)
-            .catch((err) => log('Error saving quality:', err));
+            .catch((err) => logger.log('Error saving quality:', err));
         }
 
         return newState;

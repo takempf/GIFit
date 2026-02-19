@@ -7,7 +7,10 @@ import {
   getStoryboardFrame,
   type StoryboardLevel
 } from '@shared/utils/storyboard';
+import { createLogger } from '@shared/utils/logger';
 import { StoryboardFrame } from '../TimelineStoryboardFrame/TimelineStoryboardFrame';
+
+const logger = createLogger('TimelineStoryboard');
 
 import css from './TimelineStoryboard.module.css';
 
@@ -33,7 +36,7 @@ function useStoryboardSpec(totalDurationMs: number): {
     const fetchStoryboard = async (): Promise<void> => {
       try {
         if (!video.getStoryboardSpec) {
-          console.warn('Timeline: Video adapter does not support storyboard');
+          logger.warn('Timeline: Video adapter does not support storyboard');
           return;
         }
 
@@ -43,10 +46,10 @@ function useStoryboardSpec(totalDurationMs: number): {
           const parsed = parseStoryboardSpec(spec);
           setStoryboardSpec(parsed);
         } else {
-          console.warn('Timeline: No spec in response');
+          logger.warn('Timeline: No spec in response');
         }
       } catch (e) {
-        console.error('Failed to fetch storyboard spec', e);
+        logger.error('Failed to fetch storyboard spec', e);
       }
     };
     fetchStoryboard();

@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3';
 import { GIFEncoder, quantize, applyPalette } from 'gifenc';
-import { log } from '@shared/utils/logger';
+import { createLogger } from '@shared/utils/logger';
 import floydSteinberg from '@shared/utils/dither';
 
 type Palette = [number, number, number][];
@@ -68,6 +68,8 @@ interface IndexingOptions {
  * - 'ABORT'
  * - 'ERROR' (error: Error)
  */
+const logger = createLogger('GifService');
+
 class GifService extends EventEmitter {
   private encoder: GIFEncoder | null = null;
   private aborted: boolean = false;
@@ -102,7 +104,7 @@ class GifService extends EventEmitter {
     config: GifConfig,
     videoElement: HTMLVideoElement
   ): Promise<GifCompleteData | void> {
-    log('Creating GIF with config:', config);
+    logger.log('Creating GIF with config:', config);
 
     this.aborted = false;
     this.framesComplete = 0;
@@ -163,12 +165,12 @@ class GifService extends EventEmitter {
       };
 
       // Frame collection complete, finish up
-      log('GIF processing complete.');
+      logger.log('GIF processing complete.');
       this.emit('COMPLETE', gifData);
 
       return gifData;
     } catch (error: unknown) {
-      console.error('GIF creation failed:', error);
+      logger.error('GIF creation failed:', error);
       if (!this.aborted) {
         this.emit(
           'ERROR',
@@ -215,7 +217,7 @@ class GifService extends EventEmitter {
     if (this.aborted) {
       return; // Nothing to abort
     }
-    log('Aborting GIF creation');
+    logger.log('Aborting GIF creation');
     this.aborted = true;
 
     // The async loop in processFrames will check this.aborted and stop.
@@ -224,17 +226,17 @@ class GifService extends EventEmitter {
     if (this.listenerCount('ABORT') > 0) {
       this.emit('ABORT');
     }
-    log('GIF creation aborted');
+    logger.log('GIF creation aborted');
   }
 
   destroy(): void {
-    log('Destroying GifService');
+    logger.log('Destroying GifService');
     this.abort(); // Stop any ongoing process
     this.removeAllListeners();
 
     this.canvasEl = null; // Help GC
     this.context = null; // Help GC
-    log('GifService destroyed');
+    logger.log('GifService destroyed');
   }
 
   private seek(video: HTMLVideoElement, time: number): void {
@@ -350,7 +352,7 @@ class GifService extends EventEmitter {
     videoElement: HTMLVideoElement,
     maxColors: number
   ): Promise<number[][]> {
-    log('Generating global palette...');
+    logger.log('Generating global palette...');
     const samples = await this.sampleFrames(config, videoElement, 10); // Sample 10 frames
 
     // Combine all samples into one giant buffer for quantization
@@ -366,7 +368,7 @@ class GifService extends EventEmitter {
     }
 
     const palette = quantize(combinedData, maxColors);
-    log('Global palette generated');
+    logger.log('Global palette generated');
     return palette;
   }
 

@@ -6,6 +6,9 @@ import type {
   GifProgressCallbacks
 } from './types';
 import type { GifConfig, VideoMetadata, ExtensionMessage } from '@shared/types';
+import { createLogger } from '@shared/utils/logger';
+
+const logger = createLogger('ExtensionAdapter');
 // We need to import the stored config from where it is defined.
 // Assuming it's in @shared/utils/storage or similar, but the original file was checking @/utils/storage.
 // Let's check where `storedConfig` is defined in the shared package.
@@ -38,8 +41,8 @@ async function sendMessageToActiveTab(
   if (id) {
     try {
       const tabInfo = await browser.tabs.get(id);
-      console.debug(
-        `[ExtensionAdapter] Sending ${type} to tab ${id} (${tabInfo?.title ?? 'unknown'})`
+      logger.log(
+        `Sending ${type} to tab ${id} (${tabInfo?.title ?? 'unknown'})`
       );
       const response = await browser.tabs.sendMessage(id, {
         type,
@@ -47,7 +50,7 @@ async function sendMessageToActiveTab(
       });
       return response;
     } catch (error) {
-      console.debug('Failed to send message to active tab:', error);
+      logger.log('Failed to send message to active tab:', error);
       return null;
     }
   }
