@@ -69,20 +69,46 @@ test('Popup renders and communicates with active tab', async ({
 
   // Targeted Mock: Return the specific YT tab ID
   await popupPage.addInitScript((targetTabId) => {
-    const log = (...args: any[]) => console.log('MOCK-HELPER:', ...args);
+    const log = (...args: unknown[]) => console.log('MOCK-HELPER:', ...args);
 
-    const win = window as any;
+    interface ChromeTabsQuery {
+      active?: boolean;
+      currentWindow?: boolean;
+    }
+
+    interface ChromeTab {
+      id: number;
+      active: boolean;
+      currentWindow: boolean;
+      windowId: number;
+      title: string;
+      url: string;
+    }
+
+    interface ChromeAPI {
+      tabs: {
+        query: (
+          queryInfo: ChromeTabsQuery,
+          callback?: (result: ChromeTab[]) => void
+        ) => Promise<ChromeTab[]> | void;
+      };
+    }
+
+    const win = window as unknown as { chrome: ChromeAPI };
     win.chrome = win.chrome || {};
     win.chrome.tabs = win.chrome.tabs || {};
 
     // Keep reference if needed, or just overwrite
     const originalQuery = win.chrome.tabs.query;
 
-    win.chrome.tabs.query = function (queryInfo: any, callback: any) {
+    win.chrome.tabs.query = function (
+      queryInfo: ChromeTabsQuery,
+      callback?: (result: ChromeTab[]) => void
+    ) {
       // If asking for active/currentWindow (popup's view of "active"), return our target tab
       if (queryInfo.active && queryInfo.currentWindow) {
         log(`Intercepting query, returning target tab ${targetTabId}`);
-        const result = [
+        const result: ChromeTab[] = [
           {
             id: targetTabId,
             active: true,
@@ -102,7 +128,7 @@ test('Popup renders and communicates with active tab', async ({
 
       // Pass through other queries (though mostly unused by popup)
       if (originalQuery) {
-        return originalQuery.apply(win.chrome.tabs, arguments);
+        return (originalQuery as Function).apply(win.chrome.tabs, arguments);
       }
       return Promise.resolve([]);
     };
