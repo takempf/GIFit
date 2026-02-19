@@ -4,8 +4,11 @@ import { extensionAnalyticsProvider } from '../../lib/analytics';
 
 const MIGRATION_NOTICE_KEY = 'gifit:show_v4_migration_notice';
 console.log('within background');
+const CONTEXT_MENU_ID = 'gifit:create-gif';
+
 export default defineBackground(() => {
   console.log('background, within define background');
+
   browser.runtime.onInstalled.addListener((details) => {
     extensionAnalyticsProvider.track('extension_installed', {
       reason: details.reason
@@ -22,12 +25,45 @@ export default defineBackground(() => {
         });
     }
 
+    // Create context menu
+    browser.contextMenus.create({
+      id: CONTEXT_MENU_ID,
+      title: 'Create a GIF',
+      contexts: ['page', 'video'],
+      documentUrlPatterns: [
+        'https://www.youtube.com/*',
+        'https://youtube.com/*'
+      ]
+    });
+
     // Disable action on all tabs by default, then enable where appropriate
     browser.tabs.query({}).then((tabs) => {
       tabs.forEach((tab) => {
         updateActionState(tab.id, tab.url);
       });
     });
+  });
+
+  // Handle context menu clicks
+  browser.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId === CONTEXT_MENU_ID) {
+      // type-check hack for Firefox MV2/MV3 legacy support
+      const legacyBrowser = browser as unknown as {
+        browserAction?: {
+          openPopup: () => Promise<void>;
+        };
+      };
+      const openPopup =
+        browser.action?.openPopup || legacyBrowser.browserAction?.openPopup;
+
+      if (openPopup) {
+        openPopup().catch((err: unknown) => {
+          console.error('GIFit: Failed to open popup', err);
+        });
+      } else {
+        console.error('GIFit: openPopup API not available');
+      }
+    }
   });
 
   // Listen for tab updates (URL changes)
@@ -54,7 +90,9 @@ function updateActionState(tabId: number | undefined, url: string | undefined) {
 
   if (isYouTube) {
     browser.action.enable(tabId);
+    browser.contextMenus.update(CONTEXT_MENU_ID, { enabled: true });
   } else {
     browser.action.disable(tabId);
+    browser.contextMenus.update(CONTEXT_MENU_ID, { enabled: false });
   }
 }

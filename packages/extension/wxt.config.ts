@@ -17,7 +17,7 @@ export default defineConfig({
       name: 'Timothy Kempf',
       url: 'https://kempf.dev'
     },
-    permissions: ['storage'],
+    permissions: ['storage', 'contextMenus'],
     host_permissions: ['*://*.youtube.com/*'],
     web_accessible_resources: [
       {
