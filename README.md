@@ -1,6 +1,8 @@
-![GIFit Logo](/packages/shared/src/assets/gifit-logo.svg)
+<p align="center">
+   <img src="/packages/shared/src/assets/gifit-logo.svg" alt="GIFit Logo" width="200px" />
+</p>
 
-Making a GIF can be intimidating. With GIFit, it isn't so intimidating anymore. Just install GIFit and you can make GIFs out of pieces of any YouTube video. Inherit the power of the GIF gods!
+Making a GIF can be intimidating. With GIFit, it isn't so intimidating anymore. Just install G IFit and you can make GIFs out of pieces of any YouTube video. Inherit the power of the GIF gods!
 
 ![GIFit in action](/screenshots/gifit-screenshot.avif)
 
