@@ -16,7 +16,7 @@ import GifitLogo from '@gifit/shared/assets/gifit-logo.svg?react';
 import './App.css';
 
 // Mock video source (Big Buck Bunny Trailer)
-const VIDEO_SRC = '/videos/big-buck-bunny-trailer.mp4';
+const VIDEO_SRC = './videos/big-buck-bunny-trailer.mp4';
 
 export default function App() {
   const [adapters, setAdapters] = useState<AdapterSet | null>(null);
