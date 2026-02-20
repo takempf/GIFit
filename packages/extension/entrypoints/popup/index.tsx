@@ -23,8 +23,6 @@ const storageAdapterImpl = new ExtensionStorageAdapter();
 // Inject into services (proxies)
 // Note: videoController is now a proxy instance exported as 'videoController'
 // storageAdapter is now a proxy instance exported as 'storageAdapter'
-// We might need to cast or access the underlying setAdapter method if not exposed on the type
-// But I defined setAdapter on the classes.
 videoController.setAdapter(videoAdapter);
 storageAdapter.setAdapter(storageAdapterImpl);
 

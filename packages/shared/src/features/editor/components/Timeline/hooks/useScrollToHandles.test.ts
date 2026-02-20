@@ -129,15 +129,6 @@ describe('useScrollToHandles', () => {
     });
     expect(scrollLeftIntoView).not.toHaveBeenCalled();
 
-    // Stop drag (startTime still 1500)
-    // The effect runs, sees draggingState null.
-    // prevStartTime was updated to 1500 during the last render even though we returned early?
-    // Let's check the hook logic.
-    // "if (draggingState) { ... return; }"
-    // Yes, inside the "if (draggingState)" block, we update refs. So when it re-runs with draggingState=null,
-    // prevStartTime matches current startTime (1500). So no scroll. THIS IS EXPECTED.
-    // We don't want a jump right after dropping the handle (unless the user moves it again).
-
     rerender({
       startTimeMs: 1500,
       durationMs: 2000,

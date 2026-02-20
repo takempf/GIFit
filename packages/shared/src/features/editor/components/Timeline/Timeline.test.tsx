@@ -69,10 +69,6 @@ describe('Timeline', () => {
     // startTimeMs = 2000ms, pixelsPerMs = 120/1000 = 0.12
     // transform = translateX(2000 * 0.12) = translateX(240px)
     // durationMs = 3000ms, width = 3000 * 0.12 = 360px
-    // Calculate expected styles
-    // startTimeMs = 2000ms, pixelsPerMs = 120/1000 = 0.12
-    // transform = translateX(2000 * 0.12) = translateX(240px)
-    // durationMs = 3000ms, width = 3000 * 0.12 = 360px
     expect(selection.style.transform).toBe('translateX(240px)');
     expect(selection.style.width).toBe('360px');
   });
@@ -170,15 +166,6 @@ describe('Timeline', () => {
 
   it('renders preview highlight at correct position', () => {
     render(<Timeline {...defaultProps} />);
-    // Select by class name since it doesn't have a test id in the original code,
-    // although I added the class in previous steps.
-    // Let's use logic to find it or adding a data-testid would be better but I can't edit source in this tool call easily.
-    // The previous edit added className={styles.previewHighlight} but I don't have styles object here in test.
-    // However, I can look for the div with specific style.
-    // previewTime = 2s. 2 * 120 = 240px.
-    // width = 1000/10fps * 0.12 = 100ms * 0.12 = 12px.
-
-    // best approach: check if there represents a div with left: 240px and width: 12px that is NOT the selection.
     // We can iterate over the children of the interior.
     const interior = screen.getByTestId('timeline-interior');
     const preview = Array.from(interior.children).find(
@@ -191,20 +178,6 @@ describe('Timeline', () => {
     const { container } = render(<Timeline {...defaultProps} />);
     // Props: totalDuration 10, previewTime 2
     // Expected percentage: (2 / 10) * 100 = 20%
-
-    // We need to find the element. It doesn't have a test ID, but it's the second child
-    // of the Scrollbar (after the Thumb).
-    // Or we can query by style.
-    // The previous implementation renders:
-    // <div className={styles.scrollbarPreviewHighlighter} style={{ left: '20%', width: '1px' }} />
-
-    // Using default query selector on style is tricky due to spacing.
-    // Let's inspect the scrollbar's children assuming structure.
-    // Structure: ScrollRoot -> Scrollbar -> [Thumb, SelectionIndicator, PreviewIndicator]
-
-    // Note: ScrollArea from base-ui renders a complex structure.
-    // We can try to find an element with style "width: 1px" inside the scrollbar area,
-    // but better is to look for the specific calculated left value.
 
     const previewIndicator = container.querySelector(
       'div[style*="left: 20%"][style*="width: 1px"]'

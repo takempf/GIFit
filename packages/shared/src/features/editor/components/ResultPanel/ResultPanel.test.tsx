@@ -80,13 +80,6 @@ describe('ResultPanel', () => {
 
     render(<ResultPanel />);
     const downloadButton = screen.getByTestId('download-gif-button');
-    expect(downloadButton).toHaveAttribute('aria-disabled', 'true'); // Or disabled depending on implementation
-    // Button component sets aria-disabled for non-button elements, but `as="a"` is used.
-    // Let's check `aria-disabled` or just invoke click and prevent default check if we could mocking event?
-    // Actually the button implementation says:
-    // `disabled: Component === 'button' ? disabled : undefined`
-    // `'aria-disabled': Component !== 'button' && disabled ? true : undefined`
-    // So for an anchor tag it should have aria-disabled="true".
     expect(downloadButton).toHaveAttribute('aria-disabled', 'true');
   });
 });

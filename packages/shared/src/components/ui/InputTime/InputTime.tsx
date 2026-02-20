@@ -239,9 +239,7 @@ export const InputTime: React.FC<InputTimeProps> = ({
       const effectiveStep = step * multiplier;
       let newValue =
         currentVal + (direction === 'up' ? effectiveStep : -effectiveStep);
-      newValue = roundToStep(newValue, step); // Rounding usually wants the base step to keep clean intervals?
-      // Actually if we step by 5*step, we might want to round to base step anyway to ensure we land on clean numbers.
-      // passing `step` (not effectiveStep) to roundToStep ensures we stay on the grid.
+      newValue = roundToStep(newValue, step);
       newValue = Math.max(min, Math.min(max, newValue));
       return newValue;
     },

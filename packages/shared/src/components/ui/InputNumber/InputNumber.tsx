@@ -74,24 +74,6 @@ export function InputNumber({
 
     if (onStep) {
       // NOTE: onStep might need to handle multiplier if it's custom.
-      // For now, we assume onStep handles single steps, but if we want it to support multiplier,
-      // we'd need to change its signature.
-      // Given the requirements, let's assume standard behavior for now or just call it multiple times?
-      // Calling it with a calculated new value based on our logic if onStep isn't provided is safer,
-      // OR we just pass the multiplier to onStep?
-      // The current interface `onStep` takes (currentValue, direction).
-      // We will just do the default logic if onStep is NOT provided, as that's where `stepVal` is used.
-      // If onStep IS provided, it probably encapsulates its own logic.
-      // Let's stick to the plan: "If Shift is active, multiply the step prop by 5".
-      // If `onStep` is present, it overrides internal step logic.
-      // We might want to pass the multiplier to onStep if we could, but we can't change the interface easily
-      // without breaking other things.
-      // HACK: for onStep, we might just have to invoke it differently or assume it doesn't support it for now
-      // unless we want to change the prop signature.
-      // Re-reading the plan: "multiply the step prop ... by 5".
-      // If onStep is defined, we use it. Let's assume for this specific task, we mainly care about the default case
-      // or we update onStep signature if needed. The task description implies generic input stepper behavior.
-      // Let's check where onStep is used.
       newValue = onStep(currentVal, direction);
     } else {
       newValue =

@@ -21,11 +21,6 @@ import BugIcon from '@shared/assets/bug.svg?react';
 
 import { useAdapters, useAnalytics } from '@shared/adapters/context';
 
-// We can just use ConfigState directly or Pick what we need.
-// handleSubmit uses: start, duration, width, height, framerate (from fps alias?), quality.
-// ConfigState has: start, duration, width, height, framerate, quality...
-// Let's use ConfigState for the handler.
-
 export function App() {
   const { gif: gifAdapter, getVideoTitle } = useAdapters();
   const analytics = useAnalytics();

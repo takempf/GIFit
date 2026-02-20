@@ -340,30 +340,12 @@ describe('InputNumber', () => {
       const upButton = screen.getByText('▲').closest('button')!;
 
       // Explicitly construct PointerEvent to ensure shiftKey is respected
-      // fireEvent.pointerDown(..., { shiftKey: true }) *should* work, but let's be explicit
-      // if the helper is failing us.
-      // Actually, let's try just passing the event init object correctly first.
-      // If previous failed, maybe the issue is that we are in a different environment?
-      // Let's try explicit construction or checking if userEvent.keyboard works.
-      // Given verifying is the goal, let's try the userEvent approach which is more "real".
-
-      /* 
-      await userEvent.keyboard('[ShiftLeft>]'); // Hold shift
-      fireEvent.pointerDown(upButton); // Should pick up modifier? No, fireEvent is manual.
-      */
-
-      // Let's stick to fireEvent but explicit construction
-      // Use MouseEvent since PointerEvent might not be available in JSDOM
-      // and React's onPointerDown handles standard mouse events mapped to pointer events often,
-      // or at least compatible enough for testing modifiers.
       const event = new MouseEvent('pointerdown', {
         bubbles: true,
         cancelable: true,
         shiftKey: true
       });
       // We also need to make sure it's treated as a pointer event if possible,
-      // but usually 'pointerdown' type is enough.
-      // However, to be safe, we can try adding 'pointerId' etc if needed, but let's try basic MouseEvent first.
       fireEvent(upButton, event);
 
       fireEvent.pointerUp(upButton);

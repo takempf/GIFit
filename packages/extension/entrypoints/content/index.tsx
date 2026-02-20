@@ -46,19 +46,12 @@ export default defineContentScript({
         return activeVideoElement;
       }
 
-      // Fallback: If no "best" (visible/prominent) video is found,
-      // determine if we should fallback to *any* video or `activeVideoElement`.
-      // For now, based on "Ensure its' visible", we return null if nothing matches logic.
-      // However, if we have a connected activeVideoElement, maybe we return it?
-      // Strict interpretation: "Ensure its' visible" -> return null if not.
-
       logger.log('No suitable video element found');
       return null;
     };
 
     // --- Mutation Observer ---
     // Watch for new video elements appearing in the DOM (e.g. SPA navigation)
-    // We mainly use this to log detection or hint, but getVideoElement is the authority.
     const observer = new MutationObserver((mutations) => {
       let foundNew = false;
 
@@ -80,14 +73,10 @@ export default defineContentScript({
 
       if (foundNew) {
         logger.log('New video element detected in DOM via MutationObserver');
-        // We don't blindly set activeVideoElement anymore, we let getVideoElement find it when needed.
       }
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
-
-    // Initial check - Removed to prefer on-demand checking when popup opens
-    // getVideoElement();
 
     // --- Service Event Listeners ---
     gifService.on(
@@ -123,20 +112,15 @@ export default defineContentScript({
         });
     });
 
-    // --- Storyboard Extraction ---
-    // We need to inject a script or use window.postMessage to get data from the page context
-    // because content scripts live in an isolated world and can't see window.ytInitialPlayerResponse directly.
+    // --- Storyboards ---
 
-    // 1. Listen for messages from the page (the injected script response)
+    // Listen for messages from the page (the injected script response)
     window.addEventListener('message', (event) => {
       // Only accept messages from same frame
       if (event.source !== window) return;
 
       if (event.data.type === 'YOUTUBE_PLAYER_RESPONSE') {
         logger.log('Received player response from page', event.data.payload);
-        // We received the data, now we can forward it to the popup if needed
-        // But efficiently, we might store it or just send it when requested?
-        // Actually, the flow is: Popup (Component) -> MSG -> Content Script -> PostMessage -> Page -> PostMessage -> Content Script -> SendResponse
       }
     });
 
@@ -367,7 +351,6 @@ export default defineContentScript({
       }
     );
 
-    // --- Port Listener (Popup Lifecycle) ---
     // --- Port Listener (Popup Lifecycle) ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     browser.runtime.onConnect.addListener((port: any) => {
