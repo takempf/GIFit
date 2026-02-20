@@ -60,8 +60,6 @@ test('Popup renders and communicates with active tab', async ({
     )
     .toBeTruthy();
 
-  console.log(`Found YouTube Tab ID: ${ytTabId!}`);
-
   // 2. Open popup
   const popupPage = await context.newPage();
   popupPage.on('console', (msg) => console.log('POPUP LOG:', msg.text()));
@@ -69,7 +67,7 @@ test('Popup renders and communicates with active tab', async ({
 
   // Targeted Mock: Return the specific YT tab ID
   await popupPage.addInitScript((targetTabId) => {
-    const log = (...args: unknown[]) => console.log('MOCK-HELPER:', ...args);
+    const log = (...args: unknown[]) => console.log('[Mock]', ...args);
 
     interface ChromeTabsQuery {
       active?: boolean;

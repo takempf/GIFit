@@ -5,7 +5,6 @@ const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY as
   | string
   | undefined;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
-console.log('posthog api key in web...', POSTHOG_API_KEY);
 if (POSTHOG_API_KEY) {
   posthog.init(POSTHOG_API_KEY, {
     api_host: POSTHOG_HOST ?? 'https://us.i.posthog.com',

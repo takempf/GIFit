@@ -1,6 +1,8 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
+
 import { extensionAnalyticsProvider } from '../../lib/analytics';
+import { createLogger } from '@gifit/shared';
 
 function getExtensionAction() {
   const legacyBrowser = browser as unknown as {
@@ -10,12 +12,10 @@ function getExtensionAction() {
 }
 
 const MIGRATION_NOTICE_KEY = 'gifit:show_v4_migration_notice';
-console.log('within background');
+const logger = createLogger('Background');
 const CONTEXT_MENU_ID = 'gifit:create-gif';
 
 export default defineBackground(() => {
-  console.log('background, within define background');
-
   browser.runtime.onInstalled.addListener((details) => {
     extensionAnalyticsProvider.track('extension_installed', {
       reason: details.reason
@@ -28,7 +28,7 @@ export default defineBackground(() => {
       browser.storage.sync
         .set({ [MIGRATION_NOTICE_KEY]: true })
         .catch((error: unknown) => {
-          console.error('GIFit: Failed to set migration notice flag', error);
+          logger.error('Failed to set migration notice flag', error);
         });
     }
 
@@ -58,10 +58,10 @@ export default defineBackground(() => {
 
       if (action?.openPopup) {
         action.openPopup().catch((err: unknown) => {
-          console.error('GIFit: Failed to open popup', err);
+          logger.error('Failed to open popup', err);
         });
       } else {
-        console.error('GIFit: openPopup API not available');
+        logger.error('openPopup API not available');
       }
     }
   });

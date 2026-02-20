@@ -1,4 +1,5 @@
-import { defineUnlistedScript } from '#imports';
+import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
+import { createLogger } from '@gifit/shared';
 
 declare global {
   interface Window {
@@ -13,7 +14,7 @@ declare global {
 }
 
 export default defineUnlistedScript(() => {
-  console.log('GIFit! Main World script loaded (Injected)');
+  const logger = createLogger('Main World');
 
   window.addEventListener('message', (event) => {
     // Only accept messages from same frame
@@ -43,18 +44,14 @@ export default defineUnlistedScript(() => {
       if (player && typeof player.getPlayerResponse === 'function') {
         try {
           response = player.getPlayerResponse();
-          console.log('GIFit! Main: Fetched fresh response from player API');
         } catch (e) {
-          console.warn(
-            'GIFit! Main: Error getting response from player API',
-            e
-          );
+          logger.warn('Error getting response from player API', e);
         }
       }
 
       // Fallback to initial response
       if (!response) {
-        console.log('GIFit! Main: Falling back to ytInitialPlayerResponse');
+        logger.log('Falling back to ytInitialPlayerResponse');
         response = window.ytInitialPlayerResponse;
       }
 
@@ -65,7 +62,7 @@ export default defineUnlistedScript(() => {
           castResponse.storyboards?.playerStoryboardSpecRenderer?.spec;
         const duration = castResponse.videoDetails?.lengthSeconds; // Extract duration
 
-        console.log('GIFit! Main: Found spec in player response', {
+        logger.log('Found spec in player response', {
           spec,
           duration
         });
@@ -79,7 +76,7 @@ export default defineUnlistedScript(() => {
           '*'
         );
       } else {
-        console.log('GIFit! Main: No player response found (API or Initial)');
+        logger.log('No player response found (API or Initial)');
         window.postMessage(
           {
             type: 'GIFIT_STORYBOARD_DATA',

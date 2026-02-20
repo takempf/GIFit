@@ -6,9 +6,7 @@ const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY as
   | undefined;
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
 
-console.log('(posthog) analytics.ts loaded', POSTHOG_API_KEY);
 if (POSTHOG_API_KEY) {
-  console.log('init posthog innit');
   posthog.init(POSTHOG_API_KEY, {
     api_host: POSTHOG_HOST ?? 'https://us.i.posthog.com',
     autocapture: false,
