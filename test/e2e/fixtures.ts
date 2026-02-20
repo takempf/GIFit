@@ -1,7 +1,7 @@
 import { test as base, chromium, type BrowserContext } from '@playwright/test';
 import path from 'path';
 
-const pathToExtension = path.resolve('.output/chrome-mv3');
+const pathToExtension = path.resolve('packages/extension/.output/chrome-mv3');
 
 export const test = base.extend<{
   context: BrowserContext;
@@ -15,8 +15,17 @@ export const test = base.extend<{
         `--load-extension=${pathToExtension}`
       ]
     });
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     await use(context);
     await context.close();
+  },
+  extensionId: async ({ context }, use) => {
+    let [worker] = context.serviceWorkers();
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+
+    const extensionId = worker.url().split('/')[2];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    await use(extensionId);
   }
 });
 export const expect = test.expect;

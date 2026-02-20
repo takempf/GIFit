@@ -1,0 +1,180 @@
+.timeline {
+  --selection-color: white;
+  --timeline-background-color: rgb(25, 25, 25);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  user-select: none;
+}
+
+.scrollRoot {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.5em;
+  overflow: hidden;
+  background-color: var(--timeline-background-color);
+  box-shadow:
+    inset rgba(0, 0, 0, 0.25) 0 0.125em 0.5em,
+    0 1px 1px rgba(255, 255, 255, 0.1);
+  --scrollbar-size: 1em; /* Increased for better touch target/visibility */
+}
+
+.scrollViewport {
+  width: 100%;
+  height: 60px;
+  overflow-x: scroll; /* Base UI requires native scroll behavior on viewport */
+  overflow-y: hidden;
+  position: relative;
+  scrollbar-width: none; /* Hide native scrollbar */
+  -ms-overflow-style: none;
+  outline: transparent 2px solid;
+  transition: outline 200ms;
+
+  &:focus-visible {
+    outline: var(--color_focus_border) 2px solid !important;
+    outline-offset: -3px;
+  }
+}
+
+.scrollViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollContent {
+  /* Takes specific width from inline style */
+  height: 100%;
+  min-width: 100%; /* Ensure it fills viewport if content is small */
+  display: block; /* Ensure it behaves as a block */
+}
+
+.interior {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}
+
+/* Base UI Scrollbar Styles */
+.scrollbar {
+  display: flex;
+  user-select: none;
+  touch-action: none;
+  transition: background 160ms ease-out;
+  position: relative !important; /* In flow, below the viewport */
+  width: 100%;
+  padding: 1px 2px;
+  z-index: 1;
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+.scrollbar[data-orientation='horizontal'] {
+  height: var(--scrollbar-size);
+  flex-direction: row;
+}
+
+.scrollbar:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.scrollbarThumb {
+  background: var(--color_panel_background);
+  position: relative;
+  z-index: 2; /* Ensure thumb is above indicator */
+  cursor: grab;
+  border-radius: 0.125em;
+  height: calc(100% - 2px);
+  margin-top: 1px;
+  border-bottom-left-radius: calc(0.5em - 1px);
+  border-bottom-right-radius: calc(0.5em - 1px);
+}
+
+.scrollbarThumb:hover {
+  background: oklch(from var(--color_panel_background) 0.3 c h);
+}
+
+/* Selection Indicator on Track */
+.scrollbarSelectionIndicator {
+  position: absolute;
+  top: 4px; /* Match padding/centering */
+  bottom: 4px;
+  background: oklch(from var(--selection-color) l c h / 0.25);
+  border: 0px solid var(--selection-color);
+  border-right-width: 1px;
+  border-left-width: 1px;
+  border-radius: 2px;
+  z-index: 3; /* Above thumb */
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.scrollbarPreviewHighlighter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: oklch(from var(--color_accent) l c h / 0.5);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.previewHighlight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: oklch(from var(--color_accent) l c h / 0.3);
+  z-index: 1;
+  pointer-events: none;
+  border-left: oklch(from var(--color_accent) l c h / 0.75) 1px solid;
+  transition: transform 250ms ease;
+}
+
+/* Container for Viewport and Gradients */
+.viewportContainer {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border-top: rgba(255, 255, 255, 0.05) 1px solid;
+}
+
+/* Gradients */
+.gradient {
+  position: absolute;
+  top: 0;
+  bottom: 0px;
+  width: 1.5em;
+  z-index: 20; /* Above selection (10) and ticks */
+  pointer-events: none;
+  opacity: 0; /* hidden by default */
+  transition: opacity 160ms ease-out;
+}
+
+.gradientLeft {
+  left: 0;
+  background: linear-gradient(
+    to right,
+    var(--timeline-background-color),
+    transparent
+  );
+}
+
+.scrollRoot[data-overflow-x-start] {
+  .gradientLeft {
+    opacity: 1;
+  }
+}
+
+.gradientRight {
+  right: 0;
+  background: linear-gradient(
+    to left,
+    var(--timeline-background-color),
+    transparent
+  );
+}
+
+.scrollRoot[data-overflow-x-end] {
+  .gradientRight {
+    opacity: 1;
+  }
+}

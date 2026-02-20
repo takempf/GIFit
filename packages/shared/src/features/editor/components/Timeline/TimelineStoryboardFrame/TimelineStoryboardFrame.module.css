@@ -1,0 +1,9 @@
+.frame {
+  height: 100%;
+  filter: grayscale(50%) opacity(50%);
+  aspect-ratio: var(--aspect-ratio);
+  background-image: var(--bg-image);
+  background-repeat: no-repeat;
+  background-size: var(--bg-size);
+  background-position: var(--bg-position);
+}

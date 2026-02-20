@@ -9,10 +9,13 @@ lerna-debug.log*
 
 node_modules
 .output
+dist
+dist-*
 stats.html
 stats-*.json
 .wxt
 web-ext.config.ts
+
 
 # Environment variables
 .env
@@ -33,4 +36,8 @@ web-ext.config.ts
 
 # Playwright
 test-results/*
+playwright-report/**.tsbuildinfo
 playwright-report/*
+
+# TypeScript incremental build cache
+**/*.tsbuildinfo

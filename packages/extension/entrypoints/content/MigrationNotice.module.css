@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;600;800&display=swap');
+
+.notice {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 2147483647;
+  width: 40ch;
+  padding: 1.5rem;
+  border-radius: 1em;
+
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.9);
+
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(3px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  animation: slideUp 400ms cubic-bezier(0.19, 1, 0.22, 1) forwards;
+
+  --color-red: rgb(207, 10, 55);
+  --color-red-bright: oklch(from var(--color-red) calc(l + 0.1) c h);
+
+  a {
+    color: rgb(240, 240, 240);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-decoration-color: var(--color-red);
+    text-underline-offset: 0.25em;
+
+    &:hover {
+      color: white;
+      text-decoration-color: var(--color-red-bright);
+    }
+  }
+
+  button {
+    font-size: inherit;
+  }
+}
+
+.notice[data-dismissed] {
+  animation: slideDown 300ms cubic-bezier(0.95, 0.05, 0.795, 0.035) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  to {
+    opacity: 0;
+    translate: 0 20px;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.logo {
+  height: 1em;
+  width: min-content;
+}
+
+.icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 1em;
+  font-weight: 800;
+}
+
+.body {
+  color: rgba(255, 255, 255, 0.75);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5ch;
+  color: var(--color-red-bright);
+}
+
+.dismiss {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+
+  font-family: inherit;
+  font-weight: 600;
+  color: white;
+
+  background: var(--color-red);
+  transition:
+    background 150ms,
+    scale 100ms;
+}
+
+.dismiss:hover {
+  background: var(--color-red-bright);
+}
+
+.dismiss:active {
+  scale: 0.98;
+}

@@ -1,0 +1,30 @@
+.timelineSegment {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: end;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.frameMarker {
+  height: 0.4em;
+  border-left: 1px solid rgba(0, 0, 0, 0.5);
+  border-right: 1px solid rgba(255, 255, 255, 0.25);
+  pointer-events: none;
+}
+
+/* Ticks Layer */
+.secondMarker {
+  display: flex;
+  align-items: end;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  font-size: 12px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  padding-left: 4px;
+  pointer-events: none;
+  left: 0;
+  text-shadow: 0 2px 1px rgba(0, 0, 0, 0.5);
+}

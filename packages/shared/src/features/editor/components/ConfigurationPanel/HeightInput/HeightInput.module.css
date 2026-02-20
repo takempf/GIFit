@@ -1,0 +1,4 @@
+.height {
+  grid-area: height;
+  background: var(--color_panel_background);
+}

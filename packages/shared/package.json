@@ -1,0 +1,43 @@
+{
+  "name": "@gifit/shared",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "types": "./dist/src/*.d.ts",
+      "default": "./src/*"
+    }
+  },
+  "scripts": {
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.1.0",
+    "@tanstack/react-virtual": "^3.13.18",
+    "classnames": "^2.5.1",
+    "eventemitter3": "^5.0.1",
+    "gifenc": "^1.0.3",
+    "posthog-js": "^1.347.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.2",
+    "eslint": "^9.30.0",
+    "jsdom": "^28.0.0",
+    "typescript": "^5.8.3",
+    "wxt": "^0.20.17"
+  }
+}

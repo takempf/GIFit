@@ -8,19 +8,26 @@ import prettierPlugin from 'eslint-plugin-prettier';
 export default [
   {
     ignores: [
-      '.wxt/',
-      '.output/',
-      'dist/',
-      'node_modules/',
+      '**/.wxt/',
+      '**/.output/',
+      '**/dist/',
+      '**/node_modules/',
       'public/',
       '**/*.d.ts', // Ensure .d.ts files are ignored globally
       '.prettierrc.mjs',
-      'eslint.config.js'
+      'eslint.config.js',
+      '__EXAMPLE_IMPLEMENTATION_DO_NOT_EDIT/'
     ]
   },
   // Main configuration for TypeScript files (type-aware)
   {
-    files: ['src/**/*.{ts,tsx}'],
+    files: [
+      'src/**/*.{ts,tsx}',
+      'packages/*/src/**/*.{ts,tsx}',
+      'packages/*/entrypoints/**/*.{ts,tsx}',
+      'packages/*/lib/**/*.{ts,tsx}',
+      'test/**/*.{ts,tsx}'
+    ],
     languageOptions: {
       globals: {
         ...globals.browser,
@@ -32,7 +39,11 @@ export default [
         ecmaFeatures: { jsx: true },
         ecmaVersion: 12,
         sourceType: 'module',
-        project: true,
+        project: [
+          './tsconfig.json',
+          './tsconfig.eslint.json',
+          './packages/*/tsconfig.json'
+        ],
         tsconfigRootDir: import.meta.dirname
       }
     },
@@ -65,7 +76,7 @@ export default [
         'warn',
         { argsIgnorePattern: '^_' }
       ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       '@typescript-eslint/no-empty-object-type': 'warn'
@@ -73,12 +84,19 @@ export default [
   },
   // Lighter configuration for JS/MJS/CJS config files & specific TS config files
   {
-    files: ['*.{js,mjs,cjs}', 'vitest.config.ts', 'wxt.config.ts'],
+    files: [
+      '**/*.{js,mjs,cjs}',
+      '**/vite.config.ts',
+      '**/vitest.config.ts',
+      '**/wxt.config.ts',
+      'knip.ts'
+    ],
     languageOptions: {
       globals: {
         ...globals.node,
         ...globals.es2021
       },
+      parser: tseslint.parser,
       parserOptions: {
         ecmaVersion: 12,
         sourceType: 'module'

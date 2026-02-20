@@ -1,0 +1,41 @@
+.root {
+  display: grid;
+  grid-template-areas:
+    'label value'
+    'track track';
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  grid-area: label;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: currentColor;
+}
+
+.value {
+  grid-area: value;
+  justify-self: end;
+  align-self: center;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.track {
+  grid-area: track;
+  height: 0.5rem;
+  width: 100%;
+  background-color: rgb(25, 25, 25);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.indicator {
+  height: 100%;
+  background-color: var(--color_primary);
+  border-radius: inherit;
+  transition: width 200ms ease-out;
+}
