@@ -165,7 +165,13 @@ export function App() {
             GitHub
           </a>
         </span>
-        <span className={css.version}>v{__APP_VERSION__}</span>
+        <a
+          className={css.version}
+          href="https://github.com/takempf/GIFit/releases"
+          target="_blank"
+          rel="noreferrer">
+          v{__APP_VERSION__}
+        </a>
       </footer>
     </div>
   );
