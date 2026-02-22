@@ -22,7 +22,7 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: './packages/shared/src/setupTests.ts',
+    setupFiles: path.resolve(__dirname, './packages/shared/src/setupTests.ts'),
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
