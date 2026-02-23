@@ -29,7 +29,17 @@ export default defineConfig({
         resources: ['main-world.js'],
         matches: ['*://*.youtube.com/*']
       }
-    ]
+    ],
+    browser_specific_settings: {
+      gecko: {
+        id: '',
+        // @ts-ignore - WXT doesn't support this field yet
+        data_collection_permissions: {
+          required: ['none'],
+          optional: ['technicalAndInteraction']
+        }
+      }
+    }
   },
 
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
