@@ -75,7 +75,10 @@ export function MigrationNotice(): React.JSX.Element | null {
           in your browser. Look for the GIFit icon in your extensions toolbar.
         </p>
         <p>
-          <a href="https://kempf.dev" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://kempf.dev/blog/gifit-v4"
+            target="_blank"
+            rel="noopener noreferrer">
             Why did the extension move?
           </a>
         </p>
