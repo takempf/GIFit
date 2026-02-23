@@ -144,11 +144,12 @@ export function App() {
         </section>
       </main>
       <footer className={css.footer}>
+        {/* eslint-disable-next-line react/jsx-no-target-blank */}
         <a
           className={css.credit}
           href="https://kempf.dev/#gifit"
           target="_blank"
-          rel="noreferrer">
+          rel="noopener">
           Crafted by <TKLogo className={css.tkLogo} />
         </a>
         <span className={css.support}>

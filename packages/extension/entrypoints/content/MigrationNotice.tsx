@@ -75,10 +75,11 @@ export function MigrationNotice(): React.JSX.Element | null {
           in your browser. Look for the GIFit icon in your extensions toolbar.
         </p>
         <p>
+          {/* eslint-disable-next-line react/jsx-no-target-blank */}
           <a
             href="https://kempf.dev/blog/gifit-v4"
             target="_blank"
-            rel="noopener noreferrer">
+            rel="noopener">
             Why did the extension move?
           </a>
         </p>

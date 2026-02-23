@@ -36,14 +36,10 @@ export default [
       },
       parser: tseslint.parser,
       parserOptions: {
-        ecmaFeatures: { jsx: true },
-        ecmaVersion: 12,
-        sourceType: 'module',
-        project: [
-          './tsconfig.json',
-          './tsconfig.eslint.json',
-          './packages/*/tsconfig.json'
-        ],
+        projectService: {
+          allowDefaultProject: ['test/*.ts', 'test/e2e/*.ts'],
+          defaultProject: 'tsconfig.eslint.json'
+        },
         tsconfigRootDir: import.meta.dirname
       }
     },
@@ -99,7 +95,12 @@ export default [
       parser: tseslint.parser,
       parserOptions: {
         ecmaVersion: 12,
-        sourceType: 'module'
+        sourceType: 'module',
+        projectService: {
+          allowDefaultProject: ['test/*.ts', 'test/e2e/*.ts'],
+          defaultProject: 'tsconfig.eslint.json'
+        },
+        tsconfigRootDir: import.meta.dirname
       }
     },
     plugins: {
