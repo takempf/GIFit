@@ -24,6 +24,10 @@ export default defineConfig({
     },
     permissions: ['storage', 'contextMenus'],
     host_permissions: ['*://*.youtube.com/*'],
+    content_security_policy: {
+      extension_pages:
+        "script-src 'self'; object-src 'self'; connect-src 'self' https://*.posthog.com;"
+    },
     web_accessible_resources: [
       {
         resources: ['main-world.js'],

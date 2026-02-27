@@ -1,4 +1,4 @@
-import posthog from 'posthog-js';
+import posthog from 'posthog-js/dist/module.no-external';
 import type { AnalyticsProvider } from '@gifit/shared/adapters/types';
 
 const POSTHOG_API_KEY = import.meta.env.VITE_POSTHOG_API_KEY as
@@ -13,7 +13,8 @@ if (POSTHOG_API_KEY) {
     capture_pageview: false,
     persistence: 'localStorage',
     disable_surveys: true,
-    disable_session_recording: true
+    disable_session_recording: true,
+    disable_external_dependency_loading: true
   });
 
   posthog.register({ source: 'extension' });
