@@ -133,29 +133,28 @@ export class DirectGifAdapter implements GifAdapter {
   }
 }
 
-// --- Storage Adapter (in-memory, no persistence) ---
+// --- Storage Adapter (Local Storage for Web) ---
 
-export class InMemoryStorageAdapter implements StorageAdapter {
-  private width: number = 420;
-  private fps: number = 10;
-  private quality: number = 5;
-
+export class LocalStorageAdapter implements StorageAdapter {
   async getWidth(): Promise<number | null> {
-    return this.width;
+    const val = localStorage.getItem('gifit_config_width');
+    return val ? parseInt(val, 10) : 420;
   }
   async setWidth(value: number): Promise<void> {
-    this.width = value;
+    localStorage.setItem('gifit_config_width', value.toString());
   }
   async getFps(): Promise<number | null> {
-    return this.fps;
+    const val = localStorage.getItem('gifit_config_fps');
+    return val ? parseInt(val, 10) : 10;
   }
   async setFps(value: number): Promise<void> {
-    this.fps = value;
+    localStorage.setItem('gifit_config_fps', value.toString());
   }
   async getQuality(): Promise<number | null> {
-    return this.quality;
+    const val = localStorage.getItem('gifit_config_quality');
+    return val ? parseInt(val, 10) : 5;
   }
   async setQuality(value: number): Promise<void> {
-    this.quality = value;
+    localStorage.setItem('gifit_config_quality', value.toString());
   }
 }

@@ -112,8 +112,15 @@ describe('App Integration', () => {
     });
   });
 
-  test('submits form data correctly to createGif without extra unit conversion', async () => {
-    render(<App />);
+  test('submits form data correctly and persists config to storage', async () => {
+    const mockStorageAdapter = {
+      ...createMockAdapters().storage,
+      setWidth: vi.fn().mockResolvedValue(undefined),
+      setFps: vi.fn().mockResolvedValue(undefined),
+      setQuality: vi.fn().mockResolvedValue(undefined)
+    };
+
+    render(<App />, { adapters: { storage: mockStorageAdapter } });
 
     const submitBtn = screen.getByTestId('mock-submit-btn');
     fireEvent.click(submitBtn);
@@ -133,6 +140,11 @@ describe('App Integration', () => {
       end: 4000, // start + duration (1500 + 2500)
       fps: 15
     });
+
+    // Check persistence to storage
+    expect(mockStorageAdapter.setWidth).toHaveBeenCalledWith(320);
+    expect(mockStorageAdapter.setFps).toHaveBeenCalledWith(15);
+    expect(mockStorageAdapter.setQuality).toHaveBeenCalledWith(8);
 
     // Check side effects
     expect(mockSetName).toHaveBeenCalledWith('Test Video');

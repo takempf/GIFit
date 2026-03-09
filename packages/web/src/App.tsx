@@ -5,10 +5,11 @@ import { AdapterContext, AdapterSet } from '@gifit/shared/adapters/context';
 import {
   DirectVideoAdapter,
   DirectGifAdapter,
-  InMemoryStorageAdapter
+  LocalStorageAdapter
 } from '@gifit/shared/adapters/direct';
 import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
+import { useConfigurationPanelStore } from '@gifit/shared/features/editor/stores/configurationPanelStore';
 import { webAnalyticsProvider } from './analytics';
 
 import GifitLogo from '@gifit/shared/assets/gifit-logo.svg?react';
@@ -27,11 +28,14 @@ export default function App() {
 
     const videoAdapter = new DirectVideoAdapter(getVideo);
     const gifAdapter = new DirectGifAdapter(getVideo);
-    const storageAdapterImpl = new InMemoryStorageAdapter();
+    const storageAdapterImpl = new LocalStorageAdapter();
 
     // Inject proxies
     videoController.setAdapter(videoAdapter);
     storageAdapter.setAdapter(storageAdapterImpl);
+
+    // Reload config now that the proxy is properly attached for web
+    useConfigurationPanelStore.getState().loadInitialConfig();
 
     setAdapters({
       video: videoAdapter,

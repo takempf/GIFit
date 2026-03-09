@@ -163,43 +163,34 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
         const { name, value } = payload;
         const newState = { ...state, [name]: value };
 
-        // Persist relevant changes to storage
         if (name === 'width' && typeof value === 'number') {
-          storageAdapter
-            .setWidth(value)
-            .catch((err) => logger.log('Error saving width:', err));
           newState.height = Math.round(value / state.aspectRatio);
         } else if (name === 'height' && typeof value === 'number') {
           newState.width = Math.round(value * state.aspectRatio);
-          storageAdapter
-            .setWidth(newState.width)
-            .catch((err) => logger.log('Error saving width:', err));
-        } else if (name === 'framerate' && typeof value === 'number') {
-          storageAdapter
-            .setFps(value)
-            .catch((err) => logger.log('Error saving framerate:', err));
-        } else if (name === 'quality' && typeof value === 'number') {
-          storageAdapter
-            .setQuality(value)
-            .catch((err) => logger.log('Error saving quality:', err));
         }
 
         return newState;
       }),
 
     handleVideoLoadedData: (payload) =>
-      set((state) => ({
-        ...state,
-        aspectRatio: payload.aspectRatio,
-        videoDuration: toMilliseconds(payload.duration),
-        videoWidth: payload.videoWidth,
-        videoHeight: payload.videoHeight,
-        start:
-          state.videoDuration === 0 && payload.currentTime !== undefined
-            ? toMilliseconds(payload.currentTime)
-            : state.start,
-        height: Math.round(state.width / payload.aspectRatio)
-      })),
+      set((state) => {
+        const newWidth = Math.min(state.width, payload.videoWidth);
+        const newHeight = Math.round(newWidth / payload.aspectRatio);
+
+        return {
+          ...state,
+          aspectRatio: payload.aspectRatio,
+          videoDuration: toMilliseconds(payload.duration),
+          videoWidth: payload.videoWidth,
+          videoHeight: payload.videoHeight,
+          width: newWidth,
+          height: newHeight,
+          start:
+            state.videoDuration === 0 && payload.currentTime !== undefined
+              ? toMilliseconds(payload.currentTime)
+              : state.start
+        };
+      }),
 
     handleVideoSeeked: (_payload) => {
       // no-op
