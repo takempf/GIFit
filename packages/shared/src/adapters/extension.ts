@@ -182,7 +182,13 @@ export function setupPopupPort(): () => void {
           name: 'GIFIT_POPUP_CONTEXT'
         });
         port.onDisconnect.addListener(() => {
-          window.close();
+          // Only close the popup on a clean disconnect (e.g. tab navigated away).
+          // If there's a runtime error (e.g. "Receiving end does not exist"),
+          // the content script simply isn't running on this tab — keep the popup
+          // open so the NoVideoInterstitial is shown instead.
+          if (!browser.runtime.lastError) {
+            window.close();
+          }
         });
         return port;
       }
