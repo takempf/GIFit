@@ -13,6 +13,7 @@ import {
 } from '@gifit/shared/adapters/extension';
 import { videoController } from '@gifit/shared/services/VideoController';
 import { storageAdapter } from '@gifit/shared/utils/storage';
+import { useConfigurationPanelStore } from '@gifit/shared/features/editor/stores/configurationPanelStore';
 import { extensionAnalyticsProvider } from '../../lib/analytics';
 
 // Initialize adapters
@@ -25,6 +26,11 @@ const storageAdapterImpl = new ExtensionStorageAdapter();
 // storageAdapter is now a proxy instance exported as 'storageAdapter'
 videoController.setAdapter(videoAdapter);
 storageAdapter.setAdapter(storageAdapterImpl);
+
+// Reload config now that the proxy is properly attached for the extension popup.
+// The store calls loadInitialConfig() at module-eval time, before the adapter is
+// wired up, so it always reads defaults on first run. This call fixes that.
+useConfigurationPanelStore.getState().loadInitialConfig();
 
 // Setup popup port connection
 setupPopupPort();

@@ -22,7 +22,11 @@ import BugIcon from '@shared/assets/bug.svg?react';
 import { useAdapters, useAnalytics } from '@shared/adapters/context';
 
 export function App() {
-  const { gif: gifAdapter, getVideoTitle } = useAdapters();
+  const {
+    gif: gifAdapter,
+    getVideoTitle,
+    storage: storageAdapter
+  } = useAdapters();
   const analytics = useAnalytics();
   const status = useAppStore((state) => state.status);
   const setStatus = useAppStore((state) => state.setStatus);
@@ -77,6 +81,12 @@ export function App() {
       // 1. Update UI state
       createGif(gifConfig);
       setName(name);
+
+      // Persist the settings upon generation
+      storageAdapter.setWidth(config.width).catch(() => {});
+      storageAdapter.setFps(config.framerate).catch(() => {});
+      storageAdapter.setQuality(config.quality).catch(() => {});
+
       analytics.track('gif_generation_started', gifConfig);
       setStatus('generating');
 
@@ -95,6 +105,7 @@ export function App() {
       setStatus,
       gifAdapter,
       getVideoTitle,
+      storageAdapter,
       setError,
       analytics
     ]

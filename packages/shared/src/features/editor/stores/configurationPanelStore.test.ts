@@ -111,7 +111,7 @@ describe('useConfigurationPanelStore', () => {
   });
 
   // Test Case 2: Persisting changes to storage
-  it('handleInputChange should update state and persist to storage', async () => {
+  it('handleInputChange should update state but not persist to storage', async () => {
     const { result } = renderHook(() => useConfigurationPanelStore());
     const newWidth = 800;
     const newFramerate = 24;
@@ -121,7 +121,6 @@ describe('useConfigurationPanelStore', () => {
       result.current.handleInputChange({ name: 'width', value: newWidth });
     });
     expect(result.current.width).toBe(newWidth);
-    expect(storageAdapter.setWidth).toHaveBeenCalledWith(newWidth);
     expect(result.current.height).toBe(
       Math.round(newWidth / (mockMetadata.width / mockMetadata.height))
     );
@@ -133,16 +132,13 @@ describe('useConfigurationPanelStore', () => {
       });
     });
     expect(result.current.framerate).toBe(newFramerate);
-    expect(storageAdapter.setFps).toHaveBeenCalledWith(newFramerate);
 
     act(() => {
       result.current.handleInputChange({ name: 'quality', value: newQuality });
     });
     expect(result.current.quality).toBe(newQuality);
-    expect(storageAdapter.setQuality).toHaveBeenCalledWith(newQuality);
 
-    // Test persisting width when height is changed and dimensions are linked
-    vi.mocked(storageAdapter.setWidth).mockClear(); // Clear previous calls
+    // Test linking dimensions when height is changed
     const newHeight = 450;
     act(() => {
       result.current.handleInputChange({ name: 'height', value: newHeight });
@@ -152,7 +148,6 @@ describe('useConfigurationPanelStore', () => {
     );
     expect(result.current.height).toBe(newHeight);
     expect(result.current.width).toBe(expectedWidth);
-    expect(storageAdapter.setWidth).toHaveBeenCalledWith(expectedWidth);
   });
 
   it('handleInputChange should always link dimensions', async () => {

@@ -9,9 +9,7 @@ import type { GifConfig, VideoMetadata, ExtensionMessage } from '@shared/types';
 import { createLogger } from '@shared/utils/logger';
 
 const logger = createLogger('ExtensionAdapter');
-// We need to import the stored config from where it is defined.
-// Assuming it's in @shared/utils/storage or similar, but the original file was checking @/utils/storage.
-// Let's check where `storedConfig` is defined in the shared package.
+
 import { storedConfig } from '@shared/utils/extensionStorage';
 
 // --- Helpers ---
@@ -184,7 +182,13 @@ export function setupPopupPort(): () => void {
           name: 'GIFIT_POPUP_CONTEXT'
         });
         port.onDisconnect.addListener(() => {
-          window.close();
+          // Only close the popup on a clean disconnect (e.g. tab navigated away).
+          // If there's a runtime error (e.g. "Receiving end does not exist"),
+          // the content script simply isn't running on this tab — keep the popup
+          // open so the NoVideoInterstitial is shown instead.
+          if (!browser.runtime.lastError) {
+            window.close();
+          }
         });
         return port;
       }

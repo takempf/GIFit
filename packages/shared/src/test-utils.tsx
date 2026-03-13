@@ -25,9 +25,12 @@ export const createMockAdapters = (): AdapterSet => ({
     destroy: vi.fn()
   } as unknown as GifAdapter,
   storage: {
-    get: vi.fn(),
-    set: vi.fn()
-    // Add others
+    getWidth: vi.fn(),
+    setWidth: vi.fn().mockResolvedValue(undefined),
+    getFps: vi.fn(),
+    setFps: vi.fn().mockResolvedValue(undefined),
+    getQuality: vi.fn(),
+    setQuality: vi.fn().mockResolvedValue(undefined)
   } as unknown as StorageAdapter,
   analytics: {
     track: vi.fn(),
