@@ -7,6 +7,12 @@ const rootPkg = JSON.parse(
   readFileSync(path.resolve(__dirname, '../../package.json'), 'utf-8')
 ) as { version: string };
 
+const isDev = process.env.NODE_ENV !== 'production';
+
+// In dev mode, allow the WXT HMR WebSocket so the popup can receive
+// live-reload updates. In production this is intentionally omitted.
+let extensionPages = `script-src 'self'; object-src 'self'; connect-src 'self' https://*.posthog.com${isDev ? ' ws://localhost:4242/' : ''};`;
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   dev: {
@@ -25,8 +31,7 @@ export default defineConfig({
     permissions: ['storage', 'contextMenus'],
     host_permissions: ['*://*.youtube.com/*'],
     content_security_policy: {
-      extension_pages:
-        "script-src 'self'; object-src 'self'; connect-src 'self' https://*.posthog.com;"
+      extension_pages: extensionPages
     },
     web_accessible_resources: [
       {
