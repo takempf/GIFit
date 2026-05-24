@@ -4,31 +4,69 @@ import { GifPreview } from './GifPreview';
 
 describe('GifPreview', () => {
   it('renders placeholder when previewImage is null', () => {
-    render(<GifPreview previewImage={null} width={1920} height={1080} />);
+    render(
+      <GifPreview
+        previewImage={null}
+        width={420}
+        height={236}
+        videoWidth={1920}
+        videoHeight={1080}
+      />
+    );
     expect(
       screen.getByRole('status', { name: /loading/i })
     ).toBeInTheDocument();
     expect(screen.queryByAltText('Video Preview')).not.toBeInTheDocument();
   });
 
-  it('renders image with correct src and dimensions', () => {
+  it('renders image with correct src', () => {
     const previewImage = 'data:image/png;base64,fakeimage';
-    const width = 800;
-    const height = 450;
 
     render(
-      <GifPreview previewImage={previewImage} width={width} height={height} />
+      <GifPreview
+        previewImage={previewImage}
+        width={420}
+        height={236}
+        videoWidth={1920}
+        videoHeight={1080}
+        status="configuring"
+      />
     );
 
     const img = screen.getByAltText('Video Preview');
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', previewImage);
+  });
 
-    // Check styles
-    expect(img).toHaveStyle('width: auto');
-    expect(img).toHaveStyle('height: auto');
-    expect(img).toHaveStyle(`max-width: min(100%, ${width}px)`);
-    expect(img).toHaveStyle(`max-height: min(100%, ${height}px)`);
-    expect(img).toHaveStyle(`aspect-ratio: ${width} / ${height}`);
+  it('uses video aspect ratio for wrapper regardless of status', () => {
+    const { rerender } = render(
+      <GifPreview
+        previewImage="data:image/png;base64,fakeimage"
+        width={420}
+        height={334}
+        videoWidth={1920}
+        videoHeight={1080}
+        status="configuring"
+      />
+    );
+
+    const wrapper = screen.getByAltText('Video Preview').parentElement!;
+    expect(wrapper.style.aspectRatio).toBe('1920 / 1080');
+    expect(wrapper.style.maxHeight).toBe('min(100%, 236px)');
+
+    // Same wrapper sizing after status change (no flash)
+    rerender(
+      <GifPreview
+        previewImage="data:image/gif;base64,result"
+        width={420}
+        height={334}
+        videoWidth={1920}
+        videoHeight={1080}
+        status="generated"
+      />
+    );
+
+    expect(wrapper.style.aspectRatio).toBe('1920 / 1080');
+    expect(wrapper.style.maxHeight).toBe('min(100%, 236px)');
   });
 });

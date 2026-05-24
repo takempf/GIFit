@@ -277,8 +277,7 @@ class GifService extends EventEmitter {
 
   private getFrameImageData(
     videoElement: HTMLVideoElement,
-    width: number,
-    height: number
+    config: GifConfig
   ): ImageData {
     if (!this.context || !this.canvasEl) {
       throw new Error('Canvas context or canvas element not found.');
@@ -288,18 +287,18 @@ class GifService extends EventEmitter {
     // So we copy image data from video to canvas
     this.context.drawImage(
       videoElement,
+      config.cropX ?? 0,
+      config.cropY ?? 0,
+      config.cropW ?? videoElement.videoWidth,
+      config.cropH ?? videoElement.videoHeight,
       0,
       0,
-      videoElement.videoWidth,
-      videoElement.videoHeight,
-      0,
-      0,
-      width,
-      height
+      config.width,
+      config.height
     );
 
     // We can access the image data directly from the canvas
-    const imageData = this.context.getImageData(0, 0, width, height);
+    const imageData = this.context.getImageData(0, 0, config.width, config.height);
 
     return imageData;
   }
@@ -307,7 +306,8 @@ class GifService extends EventEmitter {
   private downsampleFrame(
     videoElement: HTMLVideoElement,
     width: number,
-    height: number
+    height: number,
+    config: GifConfig
   ): ImageData {
     const canvas = document.createElement('canvas');
     canvas.width = width;
@@ -319,7 +319,17 @@ class GifService extends EventEmitter {
     }
 
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(videoElement, 0, 0, width, height);
+    ctx.drawImage(
+      videoElement,
+      config.cropX ?? 0,
+      config.cropY ?? 0,
+      config.cropW ?? videoElement.videoWidth,
+      config.cropH ?? videoElement.videoHeight,
+      0,
+      0,
+      width,
+      height
+    );
     return ctx.getImageData(0, 0, width, height);
   }
 
@@ -342,7 +352,7 @@ class GifService extends EventEmitter {
       const time = config.start + interval * i;
       await this.asyncSeek(videoElement, time / 1000);
       samples.push(
-        this.downsampleFrame(videoElement, sampleWidth, sampleHeight)
+        this.downsampleFrame(videoElement, sampleWidth, sampleHeight, config)
       );
 
       // Report progress for palette gathering
@@ -433,6 +443,14 @@ class GifService extends EventEmitter {
     // Reset video position to start after palette sampling
     await this.asyncSeek(videoElement, config.start / 1000);
 
+    // Emit a leading frame preview so the UI immediately shows
+    // the cropped content instead of the stale configuring preview.
+    if (this.context && this.canvasEl) {
+      this.getFrameImageData(videoElement, config);
+      const leadingFrame = this.canvasEl.toDataURL('image/jpeg', 0.5);
+      this.emit('FRAMES_PROGRESS', PALETTE_WEIGHT, 0, leadingFrame, 'Processing Frames...');
+    }
+
     // Deduplication state
     let pendingFrame: { data: ImageData; duration: number } | null = null;
 
@@ -465,8 +483,7 @@ class GifService extends EventEmitter {
       // Get image data
       const imageData = this.getFrameImageData(
         videoElement,
-        config.width,
-        config.height
+        config
       );
 
       // Check for deduplication

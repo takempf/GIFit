@@ -8,6 +8,10 @@ export interface GifConfig {
   fps: number;
   maxColors?: number; // 2 - 256
   noDither?: boolean;
+  cropX?: number; // source-video px
+  cropY?: number; // source-video px
+  cropW?: number; // source-video px
+  cropH?: number; // source-video px
 }
 
 export interface GifCompleteData {

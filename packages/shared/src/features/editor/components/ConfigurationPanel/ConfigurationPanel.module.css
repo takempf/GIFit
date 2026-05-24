@@ -5,9 +5,30 @@
     'timeline timeline timeline'
     'start duration fps'
     'width height quality'
+    'crop crop crop'
     'submit submit submit';
   gap: 0.75em 1em;
   padding: 0.5em;
+}
+
+.cropReset {
+  grid-area: crop;
+  display: flex;
+  justify-content: center;
+}
+
+.cropResetButton {
+  background: none;
+  border: none;
+  color: var(--color_panel_text);
+  font-size: 0.8em;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+}
+
+.cropResetButton:hover {
+  color: var(--color_button);
 }
 
 .timeline {

@@ -1,0 +1,100 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  cursor: crosshair;
+  user-select: none;
+  touch-action: none;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cropBox {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4);
+  cursor: move;
+}
+
+/* Edge handles */
+.handleN,
+.handleS,
+.handleE,
+.handleW,
+.handleNE,
+.handleNW,
+.handleSE,
+.handleSW {
+  position: absolute;
+  z-index: 1;
+}
+
+.handleN,
+.handleS {
+  left: 0;
+  right: 0;
+  height: 12px;
+  cursor: ns-resize;
+}
+
+.handleN {
+  top: -6px;
+}
+
+.handleS {
+  bottom: -6px;
+}
+
+.handleE,
+.handleW {
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+}
+
+.handleE {
+  right: -6px;
+}
+
+.handleW {
+  left: -6px;
+}
+
+/* Corner handles */
+.handleNW,
+.handleNE,
+.handleSW,
+.handleSE {
+  width: 16px;
+  height: 16px;
+  z-index: 2;
+}
+
+.handleNW {
+  top: -6px;
+  left: -6px;
+  cursor: nwse-resize;
+}
+
+.handleNE {
+  top: -6px;
+  right: -6px;
+  cursor: nesw-resize;
+}
+
+.handleSW {
+  bottom: -6px;
+  left: -6px;
+  cursor: nesw-resize;
+}
+
+.handleSE {
+  bottom: -6px;
+  right: -6px;
+  cursor: nwse-resize;
+}

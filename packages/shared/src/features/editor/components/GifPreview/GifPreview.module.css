@@ -18,10 +18,23 @@
   outline: 1px solid rgba(0, 0, 0, 0.5);
 }
 
+.imageWrapper {
+  position: relative;
+  overflow: hidden;
+}
+
 .image {
+  display: block;
+  width: 100%;
+  height: 100%;
   outline-offset: 2px;
   view-transition-name: gif-preview;
   transition: outline 200ms ease;
+}
+
+.image[data-status='generating'],
+.image[data-status='generated'] {
+  object-fit: cover;
 }
 
 .image[data-status='generating'] {

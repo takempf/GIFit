@@ -17,6 +17,11 @@ export interface ConfigState {
   framerate: number;
   quality: number;
   aspectRatio: number;
+  // Crop state (source-video pixel space)
+  cropX: number;
+  cropY: number;
+  cropW: number;
+  cropH: number;
   // Internal state
   videoDuration: number; // Milliseconds
   videoWidth: number;
@@ -52,9 +57,17 @@ interface SetStartToCurrentTimePayload {
   currentTime: number; // Seconds
 }
 
+interface CropChangePayload {
+  cropX: number;
+  cropY: number;
+  cropW: number;
+  cropH: number;
+}
+
 // Store actions interface
 export interface ConfigActions {
   handleInputChange: (payload: InputActionPayload) => void;
+  handleCropChange: (payload: CropChangePayload) => void;
   handleVideoLoadedData: (payload: VideoLoadedDataPayload) => void;
   handleVideoSeeked: (payload: VideoSeekedPayload) => void;
   handleSetStartToCurrentTime: (payload: SetStartToCurrentTimePayload) => void;
@@ -114,6 +127,10 @@ const getInitialState = (
     framerate: initialFramerate,
     quality: initialQuality,
     aspectRatio: storedAspectRatio,
+    cropX: 0,
+    cropY: 0,
+    cropW: metadata?.width ?? 0,
+    cropH: metadata?.height ?? 0,
     videoDuration: metadata?.duration ? toMilliseconds(metadata.duration) : 0,
     videoWidth: metadata?.width ?? 0,
     videoHeight: metadata?.height ?? 0,
@@ -172,19 +189,58 @@ export const useConfigurationPanelStore = create<ConfigurationPanelStore>(
         return newState;
       }),
 
-    handleVideoLoadedData: (payload) =>
+    handleCropChange: (payload) =>
       set((state) => {
-        const newWidth = Math.min(state.width, payload.videoWidth);
-        const newHeight = Math.round(newWidth / payload.aspectRatio);
+        const MIN_CROP = 32;
+        const cropX = Math.max(0, Math.min(payload.cropX, state.videoWidth - MIN_CROP));
+        const cropY = Math.max(0, Math.min(payload.cropY, state.videoHeight - MIN_CROP));
+        const cropW = Math.max(MIN_CROP, Math.min(payload.cropW, state.videoWidth - cropX));
+        const cropH = Math.max(MIN_CROP, Math.min(payload.cropH, state.videoHeight - cropY));
+
+        const newAspectRatio = cropW / cropH;
+        const newHeight = Math.round(state.width / newAspectRatio);
 
         return {
           ...state,
-          aspectRatio: payload.aspectRatio,
+          cropX,
+          cropY,
+          cropW,
+          cropH,
+          aspectRatio: newAspectRatio,
+          height: newHeight
+        };
+      }),
+
+    handleVideoLoadedData: (payload) =>
+      set((state) => {
+        // Only reset crop to full frame on first load or when the video changes.
+        // If crop is already set within this video's bounds, preserve it.
+        const videoChanged =
+          state.videoWidth !== payload.videoWidth ||
+          state.videoHeight !== payload.videoHeight;
+        const hasCrop = state.cropW > 0 && state.cropH > 0;
+
+        const cropX = videoChanged || !hasCrop ? 0 : state.cropX;
+        const cropY = videoChanged || !hasCrop ? 0 : state.cropY;
+        const cropW = videoChanged || !hasCrop ? payload.videoWidth : state.cropW;
+        const cropH = videoChanged || !hasCrop ? payload.videoHeight : state.cropH;
+
+        const effectiveAspectRatio = cropW / cropH;
+        const newWidth = Math.min(state.width, payload.videoWidth);
+        const newHeight = Math.round(newWidth / effectiveAspectRatio);
+
+        return {
+          ...state,
+          aspectRatio: effectiveAspectRatio,
           videoDuration: toMilliseconds(payload.duration),
           videoWidth: payload.videoWidth,
           videoHeight: payload.videoHeight,
           width: newWidth,
           height: newHeight,
+          cropX,
+          cropY,
+          cropW,
+          cropH,
           start:
             state.videoDuration === 0 && payload.currentTime !== undefined
               ? toMilliseconds(payload.currentTime)

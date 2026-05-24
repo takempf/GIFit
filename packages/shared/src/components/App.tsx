@@ -40,6 +40,8 @@ export function App() {
   );
   const width = useConfigurationPanelStore((state) => state.width);
   const height = useConfigurationPanelStore((state) => state.height);
+  const videoWidth = useConfigurationPanelStore((state) => state.videoWidth);
+  const videoHeight = useConfigurationPanelStore((state) => state.videoHeight);
 
   // Listen for messages from content script via adapter
   useEffect(() => {
@@ -75,7 +77,11 @@ export function App() {
         height: config.height,
         start,
         end,
-        fps: config.framerate
+        fps: config.framerate,
+        cropX: config.cropX,
+        cropY: config.cropY,
+        cropW: config.cropW,
+        cropH: config.cropH
       };
 
       // 1. Update UI state
@@ -132,16 +138,18 @@ export function App() {
             previewImage={currentPreviewImage}
             width={width}
             height={height}
+            videoWidth={videoWidth}
+            videoHeight={videoHeight}
             status={status}
           />
         </section>
 
         <section className={css.panel} aria-live="polite">
-          {status === 'configuring' && (
-            <div className={css.configuring}>
-              <ConfigurationPanel onSubmit={handleSubmit} />
-            </div>
-          )}
+          {/* ConfigurationPanel stays mounted to preserve hook state (crop,
+              metadata, preview) across status transitions. Hidden via CSS. */}
+          <div className={css.configuring} hidden={status !== 'configuring'}>
+            <ConfigurationPanel onSubmit={handleSubmit} />
+          </div>
           {status === 'generating' && (
             <div className={css.processing}>
               <ProcessingPanel />

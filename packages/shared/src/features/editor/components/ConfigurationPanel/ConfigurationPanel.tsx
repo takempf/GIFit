@@ -34,8 +34,18 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
     (state) => state.videoDuration
   );
 
+  const cropX = useConfigurationPanelStore((state) => state.cropX);
+  const cropY = useConfigurationPanelStore((state) => state.cropY);
+  const cropW = useConfigurationPanelStore((state) => state.cropW);
+  const cropH = useConfigurationPanelStore((state) => state.cropH);
+  const videoWidth = useConfigurationPanelStore((state) => state.videoWidth);
+  const videoHeight = useConfigurationPanelStore((state) => state.videoHeight);
+
   const storeHandleInputChange = useConfigurationPanelStore(
     (state) => state.handleInputChange
+  );
+  const handleCropChange = useConfigurationPanelStore(
+    (state) => state.handleCropChange
   );
   const seekVideo = useConfigurationPanelStore((state) => state.seekVideo);
   const fetchVideoMetadata = useConfigurationPanelStore(
@@ -135,6 +145,10 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       framerate,
       quality: currentConfigState.quality,
       aspectRatio: currentConfigState.aspectRatio,
+      cropX: currentConfigState.cropX,
+      cropY: currentConfigState.cropY,
+      cropW: currentConfigState.cropW,
+      cropH: currentConfigState.cropH,
       videoDuration: currentConfigState.videoDuration,
       videoWidth: currentConfigState.videoWidth,
       videoHeight: currentConfigState.videoHeight,
@@ -181,6 +195,25 @@ export function ConfigurationPanel({ onSubmit }: ConfigurationPanelProps) {
       <HeightInput />
 
       <QualityInput />
+
+      {(cropX !== 0 || cropY !== 0 || cropW !== videoWidth || cropH !== videoHeight) && (
+        <div className={css.cropReset}>
+          <button
+            type="button"
+            className={css.cropResetButton}
+            onClick={() =>
+              handleCropChange({
+                cropX: 0,
+                cropY: 0,
+                cropW: videoWidth,
+                cropH: videoHeight
+              })
+            }
+          >
+            Reset Crop
+          </button>
+        </div>
+      )}
 
       <div className={css.actions}>
         <Button
